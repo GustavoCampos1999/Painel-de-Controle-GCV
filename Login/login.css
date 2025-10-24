@@ -59,3 +59,12 @@
             margin-top: 15px;
             font-size: 14px;
         }
+
+        @media (max-width: 400px) {
+    .login-container {
+        width: 90%;
+        max-width: 300px;
+        padding: 20px;
+        box-sizing: border-box; 
+    }
+}

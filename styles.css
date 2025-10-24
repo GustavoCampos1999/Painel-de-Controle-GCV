@@ -609,7 +609,9 @@ body.dark-mode #btn-voltar-clientes {
 body.dark-mode #btn-voltar-clientes:hover {
     background-color: #5a5a5a;
 }
-
+body.dark-mode #btn-abrir-config-calculadora {
+     color: #ffffff;
+}
 
 @keyframes spin-icon {
     from {
@@ -623,4 +625,123 @@ body.dark-mode #btn-voltar-clientes:hover {
 .theme-toggle-button.toggling {
 
     animation: spin-icon 0.4s ease-out;
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column; 
+        align-items: flex-start;
+        gap: 10px;
+        padding: 15px;
+    }
+    header h1 {
+        font-size: 20px; 
+    }
+    header > div:last-child {
+        width: 100%;
+        display: flex;
+        justify-content: space-between; 
+        align-items: center;
+    }
+    .header-logo-container {
+        width: 100%; 
+    }
+    #header-logo {
+        height: 30px; 
+    }
+    #user-email {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px; 
+    }
+    main {
+        padding: 10px;
+    }
+    .tabs, .sub-tabs {
+        padding: 0 10px;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch; 
+    }
+    .tab-button, .subtab-button {
+        padding: 8px 12px;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .gerenciar-dados-secao {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .secao-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .secao-header .btn-adicionar {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box; 
+    }
+    .gerenciar-dados-secao table {
+        min-width: 600px; 
+    }
+}
+
+@media (max-width: 480px) {
+    header > div:last-child {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+     #btn-logout {
+        margin-left: 0 !important; 
+    }
+    .theme-toggle-button {
+        margin-left: 0 !important;
+    }
+    #user-email {
+        max-width: 100%;
+    }
+
+    .list-header {
+        flex-direction: column; 
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .btn-adicionar {
+        width: 100%; 
+        text-align: center;
+        box-sizing: border-box; 
+    }
+    .cliente-card {
+        flex-direction: column; 
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .cliente-acoes {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end; 
+        gap: 10px;
+    }
+    .cliente-acoes button {
+        margin-left: 0; 
+    }
+    .modal-content {
+        width: 90%;
+        padding: 20px 15px;
+        max-height: 80vh; 
+        overflow-y: auto;   
+    }
+    .modal-actions {
+        flex-direction: column; 
+        gap: 10px;
+    }
+    .modal-actions button {
+        width: 100%; 
+        box-sizing: border-box;
+    }
 }

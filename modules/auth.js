@@ -18,14 +18,34 @@ export async function checkUserSession() {
 
 export function setupLogoutButton() {
     const btnLogout = document.getElementById('btn-logout');
-    if (btnLogout) btnLogout.addEventListener('click', async (e) => {
+    if (!btnLogout) return;
+
+    btnLogout.addEventListener('click', async (e) => {
         e.preventDefault();
+
+        // 1. Desabilita o botão para evitar cliques duplos
+        btnLogout.disabled = true;
+        btnLogout.style.opacity = '0.7';
+        btnLogout.textContent = 'Saindo...';
+
         const { error } = await _supabase.auth.signOut();
+
         if (error) {
-            console.error("Erro ao fazer logout:", error);
-            showToast("Erro ao sair.", true); 
-        } else {
-            window.location.href = 'Login/login.html';
+            if (error.name === 'AuthSessionMissingError') {
+                console.log('Tentativa de logout sem sessão. Redirecionando...');
+            } else {
+                console.error('Erro ao fazer logout:', error); 
+                btnLogout.disabled = false;
+                btnLogout.style.opacity = '1';
+                btnLogout.textContent = 'Sair';
+                return; 
+            }
         }
+
+        console.log('Logout bem-sucedido ou sessão já inexistente. Redirecionando...');
+        
+        localStorage.clear(); 
+        
+        window.location.href = '/login/login.html'; 
     });
 }
