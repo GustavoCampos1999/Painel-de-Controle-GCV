@@ -26,7 +26,7 @@ formLogin.addEventListener('submit', async (e) => {
 
         console.log('Login bem-sucedido!', data);
         
-        window.location.href = '../index.html'; //
+        window.location.href = '../index.html'; 
 
     } catch (err) {
         console.error('Erro inesperado:', err);

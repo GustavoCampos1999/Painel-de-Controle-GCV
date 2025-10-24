@@ -22,8 +22,6 @@ export function setupLogoutButton() {
 
     btnLogout.addEventListener('click', async (e) => {
         e.preventDefault();
-
-        // 1. Desabilita o botão para evitar cliques duplos
         btnLogout.disabled = true;
         btnLogout.style.opacity = '0.7';
         btnLogout.textContent = 'Saindo...';
