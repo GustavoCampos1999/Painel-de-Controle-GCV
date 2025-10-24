@@ -1,0 +1,55 @@
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f7f6;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        }
+        .login-container {
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
+        .login-container h1 {
+            margin-bottom: 20px;
+        }
+        .login-container div {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .login-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box; 
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .login-container button:hover {
+            background-color: #218838;
+        }
+        #mensagem-erro {
+            color: #dc3545;
+            margin-top: 15px;
+            font-size: 14px;
+        }

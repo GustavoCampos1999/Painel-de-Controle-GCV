@@ -1,0 +1,204 @@
+:root {
+    --cor-medidas: #fffde7;  
+    --cor-cortina: #e0f7fa;   
+    --cor-forro: #e8f5e9;     
+    --cor-blackout: #fce4ec;  
+    --cor-valores: #f3e5f5;   
+    --cor-orcamento: #e8eaf6; 
+}
+
+.calculator-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.calculator-header h2 {
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
+    order: 2; 
+}
+#btn-voltar-clientes {
+    padding: 8px 12px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    order: 1; 
+}
+#btn-voltar-clientes:hover { background-color: #5a6268; }
+#btn-add-linha-calc {
+    padding: 8px 12px;
+    font-size: 14px;
+    order: 4; 
+    margin-left: 0; 
+}
+
+.save-status {
+    font-style: italic;
+    font-size: 14px;
+    color: #6c757d;
+    min-width: 150px; 
+    text-align: right;
+    order: 3; 
+}
+.save-status.saving { color: #ffc107; } 
+.save-status.saved { color: #28a745; }  
+.save-status.error { color: #dc3545; }  
+
+.tabela-container.calculator-container {
+    width: 100%;
+    overflow-x: auto; 
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+#tabela-calculo-cliente {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1900px; 
+}
+#tabela-calculo-cliente th,
+#tabela-calculo-cliente td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 13px;
+    vertical-align: middle;
+}
+#tabela-calculo-cliente th {
+    background-color: #e9ecef;
+    font-size: 12px;
+    padding: 8px 5px;
+    white-space: nowrap;
+}
+
+.sessao-medidas   { background-color: var(--cor-medidas); }
+.sessao-cortina { background-color: var(--cor-cortina); }
+.sessao-blackout{ background-color: var(--cor-blackout); }
+.sessao-valores { background-color: var(--cor-valores); }
+.sessao-orcamento { background-color: var(--cor-orcamento); }
+
+#tabela-calculo-cliente tbody input,
+#tabela-calculo-cliente tbody select {
+    width: 100%;
+    max-width: 120px; 
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 13px;
+}
+#tabela-calculo-cliente input.resultado,
+#tabela-calculo-cliente input.resultado-preco {
+    background-color: #f4f4f4;
+    font-weight: bold;
+    border: none;
+    text-align: right;
+}
+#tabela-calculo-cliente input.resultado-preco {
+    min-width: 110px;
+}
+#tabela-calculo-cliente input.input-ambiente {
+    min-width: 130px;
+    text-align: left;
+}
+
+#tabela-calculo-cliente input.format-money {
+    text-align: right;
+}
+
+#tabela-calculo-cliente tbody td:has(.input-largura),
+#tabela-calculo-cliente tbody td:has(.input-altura),
+#tabela-calculo-cliente tbody td:has(.input-pe-direito) { 
+    min-width: 80px;
+    width: 80px;
+}
+#tabela-calculo-cliente tbody td:has(.select-franzCortina),
+#tabela-calculo-cliente tbody td:has(.select-franzBlackout) {
+    min-width: 90px;
+    width: 90px;
+}
+#tabela-calculo-cliente tbody td:has(input.resultado) {
+    min-width: 80px; 
+    width: 80px;  
+}
+#tabela-calculo-cliente tbody td:has(.select-codTecidoCortina),
+#tabela-calculo-cliente tbody td:has(.select-codTecidoForro),
+#tabela-calculo-cliente tbody td:has(.select-codTecidoBlackout) {
+    min-width: 200px;
+}
+#tabela-calculo-cliente tbody td:has(.select-confecao),
+#tabela-calculo-cliente tbody td:has(.select-trilho) {
+    min-width: 110px;
+}
+#tabela-calculo-cliente tbody td:has(.select-instalacao),
+#tabela-calculo-cliente tbody td:has(.select-frete) {
+    min-width: 60px;
+}
+
+#tabela-calculo-cliente tbody td:has(.input-motor),
+#tabela-calculo-cliente tbody td:has(.input-outros) { 
+    min-width: 80px;
+}
+
+#tabela-calculo-cliente tbody .select-codTecidoCortina,
+#tabela-calculo-cliente tbody .select-codTecidoForro, 
+#tabela-calculo-cliente tbody .select-codTecidoBlackout,
+#tabela-calculo-cliente tbody .select-confecao,
+#tabela-calculo-cliente tbody .select-trilho {
+    max-width: none; 
+}
+
+.col-acoes-calc {
+    width: 60px;
+    text-align: center;
+    vertical-align: middle;
+}
+.btn-remover-linha {
+    padding: 4px 8px;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: bold;
+}
+
+.wrapper-markups.calculator-markups {
+    display: flex;
+    justify-content: center; 
+    padding: 15px 10px;
+    background: #fff;
+    margin-top: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.calculator-markups .grupo-markups {
+    display: flex;
+    gap: 20px;
+}
+.calculator-markups .grupo-markups div {
+    display: flex;
+    flex-direction: column;
+}
+.calculator-markups .grupo-markups label {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #555;
+    text-align: center;
+}
+.calculator-markups .grupo-markups input {
+    width: 100px;
+    padding: 6px;
+    font-size: 14px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
