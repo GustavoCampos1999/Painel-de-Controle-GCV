@@ -44,6 +44,6 @@ export function setupLogoutButton() {
         
         localStorage.clear(); 
         
-        window.location.href = '/login/login.html'; 
+        window.location.href = './Login/login.html';
     });
 }
