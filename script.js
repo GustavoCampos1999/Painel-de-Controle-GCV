@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnAbrirConfigCalculadora: document.getElementById('btn-abrir-config-calculadora'),
         modalConfigCalculadora: document.getElementById('modal-config-calculadora'),
         btnFecharConfigCalculadora: document.getElementById('btn-fechar-config-calculadora'),
+        btnThemeToggle: document.getElementById('btn-theme-toggle')
     };
 
     const dataRefs = {
@@ -91,7 +92,32 @@ document.addEventListener('DOMContentLoaded', () => {
     checkUserSession(); 
     setupLogoutButton(); 
     initUI(elements); 
+if (elements.btnThemeToggle) {
+        const body = document.body;
+        
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+                elements.btnThemeToggle.textContent = '☀️'; 
+            } else {
+                body.classList.remove('dark-mode');
+                elements.btnThemeToggle.textContent = '🌙'; 
+            }
+        };
+        
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(currentTheme);
 
+        elements.btnThemeToggle.addEventListener('click', () => {
+            let newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            elements.btnThemeToggle.classList.add('toggling');
+            applyTheme(newTheme);
+            setTimeout(() => {
+                elements.btnThemeToggle.classList.remove('toggling');
+            }, 400); 
+        });
+    }
     initCRM(elements);
     initDataManager(elements, dataRefs);
     initCalculator(elements, calculatorDataRefs, currentClientIdGlobal, isDataLoadedFlag); 
