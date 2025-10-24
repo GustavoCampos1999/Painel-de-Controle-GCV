@@ -72,6 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btnConfirmarExcluirLinha: document.getElementById('btn-confirmar-excluir-linha'),
         btnCancelarExcluirLinha: document.getElementById('btn-cancelar-excluir-linha'),
         spanAmbienteNomeExcluir: document.getElementById('ambiente-nome-excluir'),
+        btnAbrirConfigCalculadora: document.getElementById('btn-abrir-config-calculadora'),
+        modalConfigCalculadora: document.getElementById('modal-config-calculadora'),
+        btnFecharConfigCalculadora: document.getElementById('btn-fechar-config-calculadora'),
     };
 
     const dataRefs = {
@@ -102,6 +105,17 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.btnVoltarClientes.addEventListener('click', () => {
             currentClientIdGlobal.value = null;
             showClientListLocal();
+        });
+    }
+
+    if (elements.btnAbrirConfigCalculadora) {
+        elements.btnAbrirConfigCalculadora.addEventListener('click', () => {
+            openModal(elements.modalConfigCalculadora);
+        });
+    }
+    if (elements.btnFecharConfigCalculadora) {
+        elements.btnFecharConfigCalculadora.addEventListener('click', () => {
+            closeModal(elements.modalConfigCalculadora);
         });
     }
 

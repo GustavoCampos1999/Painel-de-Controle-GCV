@@ -15,7 +15,10 @@
     </div>
 
     <header>
-        <h1>Painel de Controle</h1>
+        <div class="header-logo-container">
+            <img src="images/logo.webp" alt="Logo Primor" id="header-logo">
+            <h1>Painel de Controle</h1>
+        </div>
         <div>
             <span id="user-email">Carregando...</span>
             <a href="#" id="btn-logout" style="margin-left: 15px;">Sair</a>
@@ -88,12 +91,12 @@
                         <tbody id="corpo-tabela-calculo-cliente"></tbody>
                     </table>
                 </div>
+                
                 <div class="wrapper-markups calculator-markups">
+                   
+                   <button id="btn-abrir-config-calculadora" class="btn-config-calc" title="Configurações">&#9881;</button> 
+
                    <div class="grupo-markups">
-                         <div>
-                            <label for="input-markup-base-calc">MARKUP (%)</label>
-                            <input type="number" id="input-markup-base-calc" class="global-calc-trigger" value="100">
-                        </div>
                         <div>
                             <label for="input-desconto-antecipado-calc">ANTECIPADO (%)</label>
                             <input type="number" id="input-desconto-antecipado-calc" class="global-calc-trigger" value="">
@@ -166,7 +169,7 @@
                     <section class="gerenciar-dados-secao">
                         <div class="secao-header">
                             <h2>Gerenciar Tipos de Confecção</h2>
-                            <button id="btn-abrir-modal-add-confeccao" class="btn-adicionar">Adicionar Opção</button>
+                            <button id="btn-abrir-modal-add-confeccao" class="btn-adicionar">Adicionar Confecção</button>
                         </div>
                         <input type="text" id="input-pesquisa-confeccao" class="input-pesquisa-dados" placeholder="Pesquisar por nome da opção...">
                         <table id="tabela-confeccao">
@@ -187,7 +190,7 @@
                      <section class="gerenciar-dados-secao">
                         <div class="secao-header">
                             <h2>Gerenciar Tipos de Trilho</h2>
-                            <button id="btn-abrir-modal-add-trilho" class="btn-adicionar">Adicionar Opção</button>
+                            <button id="btn-abrir-modal-add-trilho" class="btn-adicionar">Adicionar Trilho</button>
                         </div>
                         <input type="text" id="input-pesquisa-trilho" class="input-pesquisa-dados" placeholder="Pesquisar por nome da opção...">
                         <table id="tabela-trilho">
@@ -290,7 +293,7 @@
                 <div><label for="add-confeccao-valor">Valor:</label><input type="number" step="0.01" id="add-confeccao-valor" name="valor"></div>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancelar-add-confeccao" class="btn-cancelar">Cancelar</button>
-                    <button type="submit" class="btn-salvar">Salvar</button>
+                    <button type="submit" class.btn-salvar">Salvar</button>
                 </div>
             </form>
         </div>
@@ -356,6 +359,27 @@
             <div class="modal-actions">
                 <button type="button" id="btn-cancelar-excluir-linha" class="btn-cancelar">Cancelar</button>
                 <button type="button" id="btn-confirmar-excluir-linha" class="btn-excluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-config-calculadora" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Configurações do Orçamento</h2>
+            
+            <div class="config-calculadora-content">
+                <p>Ajuste o valor base para o cálculo do orçamento.</p>
+                
+                <div class="grupo-markups-modal">
+                    <div>
+                        <label for="input-markup-base-calc">MARKUP (%)</label>
+                        <input type="number" id="input-markup-base-calc" class="global-calc-trigger" value="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" id="btn-fechar-config-calculadora" class="btn-cancelar">Fechar</button>
             </div>
         </div>
     </div>

@@ -178,6 +178,7 @@
     margin-top: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: relative;
 }
 .calculator-markups .grupo-markups {
     display: flex;
@@ -195,6 +196,55 @@
     text-align: center;
 }
 .calculator-markups .grupo-markups input {
+    width: 100px;
+    padding: 6px;
+    font-size: 14px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+#btn-abrir-config-calculadora {
+    position: absolute; 
+    left: 15px;         
+    top: 50%;           
+    transform: translateY(-50%); 
+    background: none;
+    border: none;
+    color: #495057;
+    font-size: 24px; 
+    cursor: pointer;
+    padding: 0 10px;
+    line-height: 1;
+}
+#btn-abrir-config-calculadora:hover {
+    color: #000;
+}
+.config-calculadora-content p {
+    font-size: 14px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.modal-content h2 {
+    text-align: center;
+}
+.grupo-markups-modal {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+.grupo-markups-modal div {
+    display: flex;
+    flex-direction: column;
+}
+.grupo-markups-modal label {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #555;
+    text-align: center;
+}
+.grupo-markups-modal input {
     width: 100px;
     padding: 6px;
     font-size: 14px;

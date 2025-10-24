@@ -1,0 +1,5 @@
+# Dependências do backend
+backend/node_modules/
+
+# Arquivo de variáveis de ambiente do backend
+backend/.env
