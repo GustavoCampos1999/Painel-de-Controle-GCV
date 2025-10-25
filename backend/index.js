@@ -90,11 +90,10 @@ app.put('/api/orcamentos/:clientId', async (req, res) => {
         const result = await db.query(
             `INSERT INTO orcamentos (client_id, data, updated_at) VALUES ($1, $2, NOW())
              ON CONFLICT (client_id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
-             RETURNING data`, 
+             RETURNING data, updated_at`, 
             [clientId, orcamentoData]
         );
-      
-        res.status(200).json(result.rows[0].data);
+        res.status(200).json(result.rows[0]); 
 
     } catch (err) {
         console.error(`Erro ao salvar orçamento para client_id ${clientId}:`, err);
