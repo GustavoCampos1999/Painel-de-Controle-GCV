@@ -6,10 +6,17 @@ export function initUI(elements) {
     setupSubTabs();
 }
 
-export function showToast(message, isError = false) {
+export function showToast(message, type = 'success') {
     if (!toastElement) { console.warn("Elemento Toast não inicializado."); return; }
     toastElement.textContent = message;
-    toastElement.style.backgroundColor = isError ? '#dc3545' : '#28a745';
+    if (type === 'error') {
+        toastElement.style.backgroundColor = '#dc3545'; 
+    } else if (type === 'warning') {
+        toastElement.style.backgroundColor = '#ffc107'; 
+    } else {
+        toastElement.style.backgroundColor = '#28a745'; 
+    }
+
     toastElement.classList.add('show');
     setTimeout(() => {
         toastElement.classList.remove('show');

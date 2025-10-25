@@ -28,7 +28,7 @@ export async function carregarClientes() {
     
     if (error) {
         console.error('Erro ao carregar clientes:', error); 
-        showToast("Erro ao carregar clientes.", true);
+        showToast("Erro ao carregar clientes.", "error"); 
     } else {
         renderizarListaClientes(clientes || []);
     }
@@ -45,12 +45,15 @@ function renderizarListaClientes(clientes) {
     clientes.forEach(cliente => {
         const card = document.createElement('div');
         card.className = 'cliente-card';
+        if (cliente.venda_realizada === true) {
+            card.classList.add('venda-realizada');
+        }
         card.dataset.id = cliente.id;
         card.dataset.nome = cliente.nome;
         card.dataset.telefone = cliente.telefone || '';
         card.dataset.email = cliente.email || '';
         card.dataset.endereco = cliente.endereco || '';
-
+        
         card.innerHTML = `
             <div class="cliente-info">
                 <p><strong>${cliente.nome || 'Sem nome'}</strong></p>
@@ -66,7 +69,6 @@ function renderizarListaClientes(clientes) {
         listaClientesEl.appendChild(card);
     });
 }
-
 
 function setupAddClienteButton() {
     const button = document.getElementById('btn-abrir-modal-add'); 
@@ -90,7 +92,7 @@ function setupAddClienteForm() {
         const { error } = await _supabase.from('clientes').insert(novoCliente);
         if (error) { 
             console.error('Erro ao salvar cliente:', error); 
-            showToast('Erro ao salvar cliente.', true); 
+            showToast('Erro ao salvar cliente.', "error"); 
         }
         else { 
             formAddClienteEl.reset(); 
@@ -164,7 +166,7 @@ function setupModaisCliente() {
         const { error } = await _supabase.from('clientes').update(dadosCliente).match({ id: id });
         if (error) { 
             console.error('Erro ao atualizar:', error); 
-            showToast('Erro ao salvar dados.', true); 
+            showToast('Erro ao salvar dados.', "error"); 
         }
         else { 
             closeModal(modalEditarClienteEl); 
@@ -184,7 +186,7 @@ function setupModaisCliente() {
         const { error } = await _supabase.from('clientes').delete().match({ id: id });
         if (error) { 
             console.error('Erro ao excluir cliente:', error); 
-            showToast('Erro ao excluir cliente.', true); 
+            showToast('Erro ao excluir cliente.', "error"); 
         }
         else { 
             cardElemento.remove(); 

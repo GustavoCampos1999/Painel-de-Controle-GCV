@@ -647,6 +647,9 @@ body.dark-mode #btn-abrir-config-calculadora {
      font-size: 1.2em;
      color: #6c757d;
 }
+.cliente-card.venda-realizada .cliente-info p strong {
+    color: #218838; 
+}
 
 @keyframes spin-icon {
     from {

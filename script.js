@@ -12,6 +12,8 @@ let currentClientIdGlobal = { value: null };
 let isDataLoadedFlag = { value: false }; 
 let itemParaExcluirGenericoInfo = null;
 let triggerTecidosSort = null;
+let triggerConfeccaoSort = null; 
+let triggerTrilhoSort = null; 
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -76,6 +78,17 @@ document.addEventListener('DOMContentLoaded', () => {
         btnAbrirConfigCalculadora: document.getElementById('btn-abrir-config-calculadora'),
         modalConfigCalculadora: document.getElementById('modal-config-calculadora'),
         btnFecharConfigCalculadora: document.getElementById('btn-fechar-config-calculadora'),
+        tabsContainer: document.getElementById('calc-tabs-container'),
+        btnAddAba: document.getElementById('btn-add-aba-calc'),
+        summaryContainer: document.getElementById('calculator-summary'),
+        summaryTotalAvista: document.getElementById('summary-total-avista'),
+        summaryTotalParcelado: document.getElementById('summary-total-parcelado'),
+        summaryParceladoLabel: document.getElementById('summary-parcelado-label'),
+        modalExcluirAba: document.getElementById('modal-confirm-excluir-aba'),
+        btnConfirmarExcluirAba: document.getElementById('btn-confirmar-excluir-aba'),
+        btnCancelarExcluirAba: document.getElementById('btn-cancelar-excluir-aba'),
+        spanAbaNomeExcluir: document.getElementById('aba-nome-excluir'),
+        chkSummaryVendaRealizada: document.getElementById('chk-summary-venda-realizada'),
         btnThemeToggle: document.getElementById('btn-theme-toggle')
     };
 
@@ -128,13 +141,10 @@ if (elements.btnThemeToggle) {
         currentClientIdGlobal.value = clientId;
         showCalculatorView(clientId, clientName);
     });
-     if (elements.btnVoltarClientes) {
-        elements.btnVoltarClientes.addEventListener('click', () => {
-            currentClientIdGlobal.value = null;
-            showClientListLocal();
-        });
-    }
-
+document.addEventListener('clienteAtualizado', () => {
+        console.log("Evento 'clienteAtualizado' recebido, recarregando lista de clientes.");
+        carregarClientes(); 
+    });
     if (elements.btnAbrirConfigCalculadora) {
         elements.btnAbrirConfigCalculadora.addEventListener('click', () => {
             openModal(elements.modalConfigCalculadora);
@@ -182,6 +192,22 @@ document.addEventListener('tabelaTecidosSortRequest', () => {
             triggerTecidosSort(); 
         } else {
             console.warn("triggerTecidosSort não está definido.");
+        }
+    });
+
+    document.addEventListener('tabelaConfeccaoSortRequest', () => {
+        if (triggerConfeccaoSort) {
+            triggerConfeccaoSort();
+        } else {
+            console.warn("triggerConfeccaoSort não está definido.");
+        }
+    });
+
+    document.addEventListener('tabelaTrilhoSortRequest', () => {
+        if (triggerTrilhoSort) {
+            triggerTrilhoSort();
+        } else {
+            console.warn("triggerTrilhoSort não está definido.");
         }
     });
     console.log("Iniciando carregamento de todos os dados...");
@@ -255,8 +281,12 @@ function setupTableSorting(tableId, dataArray, renderFunction) {
         renderFunction(dataArray);
     };
 
-    if (tableId === 'tabela-tecidos') {
+   if (tableId === 'tabela-tecidos') {
         triggerTecidosSort = sortAndRender;
+    } else if (tableId === 'tabela-confeccao') {
+        triggerConfeccaoSort = sortAndRender;
+    } else if (tableId === 'tabela-trilho') { 
+        triggerTrilhoSort = sortAndRender;
     }
 
     headers.forEach(header => {

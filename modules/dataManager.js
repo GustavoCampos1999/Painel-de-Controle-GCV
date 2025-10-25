@@ -20,12 +20,14 @@ export function initDataManager(domElements, dataRefs) {
 export async function carregarDados(tabela, ordenarPor) {
     console.log(`Carregando dados para ${tabela}...`);
     const { data, error } = await _supabase.from(tabela).select('*').order(ordenarPor, { ascending: true });
+    
     if (error) {
         console.error(`Erro ao carregar ${tabela}:`, error);
-        dataArrays[tabela] = []; 
+        dataArrays[tabela].length = 0; 
         showToast(`Erro ao carregar ${tabela}.`, true);
     } else {
-        dataArrays[tabela] = data || []; 
+        dataArrays[tabela].length = 0; 
+        dataArrays[tabela].push(...(data || []));
         console.log(`${tabela} carregados:`, dataArrays[tabela].length);
     }
 }
@@ -197,7 +199,6 @@ function getFormData(form, tabela) {
     const formData = new FormData(form);
     const data = {};
     formData.forEach((value, key) => {
-        if (key === 'id' && form.id.includes('edit')) return;
 
         if (key === 'largura' || key === 'atacado' || key === 'valor') {
             data[key] = value === '' ? null : (parseFloat(value) || 0); 
@@ -216,7 +217,11 @@ async function handleSaveResponse(error, modalToClose, tabela, successMessage, o
         closeModal(modalToClose);
         await carregarDados(tabela, ordenarPor);
         showToast(successMessage);
+        
         document.dispatchEvent(new CustomEvent('dadosBaseAlterados'));
+
+        const nomeCapitalizado = tabela.charAt(0).toUpperCase() + tabela.slice(1);
+        document.dispatchEvent(new CustomEvent(`tabela${nomeCapitalizado}SortRequest`));
     }
 }
 

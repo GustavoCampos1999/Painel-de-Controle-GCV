@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin</title>
+    <title>Painel de Controle Primor</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="calculadora.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
 
@@ -56,11 +57,22 @@
                      <span id="save-status" class="save-status"></span>
                 </div>
 
+                <div id="calc-tabs-container">
+                    <button id="btn-add-aba-calc" title="Adicionar novo orçamento (aba)">+</button>
+                </div>
+                <template id="template-calc-tab">
+                    <div class="calc-tab" tabindex="0">
+                        <span class="calc-tab-name" title="Duplo clique para renomear">Orçamento 1</span>
+                        <button class="btn-close-aba" title="Fechar aba">×</button>
+                    </div>
+                </template>
+
                 <div class="tabela-container calculator-container">
                     <table id="tabela-calculo-cliente">
                        <thead>
                             <tr>
                                 <th rowspan="2" class="col-acoes-calc">AÇÕES</th>
+                                <th rowspan="2" class="col-selecionar-calc" title="Selecionar para somar">✓</th>
                                 <th rowspan="2" class="col-ambiente-calc">AMBIENTE</th>
                                 <th colspan="2" class="sessao-medidas">MEDIDAS</th>
                                 <th colspan="2" class="sessao-cortina">TECIDO CORTINA</th> <th colspan="1" class="sessao-forro">TECIDO FORRO</th>   <th colspan="2" class="sessao-blackout">BLACKOUT</th> <th colspan="5" class="sessao-valores">VALORES</th>
@@ -82,14 +94,14 @@
                                 <th class="sessao-valores">INSTALAÇÃO</th>
                                 <th class="sessao-valores">FRETE</th>
                                 <th class="sessao-valores">OUTROS</th>
-                                <th class="sessao-orcamento">À VISTA</th>
+                                <th class="sessao-orcamento">TOTAL</th>
                                 <th id="th-parcelado-header" class="sessao-orcamento">DÉBITO</th>
                             </tr>
                         </thead>
                         <tbody id="corpo-tabela-calculo-cliente"></tbody>
                     </table>
                 </div>
-        <div class="wrapper-markups calculator-markups">
+                <div class="wrapper-markups calculator-markups">
                    
                    <button id="btn-abrir-config-calculadora" class="btn-config-calc" title="Configurações">&#9881;</button> 
 
@@ -100,9 +112,30 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="calculator-summary" class="calculator-container" style="display: none;">
+                    <h3>Total Selecionado</h3>
+                    <div class="summary-totals-container">
+                        <div class="summary-total-box">
+                            <label id="summary-avista-label">TOTAL</label>
+                            <span id="summary-total-avista">R$ 0,00</span>
+                        </div>
+                        <div class="summary-total-box">
+                            <label id="summary-parcelado-label">DÉBITO</label>
+                            <span id="summary-total-parcelado">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-venda-container">
+                        <input type="checkbox" id="chk-summary-venda-realizada">
+                        <label for="chk-summary-venda-realizada">Venda Realizada</label>
+                    </div>
+                </div>
+
                 <template id="template-linha-calculadora">
                      <tr class="linha-calculo-cliente">
                          <td class="col-acoes-calc"><button class="btn-remover-linha btn-excluir">×</button></td>
+                         <td class="col-selecionar-calc"><input type="checkbox" class="select-linha-checkbox" title="Selecionar linha"></td>
                          <td class="col-ambiente-calc"><input type="text" class="input-ambiente" placeholder="Ex: Sala"></td>
                          <td><input type="number" step="0.01" class="input-largura"></td>
                          <td><input type="number" step="0.01" class="input-altura"></td>
@@ -183,7 +216,7 @@
                      <section class="gerenciar-dados-secao">
                         <div class="secao-header">
                             <h2>Gerenciar Tipos de Trilho</h2>
-                            <button id="btn-abrir-modal-add-trilho" class="btn-adicionar">Adicionar Trilho</button>
+                            <button id="btn-abrir-modal-add-trilho" class_adicionar">Adicionar Trilho</button>
                         </div>
                         <input type="text" id="input-pesquisa-trilho" class="input-pesquisa-dados" placeholder="Pesquisar por nome da opção...">
                         <table id="tabela-trilho">
@@ -286,7 +319,7 @@
                 <div><label for="add-confeccao-valor">Valor:</label><input type="number" step="0.01" id="add-confeccao-valor" name="valor"></div>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancelar-add-confeccao" class="btn-cancelar">Cancelar</button>
-                    <button type="submit" class.btn-salvar">Salvar</button>
+                    <button type="submit" class="btn-salvar">Salvar</button>
                 </div>
             </form>
         </div>
@@ -373,6 +406,17 @@
 
             <div class="modal-actions">
                 <button type="button" id="btn-fechar-config-calculadora" class="btn-cancelar">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirm-excluir-aba" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja excluir a aba <strong id="aba-nome-excluir"></strong>?</p>
+            <div class="modal-actions">
+                <button type="button" id="btn-cancelar-excluir-aba" class="btn-cancelar">Cancelar</button>
+                <button type="button" id="btn-confirmar-excluir-aba" class="btn-excluir">Excluir</button>
             </div>
         </div>
     </div>

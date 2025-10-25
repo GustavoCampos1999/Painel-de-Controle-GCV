@@ -1,5 +1,6 @@
 import { showToast, openModal, closeModal } from './ui.js';
 import { DADOS_FRANZ_CORTINA, DADOS_FRANZ_BLACKOUT, DADOS_INSTALACAO, DADOS_FRETE } from '../data/opcoes.js';
+import { _supabase } from '../supabaseClient.js'; 
 
 const TAXAS_PARCELAMENTO = {
     'DÉBITO': 0.0099, '1x': 0.0299, '2x': 0.0409, '3x': 0.0478, '4x': 0.0547, '5x': 0.0614, 
@@ -15,6 +16,10 @@ let isDataLoadedRef = { value: false };
 
 let autoSaveTimer = null;
 let linhaParaExcluir = null;
+let abaParaExcluir = { index: null, element: null };
+
+let estadoAbas = []; 
+let abaAtivaIndex = 0;
 
 function debounce(func, delay) {
     return function() {
@@ -48,12 +53,41 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     dataRefs = dataArrays;
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
+if (elements.btnVoltarClientes) {
+        elements.btnVoltarClientes.addEventListener('click', async () => {
+            if (elements.saveStatusElement && elements.saveStatusElement.textContent.includes('Salvando...')) {
 
+                showToast("Aguarde, salvando alterações...", "warning"); 
+                return; 
+            }
+
+            if (elements.saveStatusElement) {
+                elements.saveStatusElement.textContent = 'Salvando...';
+                elements.saveStatusElement.className = 'save-status saving';
+            }
+            
+            await salvarEstadoCalculadora(currentClientIdRef.value);
+            
+            currentClientIdRef.value = null;
+            if (elements.clientListView) elements.clientListView.style.display = 'block';
+            if (elements.calculatorView) elements.calculatorView.style.display = 'none';
+            
+            document.dispatchEvent(new CustomEvent('clienteAtualizado'));
+        });
+
+        elements.btnVoltarClientes.addEventListener('mouseover', () => {
+            if (elements.saveStatusElement && elements.saveStatusElement.textContent.includes('Salvando...')) {
+                elements.btnVoltarClientes.style.cursor = 'wait';
+            } else {
+                elements.btnVoltarClientes.style.cursor = 'pointer';
+            }
+        });
+    }
     const btnAddLinha = document.getElementById('btn-add-linha-calc');
     if (btnAddLinha) {
         btnAddLinha.addEventListener('click', () => {
             if (!isDataLoadedRef.value) {
-                 showToast("Aguarde, carregando dados base...", true);
+                 showToast("Aguarde, carregando dados base...", "error"); 
                  return;
             }
             adicionarLinhaCalculadora(null);
@@ -66,6 +100,7 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
         input.removeEventListener(eventType, recalcularTodasLinhas); 
         input.addEventListener(eventType, () => {
             recalcularTodasLinhas();
+            recalcularTotaisSelecionados(); 
             triggerAutoSave();
         });
     });
@@ -74,6 +109,7 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
         elements.btnConfirmarExcluirLinha.addEventListener('click', () => {
             if (linhaParaExcluir) {
                 linhaParaExcluir.remove();
+                recalcularTotaisSelecionados();
                 triggerAutoSave(); 
             }
             closeModal(elements.modalExcluirLinha); 
@@ -90,9 +126,99 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     
     preencherSelectParcelamento();
     if (elements.selectParcelamentoGlobal) {
-        elements.selectParcelamentoGlobal.addEventListener('change', atualizarHeaderParcelado);
+        elements.selectParcelamentoGlobal.addEventListener('change', () => {
+             atualizarHeaderParcelado();
+             recalcularTotaisSelecionados(); 
+        });
+    }
+    if (elements.btnAddAba) {
+        elements.btnAddAba.addEventListener('click', adicionarAba);
+    }
+
+    if (elements.tabsContainer) {
+        elements.tabsContainer.addEventListener('click', (e) => {
+            const tabElement = e.target.closest('.calc-tab');
+            if (!tabElement) return;
+            const tabIndex = parseInt(tabElement.dataset.index, 10);
+
+            if (e.target.classList.contains('btn-close-aba')) {
+                prepararExclusaoAba(tabIndex, tabElement);
+            } else if (tabIndex !== abaAtivaIndex) {
+                ativarAba(tabIndex);
+            }
+        });
+        
+        elements.tabsContainer.addEventListener('dblclick', (e) => {
+             const tabNameElement = e.target.closest('.calc-tab-name');
+             if(tabNameElement) {
+                renomearAba(tabNameElement);
+             }
+        });
+
+        let lastTap = 0;
+        elements.tabsContainer.addEventListener('touchend', (e) => {
+            const tabNameElement = e.target.closest('.calc-tab-name');
+            if (!tabNameElement) return;
+
+            const now = new Date().getTime();
+            const timeSince = now - lastTap;
+            if ((timeSince < 300) && (timeSince > 0)) {
+                e.preventDefault(); 
+                renomearAba(tabNameElement);
+            }
+            lastTap = now;
+        });
+    }
+
+    if (elements.btnConfirmarExcluirAba) {
+        elements.btnConfirmarExcluirAba.addEventListener('click', () => {
+            if (abaParaExcluir.index !== null) {
+                executarExclusaoAba(abaParaExcluir.index);
+            }
+        });
+    }
+    if (elements.btnCancelarExcluirAba) {
+        elements.btnCancelarExcluirAba.addEventListener('click', () => {
+            closeModal(elements.modalExcluirAba);
+            abaParaExcluir = { index: null, element: null };
+        });
+    }
+
+    if (elements.chkSummaryVendaRealizada) {
+        elements.chkSummaryVendaRealizada.addEventListener('change', () => {
+            if (abaAtivaIndex < 0 || abaAtivaIndex >= estadoAbas.length) return;
+            
+            const newState = elements.chkSummaryVendaRealizada.checked;
+            estadoAbas[abaAtivaIndex].venda_realizada = newState;
+            
+            renderizarTabs();
+            
+            atualizarStatusVendaCliente();
+            
+            triggerAutoSave();
+        });
     }
 }
+
+async function atualizarStatusVendaCliente() {
+    if (!currentClientIdRef.value) return;
+
+    const algumaVendaRealizada = estadoAbas.some(aba => aba.venda_realizada === true);
+
+    const { error } = await _supabase
+        .from('clientes')
+        .update({ venda_realizada: algumaVendaRealizada })
+        .match({ id: currentClientIdRef.value });
+
+    if (error) {
+        console.error("Erro ao atualizar status de venda do cliente:", error);
+        showToast("Erro ao atualizar status do cliente.", "error");
+    } else {
+        console.log("Status de venda do cliente atualizado para:", algumaVendaRealizada);
+        document.dispatchEvent(new CustomEvent('clienteAtualizado'));
+    }
+}
+
 
 function preencherSelectParcelamento() {
     const select = elements.selectParcelamentoGlobal;
@@ -116,6 +242,9 @@ function atualizarHeaderParcelado() {
     const select = elements.selectParcelamentoGlobal;
     if (header && select) {
         header.textContent = select.value;
+    }
+    if(elements.summaryParceladoLabel) {
+        elements.summaryParceladoLabel.textContent = select.value;
     }
 }
 
@@ -218,7 +347,7 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
         (typeof dataRefs.trilho !== 'object' || Object.keys(dataRefs.trilho).length === 0)) 
     {
         console.error("adicionarLinhaCalculadora: Tentativa de adicionar linha falhou. Os dados (tecidos, confeccao, trilho) ainda não estão prontos em dataRefs.", dataRefs);
-        showToast("Erro: Dados de confecção/trilho não carregados. Saia e entre no cliente novamente.", true);
+        showToast("Erro: Dados de confecção/trilho não carregados. Saia e entre no cliente novamente.", "error"); 
         
         return; 
     }
@@ -266,16 +395,30 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
             const v = parseFloat(String(estadoLinha.outros || '0').replace(/[R$\.\s]/g, "").replace(",", ".")) || 0;
             inputOutros.value = v > 0 ? formatadorReaisCalc.format(v) : '';
         }
+
+        const checkbox = novaLinha.querySelector('.select-linha-checkbox');
+        if (checkbox) {
+            checkbox.checked = estadoLinha.selecionado === true;
+        }
+
         calcularOrcamentoLinha(novaLinha);
     }
 
     const gatilhos = novaLinha.querySelectorAll('input, select');
     gatilhos.forEach(gatilho => {
         const eventType = (gatilho.tagName === 'SELECT') ? 'change' : 'input';
-        gatilho.addEventListener(eventType, () => {
-             setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
-             triggerAutoSave();
-        });
+        
+        if (gatilho.classList.contains('select-linha-checkbox')) {
+            gatilho.addEventListener('change', () => {
+                recalcularTotaisSelecionados();
+                triggerAutoSave();
+            });
+        } else {
+            gatilho.addEventListener(eventType, () => {
+                 setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
+                 triggerAutoSave();
+            });
+        }
     });
 
     const inputOutros = novaLinha.querySelector('.input-outros');
@@ -328,6 +471,48 @@ function obterValorRealSelect(selectElement) {
     if (!selectElement) return 0;
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     return parseFloat(selectedOption?.dataset.valorReal) || 0;
+}
+
+function parseCurrencyValue(value) {
+    if (!value || typeof value !== 'string') return 0;
+    return parseFloat(value.replace(/[R$\.\s]/g, "").replace(",", ".")) || 0;
+}
+
+function recalcularTotaisSelecionados() {
+    let totalAvista = 0;
+    let totalParcelado = 0;
+    let algumaLinhaSelecionada = false;
+
+    const todasLinhas = elements.calculatorTableBody.querySelectorAll('.linha-calculo-cliente');
+    
+    todasLinhas.forEach(linha => {
+        const checkbox = linha.querySelector('.select-linha-checkbox');
+        if (checkbox && checkbox.checked) {
+            algumaLinhaSelecionada = true;
+            const inputAvista = linha.querySelector('td:nth-last-child(2) input');
+            const inputParcelado = linha.querySelector('td:nth-last-child(1) input');
+            
+            totalAvista += parseCurrencyValue(inputAvista.value);
+            totalParcelado += parseCurrencyValue(inputParcelado.value);
+        }
+    });
+
+    if (elements.summaryContainer) {
+        if (algumaLinhaSelecionada) {
+            elements.summaryContainer.style.display = 'block';
+            if (elements.summaryTotalAvista) {
+                elements.summaryTotalAvista.textContent = formatadorReaisCalc.format(totalAvista);
+            }
+            if (elements.summaryTotalParcelado) {
+                elements.summaryTotalParcelado.textContent = formatadorReaisCalc.format(totalParcelado);
+            }
+            if(elements.summaryParceladoLabel && elements.selectParcelamentoGlobal) {
+                 elements.summaryParceladoLabel.textContent = elements.selectParcelamentoGlobal.value;
+            }
+        } else {
+            elements.summaryContainer.style.display = 'none';
+        }
+    }
 }
 
 async function calcularOrcamentoLinha(linha) {
@@ -390,23 +575,23 @@ async function calcularOrcamentoLinha(linha) {
         const valorAVista = resultados.orcamentoBase ?? 0;
         const valorParcelado = valorAVista * (1 + taxaParcelamento);
 
-        const ora = linha.querySelector('td:nth-child(18) input'); if(ora) ora.value = formatadorReaisCalc.format(valorAVista);
-        const orx = linha.querySelector('td:nth-child(19) input'); if(orx) orx.value = formatadorReaisCalc.format(valorParcelado);
+        const ora = linha.querySelector('td:nth-last-child(2) input'); if(ora) ora.value = formatadorReaisCalc.format(valorAVista);
+        const orx = linha.querySelector('td:nth-last-child(1) input'); if(orx) orx.value = formatadorReaisCalc.format(valorParcelado);
 
     } catch (error) {
         console.error("Erro ao calcular orçamento:", error.message);
         const qtc = linha.querySelector('td:nth-child(7) input'); if(qtc) qtc.value = '0.00';
         const qtf = linha.querySelector('td:nth-child(9) input'); if(qtf) qtf.value = '0.00';
         const qtb = linha.querySelector('td:nth-child(12) input'); if(qtb) qtb.value = '0.00';
-        const ora = linha.querySelector('td:nth-child(18) input'); if(ora) ora.value = formatadorReaisCalc.format(0);
-        const orx = linha.querySelector('td:nth-child(19) input'); if(orx) orx.value = formatadorReaisCalc.format(0);
-        showToast(`Erro no cálculo: ${error.message}`, true);
+        const ora = linha.querySelector('td:nth-last-child(2) input'); if(ora) ora.value = formatadorReaisCalc.format(0);
+        const orx = linha.querySelector('td:nth-last-child(1) input'); if(orx) orx.value = formatadorReaisCalc.format(0);
+        showToast(`Erro no cálculo: ${error.message}`, "error"); 
     }
+
+    recalcularTotaisSelecionados();
 }
 
-async function salvarEstadoCalculadora(clientId) {
-    if (!elements.calculatorView || !elements.calculatorTableBody) return;
-
+function obterEstadoAbaAtual() {
     const todasLinhas = elements.calculatorTableBody.querySelectorAll('.linha-calculo-cliente');
     const dadosOrcamento = [];
 
@@ -416,6 +601,8 @@ async function salvarEstadoCalculadora(clientId) {
 
         const trilhoSelect = linhaCalc.querySelector('.select-trilho');
         const trilhoTexto = trilhoSelect ? trilhoSelect.value : '-';
+        
+        const checkbox = linhaCalc.querySelector('.select-linha-checkbox');
 
         const estadoLinha = {
             ambiente: linhaCalc.querySelector('.input-ambiente')?.value || '',
@@ -431,12 +618,24 @@ async function salvarEstadoCalculadora(clientId) {
             instalacao: linhaCalc.querySelector('.select-instalacao')?.value || '',
             frete: linhaCalc.querySelector('.select-frete')?.value || '',
             outros: linhaCalc.querySelector('.input-outros')?.value || '',
+            selecionado: checkbox ? checkbox.checked : false 
         };
         dadosOrcamento.push(estadoLinha);
     });
+    return dadosOrcamento;
+}
+
+async function salvarEstadoCalculadora(clientId) {
+    if (!elements.calculatorView || !elements.calculatorTableBody) return;
+    if (abaAtivaIndex < 0 || abaAtivaIndex >= estadoAbas.length) {
+         console.warn("Salvamento ignorado, aba ativa inválida:", abaAtivaIndex);
+         return;
+    }
+
+    estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
 
     const estadoCompleto = {
-        ambientes: dadosOrcamento,
+        abas: estadoAbas, 
         markup: elements.calculatorMarkupInput?.value || '100',
         parcelamento: elements.selectParcelamentoGlobal?.value || 'DÉBITO', 
     };
@@ -466,7 +665,7 @@ async function salvarEstadoCalculadora(clientId) {
             elements.saveStatusElement.textContent = 'Erro ao salvar';
             elements.saveStatusElement.className = 'save-status error';
         }
-        showToast(`Erro ao salvar: ${error.message}`, true);
+        showToast(`Erro ao salvar: ${error.message}`, "error"); 
     }
 }
 
@@ -477,43 +676,56 @@ async function carregarEstadoCalculadora(clientId) {
     }
 
     if (elements.calculatorTableBody) elements.calculatorTableBody.innerHTML = '';
+    estadoAbas = []; 
+    abaAtivaIndex = 0;
 
     try {
         const response = await fetch(`https://api-calculadora-hgy8.onrender.com/api/orcamentos/${clientId}`);
         if (!response.ok) {
+             if (response.status === 404) {
+                console.log("Nenhum orçamento salvo. Criando novo.");
+                if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
+                if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = 'DÉBITO';
+                
+                estadoAbas = [{ nome: "Orçamento 1", ambientes: [], venda_realizada: false }];
+                abaAtivaIndex = 0;
+                
+                renderizarTabs();
+                ativarAba(0, true); 
+                triggerAutoSave();
+                return;
+             }
              const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido ao carregar orçamento.' }));
              console.error('Erro da API ao carregar:', response.status, errorData);
              throw new Error(errorData.message || 'Erro API carregar.');
         }
         const estado = await response.json();
 
-        if (!estado || typeof estado !== 'object' || Object.keys(estado).length === 0 || !Array.isArray(estado.ambientes)) {
-             console.log("Nenhum orçamento salvo ou formato inválido. Adicionando uma linha padrão.");
-             adicionarLinhaCalculadora(null);
-             if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
-             if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = 'DÉBITO'; 
-             atualizarHeaderParcelado();
-             triggerAutoSave();
-             return;
-        }
-
         if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = estado.markup || '100';
-        
         if(elements.selectParcelamentoGlobal) {
             elements.selectParcelamentoGlobal.value = estado.parcelamento || 'DÉBITO'; 
         }
-        atualizarHeaderParcelado(); 
-
-        if (estado.ambientes.length > 0) {
-            estado.ambientes.forEach(estadoLinha => {
-                adicionarLinhaCalculadora(estadoLinha);
+        if (estado && Array.isArray(estado.abas) && estado.abas.length > 0) {
+            estadoAbas = estado.abas;
+            estadoAbas.forEach(aba => {
+                if (aba.venda_realizada === undefined) {
+                    aba.venda_realizada = false;
+                }
             });
+            abaAtivaIndex = 0; 
+        } else if (estado && Array.isArray(estado.ambientes)) {
+            console.log("Migrando orçamento de formato antigo...");
+            estadoAbas = [{ nome: "Principal", ambientes: estado.ambientes, venda_realizada: false }];
+            abaAtivaIndex = 0;
         } else {
-             console.log("Orçamento salvo existe, mas sem ambientes. Adicionando linha padrão.");
-             adicionarLinhaCalculadora(null);
-             triggerAutoSave();
+            console.log("Orçamento salvo vazio ou inválido. Criando novo.");
+            estadoAbas = [{ nome: "Orçamento 1", ambientes: [], venda_realizada: false }];
+            abaAtivaIndex = 0;
         }
-
+        
+        renderizarTabs();
+        ativarAba(abaAtivaIndex, true); 
+        
         if (elements.saveStatusElement) {
             elements.saveStatusElement.textContent = '';
         }
@@ -524,11 +736,173 @@ async function carregarEstadoCalculadora(clientId) {
             elements.saveStatusElement.textContent = 'Erro ao carregar.';
             elements.saveStatusElement.className = 'save-status error';
         }
-        showToast(`Erro ao carregar orçamento: ${error.message}`, true);
-        adicionarLinhaCalculadora(null);
+        showToast(`Erro ao carregar orçamento: ${error.message}`, "error"); 
+        
+        estadoAbas = [{ nome: "Orçamento 1", ambientes: [], venda_realizada: false }];
+        abaAtivaIndex = 0;
+        renderizarTabs();
+        ativarAba(0, true); 
         triggerAutoSave();
     }
 }
+function renderizarTabs() {
+    if (!elements.tabsContainer) return;
+    
+    const abasAtuais = elements.tabsContainer.querySelectorAll('.calc-tab');
+    abasAtuais.forEach(tab => tab.remove());
+
+    estadoAbas.forEach((aba, index) => {
+        const template = document.getElementById('template-calc-tab');
+        const novaAba = template.content.cloneNode(true).querySelector('.calc-tab');
+        
+        novaAba.dataset.index = index;
+        novaAba.querySelector('.calc-tab-name').textContent = aba.nome || `Aba ${index + 1}`;
+        
+        if (index === abaAtivaIndex) {
+            novaAba.classList.add('active');
+        }
+        
+        if (aba.venda_realizada === true) {
+            novaAba.classList.add('venda-realizada');
+        }
+        
+        elements.tabsContainer.insertBefore(novaAba, elements.btnAddAba);
+    });
+}
+
+function ativarAba(index, isInitialLoad = false) { 
+    if (index < 0 || index >= estadoAbas.length) {
+         console.error("Tentativa de ativar aba inválida:", index);
+         return;
+    }
+    
+    if (!isInitialLoad && abaAtivaIndex >= 0 && abaAtivaIndex < estadoAbas.length) {
+         estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
+    }
+    
+    abaAtivaIndex = index;
+
+    const abasAtuais = elements.tabsContainer.querySelectorAll('.calc-tab');
+    abasAtuais.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+    });
+
+    if (elements.calculatorTableBody) elements.calculatorTableBody.innerHTML = '';
+    
+    const abaAtiva = estadoAbas[index];
+    const ambientesDaAba = abaAtiva.ambientes || [];
+    
+    if (ambientesDaAba.length > 0) {
+        ambientesDaAba.forEach(estadoLinha => {
+            adicionarLinhaCalculadora(estadoLinha);
+        });
+    } else {
+        adicionarLinhaCalculadora(null);
+    }
+
+    if (elements.chkSummaryVendaRealizada) {
+        elements.chkSummaryVendaRealizada.checked = abaAtiva.venda_realizada === true;
+    }
+
+    atualizarHeaderParcelado();
+    recalcularTotaisSelecionados();
+}
+
+function adicionarAba() {
+
+    if (abaAtivaIndex >= 0 && abaAtivaIndex < estadoAbas.length) {
+        estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
+    }
+    
+    const novaAba = {
+        nome: `Orçamento ${estadoAbas.length + 1}`,
+        ambientes: [],
+        venda_realizada: false 
+    };
+    estadoAbas.push(novaAba);
+    
+    const novoIndex = estadoAbas.length - 1;
+
+    renderizarTabs();
+    ativarAba(novoIndex); 
+
+    triggerAutoSave();
+}
+
+function prepararExclusaoAba(index, element) {
+    if (estadoAbas.length <= 1) {
+        showToast("Não é possível excluir a última aba.", "error"); 
+        return;
+    }
+    abaParaExcluir = { index, element };
+    if (elements.spanAbaNomeExcluir) {
+        elements.spanAbaNomeExcluir.textContent = estadoAbas[index].nome || `Aba ${index + 1}`;
+    }
+    openModal(elements.modalExcluirAba);
+}
+
+function executarExclusaoAba(index) {
+    if (estadoAbas.length <= 1 || index < 0 || index >= estadoAbas.length) {
+        closeModal(elements.modalExcluirAba);
+        return;
+    }
+
+    estadoAbas.splice(index, 1);
+    
+    if (abaAtivaIndex === index) {
+        abaAtivaIndex = Math.max(0, index - 1);
+    } else if (abaAtivaIndex > index) {
+        abaAtivaIndex--;
+    }
+
+    renderizarTabs();
+    ativarAba(abaAtivaIndex);
+    
+    atualizarStatusVendaCliente();
+    
+    triggerAutoSave();
+
+    closeModal(elements.modalExcluirAba);
+    abaParaExcluir = { index: null, element: null };
+}
+
+function renomearAba(tabNameElement) {
+    const abaIndex = parseInt(tabNameElement.closest('.calc-tab').dataset.index, 10);
+    const nomeAntigo = estadoAbas[abaIndex].nome;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = nomeAntigo;
+    input.className = 'calc-tab-name-input'; 
+    
+    input.addEventListener('blur', () => finalizaRenomear());
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') {
+            input.value = nomeAntigo; 
+            input.blur();
+        }
+    });
+
+    const finalizaRenomear = () => {
+        const novoNome = input.value.trim();
+        if (novoNome && novoNome !== nomeAntigo) {
+            estadoAbas[abaIndex].nome = novoNome;
+            tabNameElement.textContent = novoNome;
+            triggerAutoSave();
+        } else {
+             tabNameElement.textContent = nomeAntigo;
+        }
+        tabNameElement.style.display = 'inline-block'; 
+        input.remove();
+    };
+    
+    tabNameElement.style.display = 'none';
+    tabNameElement.parentNode.insertBefore(input, tabNameElement);
+    input.focus();
+    input.select();
+}
+
 
 export async function showCalculatorView(clientId, clientName) {
     if (!elements.clientListView || !elements.calculatorView || !elements.calculatorClientName) {
@@ -547,17 +921,15 @@ export async function showCalculatorView(clientId, clientName) {
 
     try {
         await aguardarDadosBase();
-        await carregarEstadoCalculadora(clientId);
+        await carregarEstadoCalculadora(clientId); 
         atualizarHeaderParcelado(); 
 
     } catch (err) {
         console.error("Erro ao preparar calculadora para o cliente:", err);
-        showToast(err.message || "Erro ao carregar dados da calculadora.", true);
+        showToast(err.message || "Erro ao carregar dados da calculadora.", "error"); 
         if (elements.saveStatusElement) {
             elements.saveStatusElement.textContent = 'Erro ao carregar';
             elements.saveStatusElement.className = 'save-status error';
         }
-        adicionarLinhaCalculadora(null);
-        triggerAutoSave();
     }
 }
