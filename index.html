@@ -18,9 +18,9 @@
         <div class="header-logo-container">
             <img src="images/logo.webp" alt="Logo Primor" id="header-logo">
             <h1>Painel de Controle</h1>
+            <button id="btn-theme-toggle" class="theme-toggle-button" title="Mudar tema">🌙</button>
         </div>
         <div>
-            <button id="btn-theme-toggle" class="theme-toggle-button" title="Mudar tema">🌙</button>
             <span id="user-email">Carregando...</span>
             <a href="#" id="btn-logout" style="margin-left: 15px;">Sair</a>
         </div>
@@ -58,15 +58,12 @@
 
                 <div class="tabela-container calculator-container">
                     <table id="tabela-calculo-cliente">
-                        <thead>
+                       <thead>
                             <tr>
                                 <th rowspan="2" class="col-acoes-calc">AÇÕES</th>
                                 <th rowspan="2" class="col-ambiente-calc">AMBIENTE</th>
                                 <th colspan="2" class="sessao-medidas">MEDIDAS</th>
-                                <th colspan="3" class="sessao-cortina">TECIDO CORTINA</th>
-                                <th colspan="2" class="sessao-forro">TECIDO FORRO</th>
-                                <th colspan="3" class="sessao-blackout">BLACKOUT</th>
-                                <th colspan="5" class="sessao-valores">VALORES</th>
+                                <th colspan="2" class="sessao-cortina">TECIDO CORTINA</th> <th colspan="1" class="sessao-forro">TECIDO FORRO</th>   <th colspan="2" class="sessao-blackout">BLACKOUT</th> <th colspan="5" class="sessao-valores">VALORES</th>
                                 <th colspan="2" class="sessao-orcamento">ORÇAMENTO</th>
                             </tr>
                             <tr>
@@ -85,30 +82,24 @@
                                 <th class="sessao-valores">INSTALAÇÃO</th>
                                 <th class="sessao-valores">FRETE</th>
                                 <th class="sessao-valores">OUTROS</th>
-                                <th class="sessao-orcamento">ANTECIPADO</th>
-                                <th class="sessao-orcamento">12X</th>
+                                <th class="sessao-orcamento">À VISTA</th>
+                                <th id="th-parcelado-header" class="sessao-orcamento">DÉBITO</th>
                             </tr>
                         </thead>
                         <tbody id="corpo-tabela-calculo-cliente"></tbody>
                     </table>
                 </div>
-                
-                <div class="wrapper-markups calculator-markups">
+        <div class="wrapper-markups calculator-markups">
                    
                    <button id="btn-abrir-config-calculadora" class="btn-config-calc" title="Configurações">&#9881;</button> 
 
                    <div class="grupo-markups">
                         <div>
-                            <label for="input-desconto-antecipado-calc">ANTECIPADO (%)</label>
-                            <input type="number" id="input-desconto-antecipado-calc" class="global-calc-trigger" value="">
-                        </div>
-                        <div>
-                            <label for="input-desconto-12x-calc">ENTRADA+30 (%)</label>
-                            <input type="number" id="input-desconto-12x-calc" class="global-calc-trigger" value="">
+                            <label for="select-parcelamento-global">PARCELAMENTO</label>
+                            <select id="select-parcelamento-global" class="global-calc-trigger"></select>
                         </div>
                     </div>
                 </div>
-                
                 <template id="template-linha-calculadora">
                      <tr class="linha-calculo-cliente">
                          <td class="col-acoes-calc"><button class="btn-remover-linha btn-excluir">×</button></td>

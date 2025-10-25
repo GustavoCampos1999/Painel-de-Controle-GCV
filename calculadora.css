@@ -59,6 +59,7 @@
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding-bottom: 1.5%;
 }
 
 #tabela-calculo-cliente {
@@ -195,8 +196,9 @@
     color: #555;
     text-align: center;
 }
-.calculator-markups .grupo-markups input {
-    width: 100px;
+.calculator-markups .grupo-markups input,
+.calculator-markups .grupo-markups select {
+    width: 160px;
     padding: 6px;
     font-size: 14px;
     text-align: center;
@@ -252,6 +254,16 @@
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+#tabela-calculo-cliente thead tr:nth-child(2) th:nth-child(5),  
+#tabela-calculo-cliente thead tr:nth-child(2) th:nth-child(7), 
+#tabela-calculo-cliente thead tr:nth-child(2) th:nth-child(10), 
+#tabela-calculo-cliente tbody td:nth-child(7), 
+#tabela-calculo-cliente tbody td:nth-child(9),  
+#tabela-calculo-cliente tbody td:nth-child(12) 
+{
+    display: none;
+}
+
 
 @media (max-width: 768px) {
     .calculator-header {
@@ -274,6 +286,7 @@
         text-align: center;
         font-size: 14px;
         padding: 10px 15px;
+        margin-left: 6%;
     }
     
     #btn-add-linha-calc { 
@@ -308,17 +321,8 @@
         font-size: 20px;
         padding: 5px;
     }
-    .calculator-markups .grupo-markups {
-        flex-wrap: wrap; 
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-    }
-    .calculator-markups .grupo-markups div {
-        flex-grow: 1;
-        min-width: 120px; 
-    }
-    .calculator-markups .grupo-markups input {
+.calculator-markups .grupo-markups input,
+    .calculator-markups .grupo-markups select {
         width: 100%;
         box-sizing: border-box;
     }

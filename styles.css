@@ -574,7 +574,8 @@ body.dark-mode #tabela-calculo-cliente input.resultado-preco {
     border: none;
 }
 
-body.dark-mode .calculator-markups .grupo-markups input {
+body.dark-mode .calculator-markups .grupo-markups input,
+body.dark-mode .calculator-markups .grupo-markups select {
     background-color: #333;
     color: #e0e0e0;
     border-color: #555;
@@ -687,6 +688,9 @@ body.dark-mode #btn-abrir-config-calculadora {
     }
     .gerenciar-dados-secao table {
         min-width: 600px; 
+    }
+    #btn-theme-toggle {
+        margin-left: auto; 
     }
 }
 

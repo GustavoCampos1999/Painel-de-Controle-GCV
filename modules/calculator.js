@@ -1,6 +1,13 @@
 import { showToast, openModal, closeModal } from './ui.js';
 import { DADOS_FRANZ_CORTINA, DADOS_FRANZ_BLACKOUT, DADOS_INSTALACAO, DADOS_FRETE } from '../data/opcoes.js';
 
+const TAXAS_PARCELAMENTO = {
+    'Débito': 0.0099, '1x': 0.0299, '2x': 0.0409, '3x': 0.0478, '4x': 0.0547, '5x': 0.0614,
+    '6x': 0.0681, '7x': 0.0767, '8x': 0.0833, '9x': 0.0898, '10x': 0.0963, '11x': 0.1026,
+    '12x': 0.1090, '13x': 0.1152, '14x': 0.1214, '15x': 0.1276, '16x': 0.1337, '17x': 0.1397,
+    '18x': 0.1457
+};
+
 let elements = {};
 let dataRefs = {};
 let currentClientIdRef = { value: null };
@@ -79,6 +86,36 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             closeModal(elements.modalExcluirLinha);
             linhaParaExcluir = null;
         });
+    }
+    
+    preencherSelectParcelamento();
+    if (elements.selectParcelamentoGlobal) {
+        elements.selectParcelamentoGlobal.addEventListener('change', atualizarHeaderParcelado);
+    }
+}
+
+function preencherSelectParcelamento() {
+    const select = elements.selectParcelamentoGlobal;
+    if (!select) return;
+    select.innerHTML = '';
+    for (const key in TAXAS_PARCELAMENTO) {
+        const option = new Option(key.replace('x', ''), key);
+        if(key.includes('x')) {
+            option.textContent = `${key} (taxa ${ (TAXAS_PARCELAMENTO[key] * 100).toFixed(2).replace('.',',') }%)`;
+        } else {
+             option.textContent = `${key} (taxa ${ (TAXAS_PARCELAMENTO[key] * 100).toFixed(2).replace('.',',') }%)`;
+        }
+
+        select.appendChild(option);
+    }
+    select.value = 'Débito';
+}
+
+function atualizarHeaderParcelado() {
+    const header = elements.thParceladoHeader;
+    const select = elements.selectParcelamentoGlobal;
+    if (header && select) {
+        header.textContent = select.value;
     }
 }
 
@@ -306,8 +343,8 @@ async function calcularOrcamentoLinha(linha) {
     const vOutrosN = parseFloat(vOutrosL) || 0;
 
     const markupP = parseFloat(elements.calculatorMarkupInput?.value) || 100;
-    const descAnt = parseFloat(elements.calculatorDescAntInput?.value) || 0;
-    const desc12x = parseFloat(elements.calculatorDesc12xInput?.value) || 0;
+    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'Débito';
+    const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
 
     const valorConfecao = obterValorRealSelect(linha.querySelector('.select-confecao'));
     const valorTrilho = obterValorRealSelect(linha.querySelector('.select-trilho'));
@@ -325,9 +362,7 @@ async function calcularOrcamentoLinha(linha) {
         valorInstalacao: parseFloat(linha.querySelector('.select-instalacao')?.value) || 0,
         valorFrete: parseFloat(linha.querySelector('.select-frete')?.value) || 0,
         valorOutros: vOutrosN,
-        markupBase: markupP / 100.0,
-        descontoAntecipado: descAnt / 100.0,
-        desconto12x: desc12x / 100.0
+        markupBase: markupP / 100.0
     };
 
      try {
@@ -349,8 +384,11 @@ async function calcularOrcamentoLinha(linha) {
         const qtf = linha.querySelector('td:nth-child(9) input'); if(qtf) qtf.value = fmtDec(resultados.qtdTecidoForro);
         const qtb = linha.querySelector('td:nth-child(12) input'); if(qtb) qtb.value = fmtDec(resultados.qtdTecidoBlackout);
 
-        const ora = linha.querySelector('td:nth-child(18) input'); if(ora) ora.value = formatadorReaisCalc.format(resultados.orcamentoAntecipado ?? 0);
-        const orx = linha.querySelector('td:nth-child(19) input'); if(orx) orx.value = formatadorReaisCalc.format(resultados.orcamento12x ?? 0);
+        const valorAVista = resultados.orcamentoBase ?? 0;
+        const valorParcelado = valorAVista * (1 + taxaParcelamento);
+
+        const ora = linha.querySelector('td:nth-child(18) input'); if(ora) ora.value = formatadorReaisCalc.format(valorAVista);
+        const orx = linha.querySelector('td:nth-child(19) input'); if(orx) orx.value = formatadorReaisCalc.format(valorParcelado);
 
     } catch (error) {
         console.error("Erro ao calcular orçamento:", error.message);
@@ -397,8 +435,7 @@ async function salvarEstadoCalculadora(clientId) {
     const estadoCompleto = {
         ambientes: dadosOrcamento,
         markup: elements.calculatorMarkupInput?.value || '100',
-        descAnt: elements.calculatorDescAntInput?.value || '0',
-        desc12x: elements.calculatorDesc12xInput?.value || '0',
+        parcelamento: elements.selectParcelamentoGlobal?.value || 'Débito',
     };
 
      try {
@@ -451,18 +488,18 @@ async function carregarEstadoCalculadora(clientId) {
              console.log("Nenhum orçamento salvo ou formato inválido. Adicionando uma linha padrão.");
              adicionarLinhaCalculadora(null);
              if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
-             if(elements.calculatorDescAntInput) elements.calculatorDescAntInput.value = '0';
-             if(elements.calculatorDesc12xInput) elements.calculatorDesc12xInput.value = '0';
+             if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = 'Débito';
+             atualizarHeaderParcelado();
              triggerAutoSave();
              return;
         }
 
         if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = estado.markup || '100';
-        const descAntVal = parseFloat(estado.descAnt) || 0;
-        if(elements.calculatorDescAntInput) elements.calculatorDescAntInput.value = descAntVal !== 0 ? descAntVal : '';
         
-        const desc12xVal = parseFloat(estado.desc12x) || 0;
-        if(elements.calculatorDesc12xInput) elements.calculatorDesc12xInput.value = desc12xVal !== 0 ? desc12xVal : '';
+        if(elements.selectParcelamentoGlobal) {
+            elements.selectParcelamentoGlobal.value = estado.parcelamento || 'Débito';
+        }
+        atualizarHeaderParcelado(); 
 
         if (estado.ambientes.length > 0) {
             estado.ambientes.forEach(estadoLinha => {
@@ -508,6 +545,7 @@ export async function showCalculatorView(clientId, clientName) {
     try {
         await aguardarDadosBase();
         await carregarEstadoCalculadora(clientId);
+        atualizarHeaderParcelado(); 
 
     } catch (err) {
         console.error("Erro ao preparar calculadora para o cliente:", err);

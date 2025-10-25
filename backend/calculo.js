@@ -24,8 +24,6 @@ function calcularOrcamento(dados) {
   const valorOutros = parseFloat(dados.valorOutros) || 0;
 
   const markup_Base = parseFloat(dados.markupBase) || 1.0; 
-  const desconto_Antecipado_Percent = parseFloat(dados.descontoAntecipado) || 0; 
-  const campoEntrada30_Percent = parseFloat(dados.desconto12x) || 0; 
   const fatorMarkupTotal = 1 + markup_Base;
   
   let R = 0; 
@@ -53,15 +51,11 @@ function calcularOrcamento(dados) {
   
   const custoComMarkup = CUSTO_TOTAL_BASE * fatorMarkupTotal;
 
-  const totalAntecipado_Final = custoComMarkup * (1 - desconto_Antecipado_Percent);
-  const total12x_Final = custoComMarkup * (1 - campoEntrada30_Percent);
-  
   return {
     qtdTecidoCortina: R,
     qtdTecidoForro: Z,
     qtdTecidoBlackout: AK,
-    orcamentoAntecipado: ARREDONDAR_PARA_CIMA(totalAntecipado_Final),
-    orcamento12x: ARREDONDAR_PARA_CIMA(total12x_Final)
+    orcamentoBase: ARREDONDAR_PARA_CIMA(custoComMarkup)
   };
 }
 
