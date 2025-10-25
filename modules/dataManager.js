@@ -44,12 +44,28 @@ export function renderizarTabelaTecidos(tecidos) {
     if (!tbody) return;
     tbody.innerHTML = '';
     const tecidosFiltrados = (tecidos || []).filter(t => t.produto !== 'SEM TECIDO' && t.produto !== '-');
-    if (tecidosFiltrados.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Nenhum tecido encontrado.</td></tr>'; return; }
+    if (tecidosFiltrados.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum tecido encontrado.</td></tr>'; 
+        return; 
+    }
     const formatBRL = (v) => v != null ? parseFloat(v).toFixed(2).replace('.', ',') : '0,00';
     tecidosFiltrados.forEach(d => {
         const row = tbody.insertRow();
-        row.dataset.id = d.id; row.dataset.produto = d.produto; row.dataset.largura = d.largura || 0; row.dataset.atacado = d.atacado || 0;
-        row.innerHTML = `<td>${d.produto}</td><td>${formatBRL(d.largura)}</td><td>R$ ${formatBRL(d.atacado)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+        row.dataset.id = d.id; 
+        row.dataset.produto = d.produto; 
+        row.dataset.largura = d.largura || 0; 
+        row.dataset.atacado = d.atacado || 0;
+        row.dataset.favorito = d.favorito || false; 
+
+        const favoritoClass = d.favorito ? 'favorito' : '';
+        const favoritoIcon = d.favorito ? '★' : '☆';
+
+        row.innerHTML = `
+            <td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td>
+            <td>${d.produto}</td>
+            <td>${formatBRL(d.largura)}</td>
+            <td>R$ ${formatBRL(d.atacado)}</td>
+            <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
 export function renderizarTabelaConfeccao(opcoes) {
@@ -124,6 +140,35 @@ function setupCRUD(tabela) {
         if (!row || !row.dataset.id) return;
         const id = row.dataset.id;
         const nome = row.dataset[chaveNome];
+        if (e.target.classList.contains('btn-favorito')) {
+            if (tabela !== 'tecidos') return; 
+
+            const starElement = e.target;
+            const isFavorito = row.dataset.favorito === 'true';
+            const newStatus = !isFavorito;
+            
+            starElement.textContent = newStatus ? '★' : '☆';
+            starElement.classList.toggle('favorito', newStatus);
+            row.dataset.favorito = newStatus;
+
+            _supabase.from('tecidos').update({ favorito: newStatus }).match({ id: id })
+                .then(async ({ error }) => {
+                    if (error) {
+                        console.error('Erro ao favoritar:', error);
+                        showToast('Erro ao favoritar item.', true);
+                        starElement.textContent = isFavorito ? '★' : '☆';
+                        starElement.classList.toggle('favorito', isFavorito);
+                        row.dataset.favorito = isFavorito;
+                    } else {
+                        showToast(newStatus ? 'Tecido favoritado!' : 'Tecido desfavoritado.');
+                        const itemInData = dataArrays.tecidos.find(t => t.id == id);
+                        if (itemInData) itemInData.favorito = newStatus;
+
+                        document.dispatchEvent(new CustomEvent('tabelaTecidosSortRequest'));
+                    }
+                });
+            return; 
+        }
 
         if (e.target.classList.contains('btn-excluir')) {
             itemParaExcluirInfo = { id, nome, tabela, elemento: row };

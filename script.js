@@ -11,6 +11,7 @@ let trilhoDataGlobal = [];
 let currentClientIdGlobal = { value: null };
 let isDataLoadedFlag = { value: false }; 
 let itemParaExcluirGenericoInfo = null;
+let triggerTecidosSort = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -176,7 +177,13 @@ if (elements.btnThemeToggle) {
         }
         openModal(elements.modalExcluirGenerico);
     };
-
+document.addEventListener('tabelaTecidosSortRequest', () => {
+        if (triggerTecidosSort) {
+            triggerTecidosSort(); 
+        } else {
+            console.warn("triggerTecidosSort não está definido.");
+        }
+    });
     console.log("Iniciando carregamento de todos os dados...");
     Promise.all([
         carregarClientes(),
@@ -214,6 +221,7 @@ function showClientListLocal() {
     if (document.getElementById('calculator-view')) document.getElementById('calculator-view').style.display = 'none';
     currentClientIdGlobal.value = null;
 }
+
 function setupTableSorting(tableId, dataArray, renderFunction) {
     const table = document.getElementById(tableId);
     if (!table) {
@@ -222,6 +230,34 @@ function setupTableSorting(tableId, dataArray, renderFunction) {
     }
     const headers = table.querySelectorAll('th.sortable-header');
     let sortConfig = { key: null, asc: true };
+
+    const sortAndRender = () => {
+        dataArray.sort((a, b) => {
+            if (a.hasOwnProperty('favorito') && b.hasOwnProperty('favorito')) {
+                if (a.favorito && !b.favorito) return -1;
+                if (!a.favorito && b.favorito) return 1;
+            }
+            
+            if (sortConfig.key) {
+                let valA = a[sortConfig.key];
+                let valB = b[sortConfig.key];
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return sortConfig.asc ? valA - valB : valB - valA;
+                }
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return sortConfig.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                if (valA > valB || valA === null) return sortConfig.asc ? 1 : -1;
+                if (valA < valB || valB === null) return sortConfig.asc ? -1 : 1;
+            }
+            return 0;
+        });
+        renderFunction(dataArray);
+    };
+
+    if (tableId === 'tabela-tecidos') {
+        triggerTecidosSort = sortAndRender;
+    }
 
     headers.forEach(header => {
         header.addEventListener('click', () => {
@@ -249,24 +285,18 @@ function setupTableSorting(tableId, dataArray, renderFunction) {
             }
             
             sortConfig = { key: sortKey, asc: newAsc };
-
-            dataArray.sort((a, b) => {
-                let valA = a[sortKey];
-                let valB = b[sortKey];
-                if (typeof valA === 'number' && typeof valB === 'number') {
-                    return newAsc ? valA - valB : valB - valA;
-                }
-                if (typeof valA === 'string' && typeof valB === 'string') {
-                    return newAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
-                if (valA > valB || valA === null) return newAsc ? 1 : -1;
-                if (valA < valB || valB === null) return newAsc ? -1 : 1;
-                return 0;
-            });
-
-            renderFunction(dataArray);
+            sortAndRender(); 
         });
     });
 
-    renderFunction(dataArray);
+    if (headers.length > 0) {
+        const initialSortKey = headers[0].dataset.sortKey; 
+        if (initialSortKey) {
+            sortConfig = { key: initialSortKey, asc: true };
+            headers[0].classList.add('asc');
+            const arrowSpan = headers[0].querySelector('span.sort-arrow');
+            if (arrowSpan) arrowSpan.textContent = ' ▲';
+        }
+    }
+    sortAndRender(); 
 }

@@ -614,6 +614,40 @@ body.dark-mode #btn-abrir-config-calculadora {
      color: #ffffff;
 }
 
+.col-favorito-acao {
+    width: 40px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.btn-favorito {
+    cursor: pointer;
+    font-size: 1.5em;
+    color: #ccc;
+    display: inline-block;
+    padding: 0 5px;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-favorito:hover {
+    color: #a0a0a0;
+    transform: scale(1.2);
+}
+
+.btn-favorito.favorito {
+    color: #ffc107; 
+}
+.btn-favorito.favorito:hover {
+    color: #e0a800; 
+}
+
+#tabela-tecidos th:first-child {
+     width: 40px;
+     text-align: center;
+     font-size: 1.2em;
+     color: #6c757d;
+}
+
 @keyframes spin-icon {
     from {
         transform: rotate(0deg) scale(0.9);

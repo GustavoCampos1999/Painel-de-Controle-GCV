@@ -2,7 +2,7 @@ import { showToast, openModal, closeModal } from './ui.js';
 import { DADOS_FRANZ_CORTINA, DADOS_FRANZ_BLACKOUT, DADOS_INSTALACAO, DADOS_FRETE } from '../data/opcoes.js';
 
 const TAXAS_PARCELAMENTO = {
-    'Débito': 0.0099, '1x': 0.0299, '2x': 0.0409, '3x': 0.0478, '4x': 0.0547, '5x': 0.0614,
+    'DÉBITO': 0.0099, '1x': 0.0299, '2x': 0.0409, '3x': 0.0478, '4x': 0.0547, '5x': 0.0614, 
     '6x': 0.0681, '7x': 0.0767, '8x': 0.0833, '9x': 0.0898, '10x': 0.0963, '11x': 0.1026,
     '12x': 0.1090, '13x': 0.1152, '14x': 0.1214, '15x': 0.1276, '16x': 0.1337, '17x': 0.1397,
     '18x': 0.1457
@@ -108,7 +108,7 @@ function preencherSelectParcelamento() {
 
         select.appendChild(option);
     }
-    select.value = 'Débito';
+    select.value = 'DÉBITO'; 
 }
 
 function atualizarHeaderParcelado() {
@@ -182,7 +182,6 @@ function preencherSelectCalculadora(selectElement, dados, usarChaves = false) {
     }
 }
 
-
 function preencherSelectTecidosCalculadora(selectElement) {
     if (!selectElement) return;
     selectElement.innerHTML = '';
@@ -194,15 +193,19 @@ function preencherSelectTecidosCalculadora(selectElement) {
 
     tecidos
         .filter(t => t.produto && t.produto !== 'SEM TECIDO' && t.produto !== '-')
-        .sort((a, b) => a.produto.localeCompare(b.produto))
+        .sort((a, b) => {
+            if (a.favorito && !b.favorito) return -1;
+            if (!a.favorito && b.favorito) return 1;
+            return a.produto.localeCompare(b.produto);
+        })
         .forEach(tecido => {
-            const option = new Option(tecido.produto, tecido.produto);
+            const optionText = tecido.produto; 
+            const option = new Option(optionText, tecido.produto);
             selectElement.appendChild(option);
     });
 
     selectElement.value = 'SEM TECIDO';
 }
-
 
 function adicionarLinhaCalculadora(estadoLinha = null) {
     if (!elements.calculatorTableBody) return;
@@ -343,7 +346,7 @@ async function calcularOrcamentoLinha(linha) {
     const vOutrosN = parseFloat(vOutrosL) || 0;
 
     const markupP = parseFloat(elements.calculatorMarkupInput?.value) || 100;
-    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'Débito';
+    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
     const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
 
     const valorConfecao = obterValorRealSelect(linha.querySelector('.select-confecao'));
@@ -435,7 +438,7 @@ async function salvarEstadoCalculadora(clientId) {
     const estadoCompleto = {
         ambientes: dadosOrcamento,
         markup: elements.calculatorMarkupInput?.value || '100',
-        parcelamento: elements.selectParcelamentoGlobal?.value || 'Débito',
+        parcelamento: elements.selectParcelamentoGlobal?.value || 'DÉBITO', 
     };
 
      try {
@@ -488,7 +491,7 @@ async function carregarEstadoCalculadora(clientId) {
              console.log("Nenhum orçamento salvo ou formato inválido. Adicionando uma linha padrão.");
              adicionarLinhaCalculadora(null);
              if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
-             if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = 'Débito';
+             if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = 'DÉBITO'; 
              atualizarHeaderParcelado();
              triggerAutoSave();
              return;
@@ -497,7 +500,7 @@ async function carregarEstadoCalculadora(clientId) {
         if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = estado.markup || '100';
         
         if(elements.selectParcelamentoGlobal) {
-            elements.selectParcelamentoGlobal.value = estado.parcelamento || 'Débito';
+            elements.selectParcelamentoGlobal.value = estado.parcelamento || 'DÉBITO'; 
         }
         atualizarHeaderParcelado(); 
 
