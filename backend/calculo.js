@@ -28,7 +28,9 @@ function calcularOrcamento(dados) {
   
   let R = 0; 
   if (largura > 0 && altura > 0 && tecidoCortinaLargura > 0) {
-    if (tecidoCortinaLargura - altura < 0.15) { R = ARREDONDAR_PARA_CIMA(largura * franzCortina / tecidoCortinaLargURA) * (altura + 0.2); }
+    if (tecidoCortinaLargura - altura < 0.15) { 
+        R = ARREDONDAR_PARA_CIMA(largura * franzCortina / tecidoCortinaLargura) * (altura + 0.2); 
+    }
     else { R = largura * franzCortina; }
   }
   let Z = 0; 
@@ -48,16 +50,14 @@ function calcularOrcamento(dados) {
   const custoTotalTrilho = valorUnitarioTrilho * largura;
 
   const CUSTO_BASE_MARCADO = custoTotalTecidos + custoTotalConfecao + custoTotalTrilho + valorOutros;
-
   const custoComMarkup = CUSTO_BASE_MARCADO * fatorMarkupTotal;
-
-  const CUSTO_FINAL_TOTAL = custoComMarkup + valorInstalacao + valorFrete; 
+  const CUSTO_FINAL_TOTAL = custoComMarkup + valorInstalacao + valorFrete;
 
   return {
     qtdTecidoCortina: R,
     qtdTecidoForro: Z,
     qtdTecidoBlackout: AK,
-    orcamentoBase: ARREDONDAR_PARA_CIMA(CUSTO_FINAL_TOTAL) 
+    orcamentoBase: ARREDONDAR_PARA_CIMA(CUSTO_FINAL_TOTAL)
   };
 }
 
