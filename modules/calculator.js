@@ -66,13 +66,9 @@ if (elements.btnVoltarClientes) {
                 elements.saveStatusElement.className = 'save-status saving';
             }
             
-            await salvarEstadoCalculadora(currentClientIdRef.value);
-            
-            currentClientIdRef.value = null;
-            if (elements.clientListView) elements.clientListView.style.display = 'block';
-            if (elements.calculatorView) elements.calculatorView.style.display = 'none';
-            
+          await salvarEstadoCalculadora(currentClientIdRef.value);
             document.dispatchEvent(new CustomEvent('clienteAtualizado'));
+            window.location.hash = '';
         });
 
         elements.btnVoltarClientes.addEventListener('mouseover', () => {

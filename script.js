@@ -14,12 +14,60 @@ let itemParaExcluirGenericoInfo = null;
 let triggerTecidosSort = null;
 let triggerConfeccaoSort = null; 
 let triggerTrilhoSort = null; 
+let elements = {}; 
+
+function showClientListLocal() {
+    if (document.getElementById('client-list-view')) document.getElementById('client-list-view').style.display = 'block';
+    if (document.getElementById('calculator-view')) document.getElementById('calculator-view').style.display = 'none';
+    currentClientIdGlobal.value = null;
+    
+    if (window.location.hash) {
+        window.location.hash = '';
+    }
+}
+
+function handleRouting() {
+    const hash = window.location.hash;
+
+    if (hash.startsWith('#cliente/')) {
+        const clientId = hash.split('/')[1];
+        if (!clientId) {
+            showClientListLocal();
+            return;
+        }
+
+        const card = elements.listaClientes.querySelector(`.cliente-card[data-id="${clientId}"]`);
+        
+        if (card) {
+            const clientName = card.dataset.nome;
+            currentClientIdGlobal.value = clientId;
+            showCalculatorView(clientId, clientName);
+        } else {
+            console.warn(`Roteador: Cliente ${clientId} não encontrado no DOM. Recarregando clientes...`);
+            carregarClientes().then(() => {
+                 const cardRetry = elements.listaClientes.querySelector(`.cliente-card[data-id="${clientId}"]`);
+                 if(cardRetry) {
+                     const clientName = cardRetry.dataset.nome;
+                     currentClientIdGlobal.value = clientId;
+                     showCalculatorView(clientId, clientName);
+                 } else {
+                    console.error(`Cliente ${clientId} não encontrado.`);
+                    showToast(`Cliente com ID ${clientId} não encontrado.`, 'error');
+                    showClientListLocal();
+                 }
+            });
+        }
+    } else {
+        showClientListLocal();
+    }
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     
     const loadingOverlay = document.getElementById('loading-overlay');
     
-    const elements = {
+    elements = {
         toast: document.getElementById('toast-notification'),
         userEmail: document.getElementById('user-email'),
         btnLogout: document.getElementById('btn-logout'),
@@ -136,15 +184,11 @@ if (elements.btnThemeToggle) {
     initDataManager(elements, dataRefs);
     initCalculator(elements, calculatorDataRefs, currentClientIdGlobal, isDataLoadedFlag); 
 
-    document.addEventListener('clienteSelecionado', (event) => {
-        const { clientId, clientName } = event.detail;
-        currentClientIdGlobal.value = clientId;
-        showCalculatorView(clientId, clientName);
-    });
-document.addEventListener('clienteAtualizado', () => {
+    document.addEventListener('clienteAtualizado', () => {
         console.log("Evento 'clienteAtualizado' recebido, recarregando lista de clientes.");
         carregarClientes(); 
     });
+
     if (elements.btnAbrirConfigCalculadora) {
         elements.btnAbrirConfigCalculadora.addEventListener('click', () => {
             openModal(elements.modalConfigCalculadora);
@@ -164,7 +208,7 @@ document.addEventListener('clienteAtualizado', () => {
             
             if (error) {
                 console.error(`Erro ao excluir ${tabela}:`, error);
-                showToast(`Erro ao excluir: ${error.message}`, true);
+                showToast(`Erro ao excluir: ${error.message}`, 'error');
             } else {
                 showToast('Item excluído com sucesso.');
                 itemParaExcluirGenericoInfo.elemento?.remove();
@@ -187,7 +231,7 @@ document.addEventListener('clienteAtualizado', () => {
         }
         openModal(elements.modalExcluirGenerico);
     };
-document.addEventListener('tabelaTecidosSortRequest', () => {
+    document.addEventListener('tabelaTecidosSortRequest', () => {
         if (triggerTecidosSort) {
             triggerTecidosSort(); 
         } else {
@@ -231,22 +275,20 @@ document.addEventListener('tabelaTecidosSortRequest', () => {
             loadingOverlay.style.opacity = '0';
             setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500); 
         }
+        
+        console.log("Iniciando roteador...");
+        handleRouting();
+        window.addEventListener('hashchange', handleRouting);
 
     }).catch(error => {
         console.error("Erro no fluxo de carregamento inicial:", error);
-        showToast("Erro crítico ao inicializar. Verifique o console.", true);
+        showToast("Erro crítico ao inicializar. Verifique o console.", 'error');
         if (loadingOverlay) {
             loadingOverlay.innerHTML = '<p style="color: red; padding: 20px; text-align: center;">Erro crítico ao carregar dados.<br>Verifique o console e sua conexão com o backend.</p>';
         }
     });
 
 });
-
-function showClientListLocal() {
-    if (document.getElementById('client-list-view')) document.getElementById('client-list-view').style.display = 'block';
-    if (document.getElementById('calculator-view')) document.getElementById('calculator-view').style.display = 'none';
-    currentClientIdGlobal.value = null;
-}
 
 function setupTableSorting(tableId, dataArray, renderFunction) {
     const table = document.getElementById(tableId);

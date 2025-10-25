@@ -138,11 +138,10 @@ function setupAcoesCardCliente() {
                 formEditarClienteEl.querySelector('#edit-email').value = card.dataset.email;
                 formEditarClienteEl.querySelector('#edit-endereco').value = card.dataset.endereco;
             }
-            openModal(modalEditarClienteEl);
+            Modal(modalEditarClienteEl);
             return;
         }
-        
-        document.dispatchEvent(new CustomEvent('clienteSelecionado', { detail: { clientId, clientName } }));
+        window.location.hash = `#cliente/${clientId}`;
     });
 }
 
