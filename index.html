@@ -44,6 +44,17 @@
                         <button id="btn-abrir-modal-add" class="btn-adicionar">Adicionar Novo Cliente</button>
                     </div>
                     <input type="text" id="input-pesquisa" placeholder="Pesquisar por nome...">
+                   <div class="filter-container">
+                        <select id="select-client-filter" class="client-filter-select">
+                            <option value="nome_asc">Ordenar por Nome (A-Z)</option>
+                            <option value="venda_realizada_true">Vendas Concluídas</option>
+                            <option value="venda_realizada_false">Vendas não Concluídas</option>
+                            <option value="updated_at_desc">Editados Recentemente</option>
+                            <option value="created_at_desc">Criados Recentemente</option>
+                            <option value="updated_at_asc">Últimos Editados</option>
+                            <option value="created_at_asc">Últimos Criados</option>
+                        </select>
+                    </div>
                     <div id="lista-clientes">
                         </div>
                 </div>
@@ -216,8 +227,7 @@
                      <section class="gerenciar-dados-secao">
                         <div class="secao-header">
                             <h2>Gerenciar Tipos de Trilho</h2>
-                            <button id="btn-abrir-modal-add-trilho" class_adicionar">Adicionar Trilho</button>
-                        </div>
+                            <button id="btn-abrir-modal-add-trilho" class="btn-adicionar">Adicionar Trilho</button> </div>
                         <input type="text" id="input-pesquisa-trilho" class="input-pesquisa-dados" placeholder="Pesquisar por nome da opção...">
                         <table id="tabela-trilho">
                             <thead>

@@ -5,6 +5,7 @@ let listaClientesEl, inputPesquisaClientesEl, formAddClienteEl, formEditarClient
 let modalAddClienteEl, modalEditarClienteEl, modalExcluirClienteEl;
 let btnConfirmarExcluirClienteEl;
 let clienteParaExcluirInfo = null; 
+let btnToggleFilterEl, selectClientFilterEl;
 
 export function initCRM(elements) {
     listaClientesEl = elements.listaClientes;
@@ -15,22 +16,59 @@ export function initCRM(elements) {
     modalEditarClienteEl = elements.modalEditarCliente;
     modalExcluirClienteEl = elements.modalExcluirCliente;
     btnConfirmarExcluirClienteEl = elements.btnConfirmarExcluirCliente;
+    btnToggleFilterEl = elements.btnToggleFilter;
+    selectClientFilterEl = elements.selectClientFilter;
 
     setupAddClienteButton();
     setupAddClienteForm();
     setupPesquisaClientes();
     setupAcoesCardCliente();
     setupModaisCliente();
+    setupFiltroClientes(); 
 }
 
-export async function carregarClientes() {
-    const { data: clientes, error } = await _supabase.from('clientes').select('*').order('nome', { ascending: true });
+export async function carregarClientes(filterOptions = {}) {
+    let query = _supabase.from('clientes').select('*');
+
+    if (filterOptions.venda_realizada === true) {
+        query = query.eq('venda_realizada', true);
+    } else if (filterOptions.venda_realizada === false) {
+        query = query.eq('venda_realizada', false);
+    }
+        if (filterOptions.searchTerm) {
+         query = _supabase.from('clientes').select('*').ilike('nome', `%${filterOptions.searchTerm}%`);
+    }
+
+    const orderBy = filterOptions.orderBy || 'nome';
+    const ascending = filterOptions.ascending !== false; 
+    query = query.order(orderBy, { ascending: ascending });
+
+
+    const { data: clientes, error } = await query;
     
     if (error) {
-        console.error('Erro ao carregar clientes:', error); 
-        showToast("Erro ao carregar clientes.", "error"); 
+        console.error('Erro ao carregar/filtrar clientes:', error); 
+        showToast("Erro ao carregar/filtrar clientes.", "error"); 
+        renderizarListaClientes([]); 
     } else {
         renderizarListaClientes(clientes || []);
+    }
+}
+
+function formatarDataHora(isoString) {
+    if (!isoString) return 'N/A';
+    try {
+        const data = new Date(isoString);
+        return data.toLocaleString('pt-BR', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    } catch (e) {
+        console.warn("Erro ao formatar data:", isoString, e);
+        return 'Data inválida';
     }
 }
 
@@ -38,7 +76,7 @@ function renderizarListaClientes(clientes) {
     if (!listaClientesEl) { console.warn("Elemento listaClientes não encontrado."); return; }
     listaClientesEl.innerHTML = '';
     if (!clientes || clientes.length === 0) { 
-        listaClientesEl.innerHTML = '<p style="text-align: center; color: #777;">Nenhum cliente cadastrado.</p>'; 
+        listaClientesEl.innerHTML = '<p style="text-align: center; color: #777;">Nenhum cliente encontrado com os filtros atuais.</p>'; 
         return; 
     }
 
@@ -53,12 +91,25 @@ function renderizarListaClientes(clientes) {
         card.dataset.telefone = cliente.telefone || '';
         card.dataset.email = cliente.email || '';
         card.dataset.endereco = cliente.endereco || '';
+        card.dataset.created = cliente.created_at || ''; 
+        card.dataset.updated = cliente.updated_at || '';
         
+        const criadoEm = formatarDataHora(cliente.created_at);
+        const atualizadoEm = formatarDataHora(cliente.updated_at);
+
         card.innerHTML = `
-            <div class="cliente-info">
-                <p><strong>${cliente.nome || 'Sem nome'}</strong></p>
-                <span>${cliente.telefone || 'Sem telefone'} | ${cliente.email || 'Sem email'}</span>
-                <p style="font-size: 12px; color: #555; margin-top: 5px;">${cliente.endereco || 'Sem endereço'}</p>
+            <div class="card-content">
+                <div class="card-header">
+                    <p class="cliente-nome"><strong>${cliente.nome || 'Sem nome'}</strong></p>
+                    <div class="cliente-timestamps">
+                        <span class="timestamp updated">Última Edição: ${atualizadoEm}</span>
+                        <span class="timestamp created">Criado: ${criadoEm}</span>
+                    </div>
+                </div>
+                <div class="cliente-details">
+                    <span>${cliente.telefone || 'Sem telefone'} | ${cliente.email || 'Sem email'}</span>
+                    <p>${cliente.endereco || 'Sem endereço'}</p>
+                </div>
             </div>
             <div class="cliente-acoes">
                 <button class="btn-editar">Editar</button>
@@ -97,7 +148,7 @@ function setupAddClienteForm() {
         else { 
             formAddClienteEl.reset(); 
             closeModal(modalAddClienteEl); 
-            await carregarClientes();
+            await carregarClientes(); 
             showToast('✅ Cliente cadastrado!'); 
         }
     });
@@ -107,13 +158,72 @@ function setupPesquisaClientes() {
     if (!inputPesquisaClientesEl) return;
     inputPesquisaClientesEl.addEventListener('input', () => { 
         const termo = inputPesquisaClientesEl.value.trim().toLowerCase();
-         _supabase.from('clientes').select('*').ilike('nome', `%${termo}%`).order('nome', { ascending: true })
-         .then(({ data: clientes, error }) => {
-             if (error) console.error('Erro ao pesquisar clientes:', error);
-             else renderizarListaClientes(clientes || []);
-         });
+        if (!termo) {
+            aplicarFiltroEOrdenacao(); 
+        } else {
+             carregarClientes({ searchTerm: termo, orderBy: 'nome', ascending: true }); 
+        }
     });
 }
+
+function setupFiltroClientes() {
+    if (btnToggleFilterEl) {
+        btnToggleFilterEl.addEventListener('click', () => {
+            if (selectClientFilterEl) {
+                const display = selectClientFilterEl.style.display;
+                selectClientFilterEl.style.display = display === 'none' ? 'block' : 'none';
+            }
+        });
+    }
+
+    if (selectClientFilterEl) {
+        selectClientFilterEl.addEventListener('change', () => {
+            if (inputPesquisaClientesEl) {
+                 inputPesquisaClientesEl.value = '';
+            }
+            aplicarFiltroEOrdenacao();
+        });
+    }
+}
+
+function aplicarFiltroEOrdenacao() {
+    if (!selectClientFilterEl) {
+        carregarClientes(); 
+        return;
+    }
+
+    const valorSelecionado = selectClientFilterEl.value;
+    let options = {};
+
+    switch (valorSelecionado) {
+        case 'nome_asc':
+            options = { orderBy: 'nome', ascending: true };
+            break;
+        case 'venda_realizada_true':
+            options = { venda_realizada: true, orderBy: 'nome', ascending: true };
+            break;
+        case 'venda_realizada_false':
+            options = { venda_realizada: false, orderBy: 'nome', ascending: true };
+            break;
+        case 'updated_at_desc':
+            options = { orderBy: 'updated_at', ascending: false };
+            break;
+        case 'created_at_desc':
+            options = { orderBy: 'created_at', ascending: false };
+            break;
+        case 'updated_at_asc':
+            options = { orderBy: 'updated_at', ascending: true };
+            break;
+        case 'created_at_asc':
+            options = { orderBy: 'created_at', ascending: true };
+            break;
+        default:
+            options = { orderBy: 'nome', ascending: true }; 
+    }
+    
+    carregarClientes(options);
+}
+
 
 function setupAcoesCardCliente() {
     if (!listaClientesEl) return;
@@ -138,7 +248,7 @@ function setupAcoesCardCliente() {
                 formEditarClienteEl.querySelector('#edit-email').value = card.dataset.email;
                 formEditarClienteEl.querySelector('#edit-endereco').value = card.dataset.endereco;
             }
-            Modal(modalEditarClienteEl);
+            openModal(modalEditarClienteEl); 
             return;
         }
         window.location.hash = `#cliente/${clientId}`;
@@ -169,7 +279,7 @@ function setupModaisCliente() {
         }
         else { 
             closeModal(modalEditarClienteEl); 
-            await carregarClientes(); 
+            aplicarFiltroEOrdenacao(); 
             showToast('✅ Dados salvos!'); 
         }
     });
@@ -188,7 +298,7 @@ function setupModaisCliente() {
             showToast('Erro ao excluir cliente.', "error"); 
         }
         else { 
-            cardElemento.remove(); 
+            cardElemento.remove();
             showToast('Cliente excluído.'); 
         }
         closeModal(modalExcluirClienteEl); 

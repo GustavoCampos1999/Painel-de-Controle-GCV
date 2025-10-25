@@ -75,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
         calculatorView: document.getElementById('calculator-view'),
         listaClientes: document.getElementById('lista-clientes'),
         inputPesquisaClientes: document.getElementById('input-pesquisa'),
+        btnToggleFilter: document.getElementById('btn-toggle-filter'),
+        selectClientFilter: document.getElementById('select-client-filter'),
         modalAddCliente: document.getElementById('modal-add-cliente'),
         formAddCliente: document.getElementById('form-add-cliente'),
         modalEditarCliente: document.getElementById('modal-editar-cliente'),
