@@ -1,3 +1,7 @@
+function ARREDONDAR_PARA_CIMA(num) {
+  return Math.ceil(num);
+}
+
 function calcularOrcamento(dados) {
 
   const largura = parseFloat(dados.largura) || 0;
@@ -55,3 +59,7 @@ function calcularOrcamento(dados) {
     orcamentoBase: ARREDONDAR_PARA_CIMA(CUSTO_FINAL_TOTAL)
   };
 }
+
+module.exports = {
+  calcularOrcamento
+};
