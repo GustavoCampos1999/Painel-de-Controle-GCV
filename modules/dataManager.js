@@ -3,18 +3,65 @@ import { showToast, openModal, closeModal } from './ui.js';
 
 let elements = {};
 let dataArrays = {}; 
-let itemParaExcluirInfo = null; 
 
+function formatDecimal(value, decimalPlaces = 2) {
+    const num = parseFloat(String(value).replace(',', '.')); 
+    if (isNaN(num)) {
+        return (0).toFixed(decimalPlaces).replace('.', ',');
+    }
+    return num.toFixed(decimalPlaces).replace('.', ',');
+}
+
+function setupInputFormatting(inputId, formatType) {
+    const inputElement = document.getElementById(inputId);
+    if (!inputElement) {
+        return;
+    }
+
+    const decimalPlaces = (formatType === 'measure') ? 3 : 2;
+    const prefix = (formatType === 'currency') ? 'R$ ' : '';
+
+    inputElement.addEventListener('focus', (e) => {
+        let value = e.target.value.replace(prefix, '').trim();
+        let num = parseFloat(String(value).replace(',', '.'));
+        if (!isNaN(num)) { 
+            e.target.value = String(num).replace('.', ',');
+        } else {
+            e.target.value = '';
+        }
+    });
+    inputElement.addEventListener('blur', (e) => {
+        let value = e.target.value;
+        let num = parseFloat(String(value).replace(',', '.')) || 0;
+    
+        e.target.value = prefix + num.toFixed(decimalPlaces).replace('.', ',');
+    });
+}
 export function initDataManager(domElements, dataRefs) {
     elements = domElements;
     dataArrays = dataRefs;
-
     setupCRUD('tecidos');
     setupPesquisa('tecidos', 'produto');
     setupCRUD('confeccao');
     setupPesquisa('confeccao', 'opcao');
     setupCRUD('trilho');
     setupPesquisa('trilho', 'opcao');
+    setupCRUD('frete');
+    setupPesquisa('frete', 'opcao');
+    setupCRUD('instalacao');
+    setupPesquisa('instalacao', 'opcao');
+    setupInputFormatting('add-tecido-largura', 'measure');    
+    setupInputFormatting('add-tecido-atacado', 'currency'); 
+    setupInputFormatting('edit-tecido-largura', 'measure');   
+    setupInputFormatting('edit-tecido-atacado', 'currency');  
+    setupInputFormatting('add-confeccao-valor', 'currency');
+    setupInputFormatting('edit-confeccao-valor', 'currency');
+    setupInputFormatting('add-trilho-valor', 'currency');
+    setupInputFormatting('edit-trilho-valor', 'currency');
+    setupInputFormatting('add-frete-valor', 'currency');
+    setupInputFormatting('edit-frete-valor', 'currency');
+    setupInputFormatting('add-instalacao-valor', 'currency');
+    setupInputFormatting('edit-instalacao-valor', 'currency');
 }
 
 export async function carregarDados(tabela, ordenarPor) {
@@ -37,10 +84,42 @@ function getRenderFunction(tabela) {
         case 'tecidos': return renderizarTabelaTecidos;
         case 'confeccao': return renderizarTabelaConfeccao;
         case 'trilho': return renderizarTabelaTrilho;
+        case 'frete': return renderizarTabelaFrete; 
+        case 'instalacao': return renderizarTabelaInstalacao;
         default: return null;
     }
 }
+export function renderizarTabelaFrete(opcoes) {
+     const tbody = elements.tabelaFreteBody;
+     if (!tbody) return;
+    tbody.innerHTML = '';
+    const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
+ if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="2">Nenhuma opção encontrada.</td></tr>'; return; }
 
+filtradas.forEach(d => {
+    const row = tbody.insertRow();
+    row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0;
+    row.innerHTML = `
+        <td>R$ ${formatDecimal(d.valor, 2)}</td>
+        <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+});
+}
+
+export function renderizarTabelaInstalacao(opcoes) {
+     const tbody = elements.tabelaInstalacaoBody;
+     if (!tbody) return;
+    tbody.innerHTML = '';
+    const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
+   if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="2">Nenhuma opção encontrada.</td></tr>'; return; }
+
+filtradas.forEach(d => {
+    const row = tbody.insertRow();
+    row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0;
+    row.innerHTML = `
+        <td>R$ ${formatDecimal(d.valor, 2)}</td>
+        <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+});
+}
 export function renderizarTabelaTecidos(tecidos) {
     const tbody = elements.tabelaTecidosBody;
     if (!tbody) return;
@@ -50,7 +129,7 @@ export function renderizarTabelaTecidos(tecidos) {
         tbody.innerHTML = '<tr><td colspan="5">Nenhum tecido encontrado.</td></tr>'; 
         return; 
     }
-    const formatBRL = (v) => v != null ? parseFloat(v).toFixed(2).replace('.', ',') : '0,00';
+
     tecidosFiltrados.forEach(d => {
         const row = tbody.insertRow();
         row.dataset.id = d.id; 
@@ -65,8 +144,8 @@ export function renderizarTabelaTecidos(tecidos) {
         row.innerHTML = `
             <td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td>
             <td>${d.produto}</td>
-            <td>${formatBRL(d.largura)}</td>
-            <td>R$ ${formatBRL(d.atacado)}</td>
+            <td>${formatDecimal(d.largura, 3)}</td>
+            <td>R$ ${formatDecimal(d.atacado, 2)}</td>
             <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
@@ -75,12 +154,18 @@ export function renderizarTabelaConfeccao(opcoes) {
      if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
-    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="3">Nenhuma opção encontrada.</td></tr>'; return; }
-    const formatBRL = (v) => v != null ? parseFloat(v).toFixed(2).replace('.', ',') : '0,00';
+    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Nenhuma opção encontrada.</td></tr>'; return; }
+
     filtradas.forEach(d => {
         const row = tbody.insertRow();
-        row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0;
-        row.innerHTML = `<td>${d.opcao}</td><td>R$ ${formatBRL(d.valor)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+        row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0; row.dataset.favorito = d.favorito || false;
+        const favoritoClass = d.favorito ? 'favorito' : '';
+        const favoritoIcon = d.favorito ? '★' : '☆';
+        row.innerHTML = `
+            <td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td>
+            <td>${d.opcao}</td>
+            <td>R$ ${formatDecimal(d.valor, 2)}</td>
+            <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
 export function renderizarTabelaTrilho(opcoes) {
@@ -88,12 +173,20 @@ export function renderizarTabelaTrilho(opcoes) {
      if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
-    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="3">Nenhuma opção encontrada.</td></tr>'; return; }
-    const formatBRL = (v) => v != null ? parseFloat(v).toFixed(2).replace('.', ',') : '0,00';
+    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Nenhuma opção encontrada.</td></tr>'; return; }
+
     filtradas.forEach(d => {
         const row = tbody.insertRow();
-        row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0;
-        row.innerHTML = `<td>${d.opcao}</td><td>R$ ${formatBRL(d.valor)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+        row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0; row.dataset.favorito = d.favorito || false;
+        
+        const favoritoClass = d.favorito ? 'favorito' : '';
+        const favoritoIcon = d.favorito ? '★' : '☆';
+        
+        row.innerHTML = `
+            <td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td>
+            <td>${d.opcao}</td>
+            <td>R$ ${formatDecimal(d.valor, 2)}</td>
+            <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
 
@@ -112,16 +205,20 @@ function setupCRUD(tabela) {
     const btnCancelEdit = elements[`btnCancelEdit${nomeCapitalizado}`];
 
     const tbody = elements[`tabela${nomeCapitalizado}Body`];
-
     if (btnAbrirModalAdd) btnAbrirModalAdd.addEventListener('click', () => {
-        if(formAdd) formAdd.reset();
+        if(formAdd) {
+            formAdd.reset();
+            const inputs = formAdd.querySelectorAll('input[name="largura"], input[name="atacado"], input[name="valor"]');
+            inputs.forEach(input => input.value = '');
+        }
         openModal(modalAdd);
     });
     if (formAdd) formAdd.addEventListener('submit', async (e) => {
         e.preventDefault();
         const dados = getFormData(formAdd, tabela);
         const { error } = await _supabase.from(tabela).insert(dados);
-        handleSaveResponse(error, modalAdd, tabela, `✅ ${nomeSingular} adicionado(a)!`, tabela === 'tecidos' ? 'produto' : 'opcao');
+        const orderBy = (tabela === 'frete' || tabela === 'instalacao') ? 'valor' : (tabela === 'tecidos' ? 'produto' : 'opcao');
+        handleSaveResponse(error, modalAdd, tabela, `✅ ${nomeSingular} adicionado(a)!`, orderBy);
     });
     if (btnCancelAdd) btnCancelAdd.addEventListener('click', () => closeModal(modalAdd));
 
@@ -133,7 +230,8 @@ function setupCRUD(tabela) {
         const updateData = {...dados}; 
         delete updateData.id; 
         const { error } = await _supabase.from(tabela).update(updateData).match({ id: id });
-         handleSaveResponse(error, modalEdit, tabela, `✅ ${nomeSingular} atualizado(a)!`, tabela === 'tecidos' ? 'produto' : 'opcao');
+         const orderBy = (tabela === 'frete' || tabela === 'instalacao') ? 'valor' : (tabela === 'tecidos' ? 'produto' : 'opcao');
+         handleSaveResponse(error, modalEdit, tabela, `✅ ${nomeSingular} atualizado(a)!`, orderBy);
     });
     if (btnCancelEdit) btnCancelEdit.addEventListener('click', () => closeModal(modalEdit));
 
@@ -142,8 +240,8 @@ function setupCRUD(tabela) {
         if (!row || !row.dataset.id) return;
         const id = row.dataset.id;
         const nome = row.dataset[chaveNome];
+
         if (e.target.classList.contains('btn-favorito')) {
-            if (tabela !== 'tecidos') return; 
 
             const starElement = e.target;
             const isFavorito = row.dataset.favorito === 'true';
@@ -153,7 +251,7 @@ function setupCRUD(tabela) {
             starElement.classList.toggle('favorito', newStatus);
             row.dataset.favorito = newStatus;
 
-            _supabase.from('tecidos').update({ favorito: newStatus }).match({ id: id })
+            _supabase.from(tabela).update({ favorito: newStatus }).match({ id: id })
                 .then(async ({ error }) => {
                     if (error) {
                         console.error('Erro ao favoritar:', error);
@@ -162,29 +260,43 @@ function setupCRUD(tabela) {
                         starElement.classList.toggle('favorito', isFavorito);
                         row.dataset.favorito = isFavorito;
                     } else {
-                        showToast(newStatus ? 'Tecido favoritado!' : 'Tecido desfavoritado.');
-                        const itemInData = dataArrays.tecidos.find(t => t.id == id);
+                        showToast(newStatus ? 'Item favoritado!' : 'Item desfavoritado.');
+                        const itemInData = dataArrays[tabela].find(t => t.id == id);
                         if (itemInData) itemInData.favorito = newStatus;
 
-                        document.dispatchEvent(new CustomEvent('tabelaTecidosSortRequest'));
+                        document.dispatchEvent(new CustomEvent(`tabela${nomeCapitalizado}SortRequest`));
                     }
                 });
             return; 
         }
 
         if (e.target.classList.contains('btn-excluir')) {
-            itemParaExcluirInfo = { id, nome, tabela, elemento: row };
-            const spanNome = elements.spanItemNomeExcluir;
-            if (spanNome) spanNome.textContent = nome;
-            openModal(elements.modalExcluirGenerico);
+            if (window.prepararExclusaoGenerica) {
+                window.prepararExclusaoGenerica({ id, nome, tabela, elemento: row });
+            } else {
+                console.error("Função prepararExclusaoGenerica não encontrada.");
+                showToast("Erro ao preparar exclusão.", "error");
+            }
         }
+      
         if (e.target.classList.contains('btn-editar')) {
             if(formEdit){
                 formEdit.querySelector(`input[name="id"]`).value = id; 
                 for (const key in row.dataset) {
                    const input = formEdit.querySelector(`[name="${key}"]`);
                    if(input && key !== 'id') {
-                       input.value = row.dataset[key];
+                        
+                        const num = parseFloat(row.dataset[key]) || 0;
+
+                        if (num === 0) {
+                            input.value = ''; 
+                        } else if (key === 'largura') {
+                            input.value = num.toFixed(3).replace('.', ','); 
+                        } else if (key === 'atacado' || key === 'valor') {
+                            input.value = 'R$ ' + num.toFixed(2).replace('.', ','); 
+                        } else {
+                            input.value = row.dataset[key]; 
+                        }
                    } else if (key === 'id' && !formEdit.querySelector(`input[name="id"]`)){
                        console.warn("Input hidden 'id' não encontrado no form de edição para", tabela);
                    }
@@ -201,7 +313,9 @@ function getFormData(form, tabela) {
     formData.forEach((value, key) => {
 
         if (key === 'largura' || key === 'atacado' || key === 'valor') {
-            data[key] = value === '' ? null : (parseFloat(value) || 0); 
+            const valorLimpo = String(value).replace('R$', '').trim();
+            const valorNumerico = valorLimpo.replace(',', '.');
+            data[key] = value === '' ? null : (parseFloat(valorNumerico) || 0); 
         } else {
             data[key] = value;
         }

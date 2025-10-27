@@ -262,6 +262,10 @@
 {
     display: none;
 }
+#input-valor-entrada-global,
+#select-frete-global {
+    width: 100px;
+}
 
 #calc-tabs-container {
     display: flex;
@@ -388,6 +392,7 @@ body.dark-mode .btn-close-aba:hover {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    text-align: center;
 }
 #calculator-summary h3 {
     margin: 0 0 10px 0;
@@ -424,21 +429,21 @@ body.dark-mode #calculator-summary p span {
     border-radius: 6px;
     overflow: hidden; 
     border: 1px solid #ddd;
-    max-width: 400px; 
+    max-width: 100%; 
+    display: inline-flex; 
     margin-left: auto;
     margin-right: auto;
 }
 
 .summary-total-box {
-    flex: 1; 
+    flex: 1 1 auto; 
     padding: 10px;
     text-align: center;
     background-color: #e9ecef; 
 }
-.summary-total-box:first-child {
-    border-right: 1px solid #ddd;
+.summary-total-box + .summary-total-box {
+    border-left: 1px solid #ddd;
 }
-
 .summary-total-box label {
     display: block;
     font-size: 12px;
@@ -454,7 +459,46 @@ body.dark-mode #calculator-summary p span {
     font-weight: bold;
     color: #007bff;
 }
+#summary-total-entrada {
+    background-color: var(--cor-medidas); 
+}
+#summary-total-entrada label {
+    color: #8a6d00;
+}
+#summary-total-entrada span {
+    color: #8a6d00;
+}
+#summary-total-restante {
+    background-color: var(--cor-medidas); 
+}
+#summary-total-restante label {
+    color: #8a6d00;
+}
+#summary-total-restante span {
+    color: #8a6d00;
+}
+body.dark-mode #summary-total-restante {
+    background-color: var(--cor-medidas); 
+}
+body.dark-mode #summary-total-restante label {
+    color: #e6b90f;
+}
+body.dark-mode #summary-total-restante span {
+    color: #e6b90f;
+}
+body.dark-mode #summary-total-entrada {
+    background-color: var(--cor-medidas); 
+}
+body.dark-mode #summary-total-entrada label {
+    color: #e6b90f;
+}
+body.dark-mode #summary-total-entrada span {
+    color: #e6b90f;
+}
 
+body.dark-mode .summary-total-box + .summary-total-box {
+    border-left-color: #444;
+}
 body.dark-mode #calculator-summary {
     border-color: #333;
 }
@@ -528,7 +572,9 @@ body.dark-mode .summary-venda-container {
 body.dark-mode .summary-venda-container label {
     color: #e0e0e0;
 }
-
+.calculator-markups .grupo-markups input.format-money {
+    text-align: right;
+}
 @media (max-width: 768px) {
     .calculator-header {
         display: flex;
@@ -599,10 +645,17 @@ body.dark-mode .summary-venda-container label {
         flex-wrap: wrap;
         justify-content: center;
     }
-    .calculator-markups .grupo-markups input,
-    .calculator-markups .grupo-markups select {
-        width: 150px;
-    }
+   .calculator-markups .grupo-markups input,
+.calculator-markups .grupo-markups select {
+     width: 150px;
+}
+#select-parcelamento-global {
+    width: 170px;
+}
+#input-valor-entrada-global,
+#select-frete-global {
+    width: 100px;
+}
 }
 
 @media (max-width: 480px) {
@@ -674,8 +727,15 @@ body.dark-mode .summary-venda-container label {
         justify-content: center;
         gap: 10px;
     }
-    .calculator-markups .grupo-markups input,
-    .calculator-markups .grupo-markups select {
-        width: 130px;
-    }
+   .calculator-markups .grupo-markups input,
+.calculator-markups .grupo-markups select {
+     width: 130px; 
+}
+#select-parcelamento-global {
+    width: 170px;
+}
+#input-valor-entrada-global,
+#select-frete-global {
+    width: 100px;
+}
 }

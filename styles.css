@@ -747,7 +747,7 @@ body.dark-mode header a#btn-logout:hover {
     color: #e0a800;
 }
 
-#tabela-tecidos th:first-child {
+.gerenciar-dados-secao th[title="Favorito"] {
      width: 40px;
      text-align: center;
      font-size: 1.2em;

@@ -1,7 +1,8 @@
 import { showToast, openModal, closeModal } from './ui.js';
-import { DADOS_FRANZ_CORTINA, DADOS_FRANZ_BLACKOUT, DADOS_INSTALACAO, DADOS_FRETE } from '../data/opcoes.js';
 import { _supabase } from '../supabaseClient.js'; 
 
+const DADOS_FRANZ_CORTINA = ["3.0", "2.8", "2.5", "2.0", "1.5", "1.2", "1.0"];
+const DADOS_FRANZ_BLACKOUT = ["2.5", "2.0", "1.5", "1.2", "1.0"];
 const TAXAS_PARCELAMENTO = {
     'DÉBITO': 0.0099, '1x': 0.0299, '2x': 0.0409, '3x': 0.0478, '4x': 0.0547, '5x': 0.0614, 
     '6x': 0.0681, '7x': 0.0767, '8x': 0.0833, '9x': 0.0898, '10x': 0.0963, '11x': 0.1026,
@@ -44,9 +45,46 @@ const triggerAutoSave = debounce(async () => {
     await salvarEstadoCalculadora(currentClientIdRef.value);
 }, 1000);
 
-
-
 const formatadorReaisCalc = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+function setupDecimalFormatting(inputElement, decimalPlaces = 2) {
+    if (!inputElement) return;
+
+    inputElement.addEventListener('focus', (e) => {
+        let value = e.target.value.replace(',', '.');
+        let num = parseFloat(value);
+        if (!isNaN(num) && num !== 0) {
+            e.target.value = String(num).replace('.', ',');
+        } else {
+            e.target.value = '';
+        }
+    });
+
+    inputElement.addEventListener('blur', (e) => {
+        let value = e.target.value;
+        let num = parseFloat(String(value).replace(',', '.')) || 0;
+        
+        e.target.value = num.toFixed(decimalPlaces).replace('.', ',');
+    });
+}
+
+function setupCurrencyFormatting(inputElement) {
+    if (!inputElement) return;
+
+    inputElement.addEventListener('focus', (e) => {
+        let v = e.target.value.replace("R$", "").trim().replace(/\./g, "").replace(",", ".");
+        let n = parseFloat(v) || 0;
+        e.target.value = (n > 0) ? String(n).replace('.', ',') : '';
+    });
+
+    inputElement.addEventListener('blur', (e) => {
+         let n = parseFloat(String(e.target.value).replace(',', '.')) || 0;
+         e.target.value = n !== 0 ? formatadorReaisCalc.format(n) : '';
+         
+         recalcularTotaisSelecionados(); 
+         triggerAutoSave();
+    });
+}
 
 export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoadedFlag) {
     elements = domElements;
@@ -119,8 +157,7 @@ if (elements.btnVoltarClientes) {
             linhaParaExcluir = null;
         });
     }
-    
-    preencherSelectParcelamento();
+   
     if (elements.selectParcelamentoGlobal) {
         elements.selectParcelamentoGlobal.addEventListener('change', () => {
              atualizarHeaderParcelado();
@@ -270,32 +307,27 @@ function aguardarDadosBase() {
     });
 }
 
-
-function preencherSelectCalculadora(selectElement, dados, usarChaves = false) {
+function preencherSelectCalculadora(selectElement, dados, usarChaves = false, defaultText = "Nenhum", valueAsNumber = false) {
     if (!selectElement) return;
     selectElement.innerHTML = '';
 
     if (usarChaves) {
-        const optionDefault = new Option('-', '-');
-        optionDefault.dataset.valorReal = 0;
+        const defaultValue = valueAsNumber ? '0' : '-';
+        const optionDefault = new Option(defaultText, defaultValue);
+        if (!valueAsNumber) optionDefault.dataset.valorReal = 0;
         selectElement.appendChild(optionDefault);
 
         if (dados && typeof dados === 'object' && !Array.isArray(dados)) {
-            
             Object.keys(dados).forEach(chave => {
-                const option = new Option(chave, chave);
-                
-                option.dataset.valorReal = dados[chave];
-                
+                const optionValue = valueAsNumber ? dados[chave] : chave;
+                const option = new Option(chave, optionValue);
+                if (!valueAsNumber) option.dataset.valorReal = dados[chave]; 
                 selectElement.appendChild(option);
             });
-
         } else {
             console.error("preencherSelectCalculadora 'usarChaves=true' esperava um OBJETO, mas recebeu:", dados);
         }
-
-        selectElement.value = '-';
-
+        selectElement.value = defaultValue;
     } else {
         dados.forEach(valor => {
              const option = new Option(valor, valor);
@@ -349,16 +381,17 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
     }
 
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
+    setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
+    setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
 
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzCortina'), DADOS_FRANZ_CORTINA);
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzBlackout'), DADOS_FRANZ_BLACKOUT);
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro'));
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout'));
-    preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), dataRefs.confeccao, true);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), DADOS_INSTALACAO);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-frete'), DADOS_FRETE);
+   preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), dataRefs.confeccao, true, "NENHUM", false);
+preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM", false);
+preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "SEM INSTALAÇÃO", true);   
 
     if (!estadoLinha || !estadoLinha.franzBlackout) {
         const selectFranzBk = novaLinha.querySelector('.select-franzBlackout');
@@ -367,8 +400,12 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
 
     if (estadoLinha) {
         novaLinha.querySelector('.input-ambiente').value = estadoLinha.ambiente || '';
-        novaLinha.querySelector('.input-largura').value = estadoLinha.largura || '';
-        novaLinha.querySelector('.input-altura').value = estadoLinha.altura || '';
+        const larguraVal = parseFloat(String(estadoLinha.largura || '0').replace(',', '.')) || 0;
+        novaLinha.querySelector('.input-largura').value = larguraVal.toFixed(3).replace('.', ',');
+        
+        const alturaVal = parseFloat(String(estadoLinha.altura || '0').replace(',', '.')) || 0;
+        novaLinha.querySelector('.input-altura').value = alturaVal.toFixed(3).replace('.', ',');
+
         novaLinha.querySelector('.select-franzCortina').value = estadoLinha.franzCortina || (DADOS_FRANZ_CORTINA.length > 0 ? DADOS_FRANZ_CORTINA[0] : '');
         novaLinha.querySelector('.select-codTecidoCortina').value = estadoLinha.codTecidoCortina || 'SEM TECIDO';
         novaLinha.querySelector('.select-codTecidoForro').value = estadoLinha.codTecidoForro || 'SEM TECIDO';
@@ -384,8 +421,7 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
              selectTrilho.value = estadoLinha.trilhoTexto || '-';
         }
         
-        novaLinha.querySelector('.select-instalacao').value = estadoLinha.instalacao || (DADOS_INSTALACAO.length > 0 ? DADOS_INSTALACAO[0] : '');
-        novaLinha.querySelector('.select-frete').value = estadoLinha.frete || (DADOS_FRETE.length > 0 ? DADOS_FRETE[0] : '');
+        novaLinha.querySelector('.select-instalacao').value = estadoLinha.instalacao || '0';
         const inputOutros = novaLinha.querySelector('.input-outros');
         if (inputOutros) {
             const v = parseFloat(String(estadoLinha.outros || '0').replace(/[R$\.\s]/g, "").replace(",", ".")) || 0;
@@ -409,13 +445,25 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
                 recalcularTotaisSelecionados();
                 triggerAutoSave();
             });
-        } else {
-            gatilho.addEventListener(eventType, () => {
+        } else if (gatilho.type !== 'text') { 
+             gatilho.addEventListener(eventType, () => {
                  setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
+                 triggerAutoSave();
+            });
+        } else if (gatilho.classList.contains('input-ambiente')) {
+             gatilho.addEventListener('input', () => {
                  triggerAutoSave();
             });
         }
     });
+    const inputsTexto = novaLinha.querySelectorAll('.input-largura, .input-altura');
+    inputsTexto.forEach(input => {
+        input.addEventListener('blur', () => {
+             setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
+             triggerAutoSave();
+        });
+    });
+
 
     const inputOutros = novaLinha.querySelector('.input-outros');
     if(inputOutros){
@@ -476,8 +524,9 @@ function parseCurrencyValue(value) {
 
 function recalcularTotaisSelecionados() {
     let totalAvista = 0;
-    let totalParcelado = 0;
     let algumaLinhaSelecionada = false;
+    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
+    const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
 
     const todasLinhas = elements.calculatorTableBody.querySelectorAll('.linha-calculo-cliente');
     
@@ -486,27 +535,63 @@ function recalcularTotaisSelecionados() {
         if (checkbox && checkbox.checked) {
             algumaLinhaSelecionada = true;
             const inputAvista = linha.querySelector('td:nth-last-child(2) input');
-            const inputParcelado = linha.querySelector('td:nth-last-child(1) input');
             
             totalAvista += parseCurrencyValue(inputAvista.value);
-            totalParcelado += parseCurrencyValue(inputParcelado.value);
         }
     });
 
+    const valorFreteGlobal = parseFloat(elements.selectFreteGlobal?.value) || 0;
+    const valorEntradaGlobal = parseCurrencyValue(elements.inputValorEntradaGlobal?.value);
+    
+    let valorTotalFinal = 0;
+    let valorRestanteFinal = 0;
+    let valorParceladoFinal = 0;
+
+    if (algumaLinhaSelecionada) {
+        valorTotalFinal = totalAvista + valorFreteGlobal;
+        valorRestanteFinal = valorTotalFinal - valorEntradaGlobal;
+        let valorParaParcelar = totalAvista - valorEntradaGlobal;
+        if (valorParaParcelar < 0) {
+            valorParaParcelar = 0; 
+        }
+        const valorParceladoComTaxa = valorParaParcelar * (1 + taxaParcelamento);
+        valorParceladoFinal = valorParceladoComTaxa + valorFreteGlobal;
+
+    }
+    
     if (elements.summaryContainer) {
         if (algumaLinhaSelecionada) {
             elements.summaryContainer.style.display = 'block';
+        
             if (elements.summaryTotalAvista) {
-                elements.summaryTotalAvista.textContent = formatadorReaisCalc.format(totalAvista);
+                elements.summaryTotalAvista.textContent = formatadorReaisCalc.format(valorTotalFinal);
             }
+            
             if (elements.summaryTotalParcelado) {
-                elements.summaryTotalParcelado.textContent = formatadorReaisCalc.format(totalParcelado);
+                elements.summaryTotalParcelado.textContent = formatadorReaisCalc.format(valorParceladoFinal);
             }
+            
+            if (valorEntradaGlobal > 0) {
+                if(elements.summaryTotalEntrada && elements.summaryTotalEntradaValue) {
+                    elements.summaryTotalEntrada.style.display = 'block';
+                    elements.summaryTotalEntradaValue.textContent = formatadorReaisCalc.format(valorEntradaGlobal);
+                }
+                if(elements.summaryTotalRestante && elements.summaryTotalRestanteValue) {
+                    elements.summaryTotalRestante.style.display = 'block';
+                    elements.summaryTotalRestanteValue.textContent = formatadorReaisCalc.format(valorRestanteFinal);
+                }
+            } else {
+                if(elements.summaryTotalEntrada) elements.summaryTotalEntrada.style.display = 'none';
+                if(elements.summaryTotalRestante) elements.summaryTotalRestante.style.display = 'none';
+            }
+
             if(elements.summaryParceladoLabel && elements.selectParcelamentoGlobal) {
                  elements.summaryParceladoLabel.textContent = elements.selectParcelamentoGlobal.value;
             }
         } else {
             elements.summaryContainer.style.display = 'none';
+            if (elements.summaryTotalEntrada) elements.summaryTotalEntrada.style.display = 'none';
+            if (elements.summaryTotalRestante) elements.summaryTotalRestante.style.display = 'none';
         }
     }
 }
@@ -532,10 +617,9 @@ async function calcularOrcamentoLinha(linha) {
 
     const valorConfecao = obterValorRealSelect(linha.querySelector('.select-confecao'));
     const valorTrilho = obterValorRealSelect(linha.querySelector('.select-trilho'));
-
     const dadosDeEntrada = {
-        largura: parseFloat(linha.querySelector('.input-largura')?.value) || 0,
-        altura: parseFloat(linha.querySelector('.input-altura')?.value) || 0,
+        largura: parseFloat(String(linha.querySelector('.input-largura')?.value).replace(',', '.')) || 0,
+        altura: parseFloat(String(linha.querySelector('.input-altura')?.value).replace(',', '.')) || 0,
         franzCortina: parseFloat(linha.querySelector('.select-franzCortina')?.value) || 1.0,
         franzBlackout: parseFloat(linha.querySelector('.select-franzBlackout')?.value) || 1.0,
         tecidoCortina: { largura: tecCortina?.largura || 0, preco: tecCortina?.atacado || 0 },
@@ -544,7 +628,7 @@ async function calcularOrcamentoLinha(linha) {
         valorConfecao: valorConfecao,
         valorTrilho: valorTrilho,
         valorInstalacao: parseFloat(linha.querySelector('.select-instalacao')?.value) || 0,
-        valorFrete: parseFloat(linha.querySelector('.select-frete')?.value) || 0,
+        valorFrete: parseFloat(elements.selectFreteGlobal?.value) || 0,
         valorOutros: vOutrosN,
         markupBase: markupP / 100.0
     };
@@ -563,22 +647,21 @@ async function calcularOrcamentoLinha(linha) {
         }
 
         const resultados = await response.json();
-        const fmtDec = (v) => v != null ? v.toFixed(2) : '0.00';
-        const qtc = linha.querySelector('td:nth-child(7) input'); if(qtc) qtc.value = fmtDec(resultados.qtdTecidoCortina);
-        const qtf = linha.querySelector('td:nth-child(9) input'); if(qtf) qtf.value = fmtDec(resultados.qtdTecidoForro);
-        const qtb = linha.querySelector('td:nth-child(12) input'); if(qtb) qtb.value = fmtDec(resultados.qtdTecidoBlackout);
-
+        const fmtDecQtd = (v) => v != null ? v.toFixed(3).replace('.',',') : '0,000';
+        const qtc = linha.querySelector('td:nth-child(8) input'); if(qtc) qtc.value = fmtDecQtd(resultados.qtdTecidoCortina);
+        const qtf = linha.querySelector('td:nth-child(10) input'); if(qtf) qtf.value = fmtDecQtd(resultados.qtdTecidoForro);
+        const qtb = linha.querySelector('td:nth-child(13) input'); if(qtb) qtb.value = fmtDecQtd(resultados.qtdTecidoBlackout);
         const valorAVista = resultados.orcamentoBase ?? 0;
         const valorParcelado = valorAVista * (1 + taxaParcelamento);
 
         const ora = linha.querySelector('td:nth-last-child(2) input'); if(ora) ora.value = formatadorReaisCalc.format(valorAVista);
         const orx = linha.querySelector('td:nth-last-child(1) input'); if(orx) orx.value = formatadorReaisCalc.format(valorParcelado);
 
-    } catch (error) {
+} catch (error) {
         console.error("Erro ao calcular orçamento:", error.message);
-        const qtc = linha.querySelector('td:nth-child(7) input'); if(qtc) qtc.value = '0.00';
-        const qtf = linha.querySelector('td:nth-child(9) input'); if(qtf) qtf.value = '0.00';
-        const qtb = linha.querySelector('td:nth-child(12) input'); if(qtb) qtb.value = '0.00';
+        const qtc = linha.querySelector('td:nth-child(8) input'); if(qtc) qtc.value = '0,000';
+        const qtf = linha.querySelector('td:nth-child(10) input'); if(qtf) qtf.value = '0,000';
+        const qtb = linha.querySelector('td:nth-child(13) input'); if(qtb) qtb.value = '0,000';
         const ora = linha.querySelector('td:nth-last-child(2) input'); if(ora) ora.value = formatadorReaisCalc.format(0);
         const orx = linha.querySelector('td:nth-last-child(1) input'); if(orx) orx.value = formatadorReaisCalc.format(0);
         showToast(`Erro no cálculo: ${error.message}`, "error"); 
@@ -612,7 +695,6 @@ function obterEstadoAbaAtual() {
             confecaoTexto: confecaoTexto,
             trilhoTexto: trilhoTexto,
             instalacao: linhaCalc.querySelector('.select-instalacao')?.value || '',
-            frete: linhaCalc.querySelector('.select-frete')?.value || '',
             outros: linhaCalc.querySelector('.input-outros')?.value || '',
             selecionado: checkbox ? checkbox.checked : false 
         };
@@ -630,10 +712,11 @@ async function salvarEstadoCalculadora(clientId) {
 
     estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
 
-    const estadoCompleto = {
+const estadoCompleto = {
         abas: estadoAbas, 
         markup: elements.calculatorMarkupInput?.value || '100',
         parcelamento: elements.selectParcelamentoGlobal?.value || 'DÉBITO', 
+        frete: elements.selectFreteGlobal?.value || '0', 
     };
 
      try {
@@ -701,6 +784,7 @@ async function carregarEstadoCalculadora(clientId) {
         if(elements.selectParcelamentoGlobal) {
             elements.selectParcelamentoGlobal.value = estado.parcelamento || 'DÉBITO'; 
         }
+        if(elements.selectFreteGlobal) elements.selectFreteGlobal.value = estado.frete || '0';
         if (estado && Array.isArray(estado.abas) && estado.abas.length > 0) {
             estadoAbas = estado.abas;
             estadoAbas.forEach(aba => {
@@ -917,6 +1001,7 @@ export async function showCalculatorView(clientId, clientName) {
 
     try {
         await aguardarDadosBase();
+        preencherSelectCalculadora(elements.selectFreteGlobal, dataRefs.frete, true, "SEM FRETE", true);
         await carregarEstadoCalculadora(clientId); 
         atualizarHeaderParcelado(); 
 

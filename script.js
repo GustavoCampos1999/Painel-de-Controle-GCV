@@ -2,18 +2,22 @@ import { _supabase } from './supabaseClient.js';
 import { checkUserSession, setupLogoutButton } from './modules/auth.js';
 import { initUI, showToast, openModal, closeModal } from './modules/ui.js'; 
 import { initCRM, carregarClientes } from './modules/crm.js';
-import { initDataManager, carregarDados, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho } from './modules/dataManager.js';
+import { initDataManager, carregarDados, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js';
 import { initCalculator, showCalculatorView } from './modules/calculator.js';
 
 let tecidosDataGlobal = [];
 let confeccaoDataGlobal = [];
 let trilhoDataGlobal = [];
+let freteDataGlobal = []; 
+let instalacaoDataGlobal = []; 
 let currentClientIdGlobal = { value: null };
 let isDataLoadedFlag = { value: false }; 
 let itemParaExcluirGenericoInfo = null;
 let triggerTecidosSort = null;
 let triggerConfeccaoSort = null; 
 let triggerTrilhoSort = null; 
+let triggerFreteSort = null; 
+let triggerInstalacaoSort = null;
 let elements = {}; 
 
 function showClientListLocal() {
@@ -110,6 +114,24 @@ document.addEventListener('DOMContentLoaded', () => {
         modalEditTrilho: document.getElementById('modal-edit-trilho'),
         formEditTrilho: document.getElementById('form-edit-trilho'),
         btnCancelEditTrilho: document.getElementById('btn-cancelar-edit-trilho'),
+        tabelaFreteBody: document.querySelector('#tabela-frete-body'),
+        inputPesquisaFrete: document.getElementById('input-pesquisa-frete'),
+        btnAbrirModalAddFrete: document.getElementById('btn-abrir-modal-add-frete'),
+        modalAddFrete: document.getElementById('modal-add-frete'),
+        formAddFrete: document.getElementById('form-add-frete'),
+        btnCancelAddFrete: document.getElementById('btn-cancelar-add-frete'),
+        modalEditFrete: document.getElementById('modal-edit-frete'),
+        formEditFrete: document.getElementById('form-edit-frete'),
+        btnCancelEditFrete: document.getElementById('btn-cancelar-edit-frete'),
+        tabelaInstalacaoBody: document.querySelector('#tabela-instalacao-body'),
+        inputPesquisaInstalacao: document.getElementById('input-pesquisa-instalacao'),
+        btnAbrirModalAddInstalacao: document.getElementById('btn-abrir-modal-add-instalacao'),
+        modalAddInstalacao: document.getElementById('modal-add-instalacao'),
+        formAddInstalacao: document.getElementById('form-add-instalacao'),
+        btnCancelAddInstalacao: document.getElementById('btn-cancelar-add-instalacao'),
+        modalEditInstalacao: document.getElementById('modal-edit-instalacao'),
+        formEditInstalacao: document.getElementById('form-edit-instalacao'),
+        btnCancelEditInstalacao: document.getElementById('btn-cancelar-edit-instalacao'),
         modalExcluirGenerico: document.getElementById('modal-confirm-excluir-generico'),
         btnConfirmarExcluirGenerico: document.getElementById('btn-confirmar-excluir-generico'),
         btnCancelExcluirGenerico: document.getElementById('btn-cancelar-excluir-generico'),
@@ -119,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
         saveStatusElement: document.getElementById('save-status'),
         calculatorMarkupInput: document.getElementById('input-markup-base-calc'),
         selectParcelamentoGlobal: document.getElementById('select-parcelamento-global'),
+        inputValorEntradaGlobal: document.getElementById('input-valor-entrada-global'),
+        selectFreteGlobal: document.getElementById('select-frete-global'),
         thParceladoHeader: document.getElementById('th-parcelado-header'),
         btnVoltarClientes: document.getElementById('btn-voltar-clientes'),
         modalExcluirLinha: document.getElementById('modal-confirm-excluir-linha'),
@@ -134,6 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotalAvista: document.getElementById('summary-total-avista'),
         summaryTotalParcelado: document.getElementById('summary-total-parcelado'),
         summaryParceladoLabel: document.getElementById('summary-parcelado-label'),
+        summaryTotalEntrada: document.getElementById('summary-total-entrada'),
+        summaryTotalEntradaValue: document.getElementById('summary-total-entrada-value'),
+        summaryTotalRestante: document.getElementById('summary-total-restante'),
+        summaryRestanteLabel: document.getElementById('summary-restante-label'),
+        summaryTotalRestanteValue: document.getElementById('summary-total-restante-value'),
         modalExcluirAba: document.getElementById('modal-confirm-excluir-aba'),
         btnConfirmarExcluirAba: document.getElementById('btn-confirmar-excluir-aba'),
         btnCancelarExcluirAba: document.getElementById('btn-cancelar-excluir-aba'),
@@ -145,12 +174,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataRefs = {
         tecidos: tecidosDataGlobal,
         confeccao: confeccaoDataGlobal,
-        trilho: trilhoDataGlobal
+        trilho: trilhoDataGlobal,
+        frete: freteDataGlobal, 
+        instalacao: instalacaoDataGlobal
     };
     const calculatorDataRefs = {
          tecidos: tecidosDataGlobal, 
          confeccao: {},
-         trilho: {}
+         trilho: {},
+         frete: {}, 
+         instalacao: {} 
     };
 
     checkUserSession(); 
@@ -256,22 +289,50 @@ if (elements.btnThemeToggle) {
             console.warn("triggerTrilhoSort não está definido.");
         }
     });
+    document.addEventListener('tabelaFreteSortRequest', () => {
+        if (triggerFreteSort) {
+            triggerFreteSort();
+        } else {
+            console.warn("triggerFreteSort não está definido.");
+        }
+    });
+    document.addEventListener('tabelaInstalacaoSortRequest', () => {
+        if (triggerInstalacaoSort) {
+            triggerInstalacaoSort();
+        } else {
+            console.warn("triggerInstalacaoSort não está definido.");
+        }
+    });
     console.log("Iniciando carregamento de todos os dados...");
     Promise.all([
         carregarClientes(),
         carregarDados('tecidos', 'produto'),
         carregarDados('confeccao', 'opcao'), 
-        carregarDados('trilho', 'opcao')     
+        carregarDados('trilho', 'opcao'),
+        carregarDados('frete', 'valor'),
+        carregarDados('instalacao', 'valor') 
     ]).then(() => {
         console.log("Todos os dados carregados, configurando ordenação...");
          setupTableSorting('tabela-tecidos', dataRefs.tecidos, renderizarTabelaTecidos);
          setupTableSorting('tabela-confeccao', dataRefs.confeccao, renderizarTabelaConfeccao);
          setupTableSorting('tabela-trilho', dataRefs.trilho, renderizarTabelaTrilho);
+         setupTableSorting('tabela-frete', dataRefs.frete, renderizarTabelaFrete);
+         setupTableSorting('tabela-instalacao', dataRefs.instalacao, renderizarTabelaInstalacao);
 
          calculatorDataRefs.tecidos = dataRefs.tecidos; 
          calculatorDataRefs.confeccao = (dataRefs.confeccao || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
          calculatorDataRefs.trilho = (dataRefs.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
-         isDataLoadedFlag.value = true; 
+        calculatorDataRefs.frete = (dataRefs.frete || []).reduce((acc, item) => {
+             const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ',');
+             acc[key] = item.valor; 
+             return acc; 
+         }, {});
+         calculatorDataRefs.instalacao = (dataRefs.instalacao || []).reduce((acc, item) => {
+             const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ',');
+             acc[key] = item.valor; 
+             return acc; 
+         }, {});
+         isDataLoadedFlag.value = true;
 
          if (loadingOverlay) {
             loadingOverlay.style.opacity = '0';
@@ -331,6 +392,12 @@ function setupTableSorting(tableId, dataArray, renderFunction) {
         triggerConfeccaoSort = sortAndRender;
     } else if (tableId === 'tabela-trilho') { 
         triggerTrilhoSort = sortAndRender;
+    }
+    else if (tableId === 'tabela-frete') { 
+        triggerFreteSort = sortAndRender;
+    }
+    else if (tableId === 'tabela-instalacao') { 
+        triggerInstalacaoSort = sortAndRender;
     }
 
     headers.forEach(header => {
