@@ -883,8 +883,7 @@ body.dark-mode .client-filter-select {
     .card-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start; 
-        flex-wrap: wrap; 
+        align-items: flex-start; ; 
         gap: 5px; 
         margin-bottom: 8px;
     }
