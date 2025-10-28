@@ -101,7 +101,7 @@ app.put('/api/orcamentos/:clientId', async (req, res) => {
     }
 });
 
-app.listen(PORTA, () => {
-    console.log(`--- Servidor rodando em http://localhost:${PORTA} ---`);
+app.listen(PORTA, '0.0.0.0', () => {
+    console.log(`--- Servidor rodando na porta ${PORTA} ---`); 
     console.log('API pronta para servir dados do Supabase.');
 });

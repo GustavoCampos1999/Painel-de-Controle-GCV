@@ -9,6 +9,75 @@ const TAXAS_PARCELAMENTO = {
     '12x': 0.1090, '13x': 0.1152, '14x': 0.1214, '15x': 0.1276, '16x': 0.1337, '17x': 0.1397,
     '18x': 0.1457
 };
+const DADOS_MODELO_CORTINA = [
+    "CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", 
+    "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", 
+    "PH 25", "PH 50", "PH 75", "PLISSADA", "ROLO", "ROMANA", 
+    "TRILHO MOTORIZADO", "VERTIGLISS"
+];
+const DADOS_MODELO_TOLDO = [
+ "PERGOLA", "BALI", "BERGAMO", "BERLIM", "CAPRI", "MILAO", "MILAO COMPACT", 
+    "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"
+];
+const DADOS_COR_ACESSORIOS = [
+  "PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"
+];
+const DADOS_COMANDO = ["MANUAL", "MOTORIZADO"];
+
+function obterEstadoSection(sectionElement) {
+    const sectionType = sectionElement.dataset.sectionType;
+    const todasLinhas = sectionElement.querySelectorAll('.linha-calculo-cliente');
+    const dadosSecao = [];
+
+    todasLinhas.forEach(linhaCalc => {
+        let estadoLinha = {
+            ambiente: linhaCalc.querySelector('.input-ambiente')?.value || '',
+            largura: linhaCalc.querySelector('.input-largura')?.value || '',
+            altura: linhaCalc.querySelector('.input-altura')?.value || '',
+            selecionado: linhaCalc.querySelector('.select-linha-checkbox')?.checked || false
+        };
+        if (sectionType === 'tecido') {
+            estadoLinha.franzCortina = linhaCalc.querySelector('.select-franzCortina')?.value || '';
+            estadoLinha.codTecidoCortina = linhaCalc.querySelector('.select-codTecidoCortina')?.value || 'SEM TECIDO';
+            estadoLinha.codTecidoForro = linhaCalc.querySelector('.select-codTecidoForro')?.value || 'SEM TECIDO';
+            estadoLinha.franzBlackout = linhaCalc.querySelector('.select-franzBlackout')?.value || '1.2';
+            estadoLinha.codTecidoBlackout = linhaCalc.querySelector('.select-codTecidoBlackout')?.value || 'SEM TECIDO';
+            estadoLinha.confecaoTexto = linhaCalc.querySelector('.select-confecao')?.value || '-';
+            estadoLinha.trilhoTexto = linhaCalc.querySelector('.select-trilho')?.value || '-';
+            estadoLinha.instalacao = linhaCalc.querySelector('.select-instalacao')?.value || '';
+            estadoLinha.outros = linhaCalc.querySelector('.input-outros')?.value || '';
+            estadoLinha.observacao = linhaCalc.querySelector('.input-observacao')?.value || '';
+
+        } else if (sectionType === 'amorim') {
+            estadoLinha.modelo_cortina = linhaCalc.querySelector('.select-modelo-cortina')?.value || '';
+            estadoLinha.codigo_tecido = linhaCalc.querySelector('.select-codTecidoCortina')?.value || 'SEM TECIDO';
+            estadoLinha.cor_acessorios = linhaCalc.querySelector('.select-cor-acessorios')?.value || '';
+            estadoLinha.comando = linhaCalc.querySelector('.select-comando')?.value || '';
+            if (estadoLinha.comando === 'MOTORIZADO') {
+                estadoLinha.altura_comando = linhaCalc.querySelector('.select-altura-comando-motor')?.value || '';
+            } else {
+                estadoLinha.altura_comando = linhaCalc.querySelector('.input-altura-comando-manual')?.value || '';
+            }
+            estadoLinha.valor_manual = linhaCalc.querySelector('.input-valor-manual')?.value || '';
+            estadoLinha.observacao = linhaCalc.querySelector('.input-observacao')?.value || '';
+
+        } else if (sectionType === 'toldos') {
+            estadoLinha.modelo_toldo = linhaCalc.querySelector('.select-modelo-toldo')?.value || '';
+            estadoLinha.codigo_tecido = linhaCalc.querySelector('.select-codTecidoCortina')?.value || 'SEM TECIDO';
+            estadoLinha.cor_acessorios = linhaCalc.querySelector('.select-cor-acessorios')?.value || '';
+            estadoLinha.comando = linhaCalc.querySelector('.select-comando')?.value || '';
+            if (estadoLinha.comando === 'MOTORIZADO') {
+                estadoLinha.altura_comando = linhaCalc.querySelector('.select-altura-comando-motor')?.value || '';
+            } else {
+                estadoLinha.altura_comando = linhaCalc.querySelector('.input-altura-comando-manual')?.value || '';
+            }
+            estadoLinha.valor_manual = linhaCalc.querySelector('.input-valor-manual')?.value || '';
+            estadoLinha.observacao = linhaCalc.querySelector('.input-observacao')?.value || '';
+        }
+        dadosSecao.push(estadoLinha);
+    });
+    return dadosSecao;
+}
 
 let elements = {};
 let dataRefs = {};
@@ -19,7 +88,41 @@ let estadoAbas = [];
 let abaAtivaIndex = 0;
 let linhaParaExcluir = null;
 let abaParaExcluir = { index: null, element: null };
+let secaoParaExcluir = { element: null, type: null, button: null };
 let isDirty = false;
+let dragElement = null;
+function handleDragStart(e, sectionElement) {
+    // Previne seleção de texto (mouse) ou scroll (touch)
+    e.preventDefault(); 
+    dragElement = sectionElement;
+    dragElement.classList.add('dragging');
+}
+
+function handleDragMove(e) {
+    if (!dragElement) return;
+
+    // Previne o scroll da página enquanto arrasta
+    if (e.cancelable) {
+        e.preventDefault();
+    }
+
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const afterElement = getDragAfterElement(elements.quoteSectionsContainer, y);
+
+    if (afterElement == null) {
+        elements.quoteSectionsContainer.appendChild(dragElement);
+    } else {
+        elements.quoteSectionsContainer.insertBefore(dragElement, afterElement);
+    }
+}
+
+function handleDragEnd() {
+    if (!dragElement) return;
+    dragElement.classList.remove('dragging');
+    dragElement = null;
+    setDirty();
+}
 
 function setDirty() {
     if (isDirty) return; 
@@ -82,17 +185,38 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             }
         });
     }
+if (elements.quoteSectionsContainer) {
+    // Eventos de Mouse
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
 
-    const btnAddLinha = document.getElementById('btn-add-linha-calc');
-    if (btnAddLinha) {
-        btnAddLinha.addEventListener('click', () => {
-            if (!isDataLoadedRef.value) {
-                 showToast("Aguarde, carregando dados base...", "error"); 
-                 return;
-            }
-            adicionarLinhaCalculadora(null);
-        });
-    }
+    // Eventos de Toque
+    // Usamos 'document' para 'touchmove' e 'touchend' para que o usuário
+    // possa mover o dedo para fora do container sem quebrar o "arrastar".
+    document.addEventListener('touchmove', handleDragMove, { passive: false });
+    document.addEventListener('touchend', handleDragEnd);
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.quote-section:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+    const btnAddSectionTecido = document.getElementById('btn-add-section-tecido');
+    const btnAddSectionAmorim = document.getElementById('btn-add-section-amorim');
+    const btnAddSectionToldos = document.getElementById('btn-add-section-toldos');
+    
+    if (btnAddSectionTecido) btnAddSectionTecido.addEventListener('click', (e) => addSection('tecido', e.target));
+    if (btnAddSectionAmorim) btnAddSectionAmorim.addEventListener('click', (e) => addSection('amorim', e.target));
+    if (btnAddSectionToldos) btnAddSectionToldos.addEventListener('click', (e) => addSection('toldos', e.target));
 
     const globalTriggers = document.querySelectorAll('.global-calc-trigger');
     globalTriggers.forEach(input => {
@@ -142,7 +266,11 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             elements.btnManualSave.disabled = false;
         });
     }
-
+if (elements.btnPrintOrcamento) {
+    elements.btnPrintOrcamento.addEventListener('click', () => {
+        window.print();
+    });
+}
     if (elements.btnConfirmarSair) {
         elements.btnConfirmarSair.addEventListener('click', () => {
             isDirty = false; 
@@ -250,10 +378,133 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             renderizarTabs();
             atualizarStatusVendaCliente();
             setDirty();
+        });        
+    }
+    if (elements.btnConfirmarExcluirSecao) {
+        elements.btnConfirmarExcluirSecao.addEventListener('click', () => {
+            executarExclusaoSecao();
+        });
+    }
+    if (elements.btnCancelarExcluirSecao) {
+        elements.btnCancelarExcluirSecao.addEventListener('click', () => {
+            closeModal(elements.modalExcluirSecao);
+            secaoParaExcluir = { element: null, type: null, button: null };
         });
     }
 }
+function executarExclusaoSecao() {
+    if (secaoParaExcluir && secaoParaExcluir.element && secaoParaExcluir.button) {
+        secaoParaExcluir.element.remove();
+        secaoParaExcluir.button.classList.remove('hidden');
+        checkSectionControls();
+        recalcularTotaisSelecionados();
+        setDirty();
+    }
+    closeModal(elements.modalExcluirSecao);
+    secaoParaExcluir = { element: null, type: null, button: null };
+}
 
+function checkSectionControls() {
+    if (!elements.sectionControlsContainer) return;
+    const span = elements.sectionControlsContainer.querySelector('span');
+    if (!span) return;
+
+    const btnTecido = document.getElementById('btn-add-section-tecido');
+    const btnAmorim = document.getElementById('btn-add-section-amorim');
+    const btnToldos = document.getElementById('btn-add-section-toldos');
+
+    const allHidden = btnTecido.classList.contains('hidden') &&
+                      btnAmorim.classList.contains('hidden') &&
+                      btnToldos.classList.contains('hidden');
+
+    span.style.display = allHidden ? 'none' : 'inline';
+}
+
+function addSection(sectionType, buttonElement) {
+    if (!isDataLoadedRef.value) {
+        showToast("Aguarde, carregando dados base...", "error"); 
+        return;
+    }
+
+    const templateId = `template-section-${sectionType}`;
+    const template = document.getElementById(templateId);
+    if (!template) {
+        console.error(`Template ${templateId} não encontrado!`);
+        return;
+    }
+
+    const sectionClone = template.content.cloneNode(true);
+    const sectionElement = sectionClone.querySelector('.quote-section');
+    const tableBody = sectionElement.querySelector('.tabela-calculo-body');
+    const btnAddLinha = sectionElement.querySelector('.btn-add-linha');
+    const btnRemoverSecao = sectionElement.querySelector('.btn-remover-secao'); 
+    const btnDrag = sectionElement.querySelector('.btn-drag-secao');
+
+   // Adiciona listeners para iniciar o "arrastar" (mouse e touch)
+if (btnDrag) {
+    btnDrag.addEventListener('mousedown', (e) => {
+        e.stopPropagation(); // Impede que o evento suba
+        handleDragStart(e, sectionElement);
+    });
+
+    btnDrag.addEventListener('touchstart', (e) => {
+        e.stopPropagation(); // Impede que o evento suba
+        handleDragStart(e, sectionElement);
+    }, { passive: false }); // 'passive: false' é necessário para o preventDefault()
+}
+
+    if (btnAddLinha) {
+        btnAddLinha.addEventListener('click', () => {
+            switch (sectionType) {
+                case 'tecido':
+                    adicionarLinhaTecido(tableBody, null);
+                    break;
+                case 'amorim':
+                    adicionarLinhaAmorim(tableBody, null);
+                    break;
+                case 'toldos':
+                    adicionarLinhaToldos(tableBody, null);
+                    break;
+            }
+        });
+    }
+
+    if (btnRemoverSecao) {
+        btnRemoverSecao.addEventListener('click', () => {
+            secaoParaExcluir = {
+                element: sectionElement,
+                type: sectionType,
+                button: buttonElement 
+            };
+            if (elements.spanSecaoNomeExcluir) {
+                elements.spanSecaoNomeExcluir.textContent = sectionElement.querySelector('h3').textContent;
+            }
+            openModal(elements.modalExcluirSecao);
+        });
+    }
+
+    switch (sectionType) {
+        case 'tecido':
+            adicionarLinhaTecido(tableBody, null);
+            break;
+        case 'amorim':
+            adicionarLinhaAmorim(tableBody, null);
+            break;
+        case 'toldos':
+            adicionarLinhaToldos(tableBody, null);
+            break;
+    }
+
+    document.getElementById('quote-sections-container').appendChild(sectionElement);
+
+    if (buttonElement) {
+        buttonElement.classList.add('hidden');
+    }
+
+    atualizarHeaderParcelado();
+    checkSectionControls(); 
+    setDirty();
+}
 async function atualizarStatusVendaCliente() {
     if (!currentClientIdRef.value) return;
 
@@ -384,9 +635,12 @@ function preencherSelectTecidosCalculadora(selectElement) {
     selectElement.value = 'SEM TECIDO';
 }
 
-function adicionarLinhaCalculadora(estadoLinha = null) {
-    if (!elements.calculatorTableBody) return;
-    const template = document.getElementById('template-linha-calculadora');
+function adicionarLinhaTecido(tableBody, estadoLinha = null) {
+    if (!tableBody) {
+        console.error("adicionarLinhaTecido chamada sem tableBody!");
+        return;
+    }
+    const template = document.getElementById('template-linha-tecido'); 
     if (!template) return;
 
     if (!dataRefs.tecidos || !dataRefs.confeccao || !dataRefs.trilho ||
@@ -394,9 +648,8 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
         (typeof dataRefs.confeccao !== 'object' || Object.keys(dataRefs.confeccao).length === 0) || 
         (typeof dataRefs.trilho !== 'object' || Object.keys(dataRefs.trilho).length === 0)) 
     {
-        console.error("adicionarLinhaCalculadora: Tentativa de adicionar linha falhou. Os dados (tecidos, confeccao, trilho) ainda não estão prontos em dataRefs.", dataRefs);
+        console.error("adicionarLinhaTecido: Tentativa de adicionar linha falhou. Os dados (tecidos, confeccao, trilho) ainda não estão prontos em dataRefs.", dataRefs);
         showToast("Erro: Dados de confecção/trilho não carregados. Saia e entre no cliente novamente.", "error"); 
-        
         return; 
     }
 
@@ -422,7 +675,7 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
         novaLinha.querySelector('.input-ambiente').value = estadoLinha.ambiente || '';
         const larguraVal = parseFloat(String(estadoLinha.largura || '0').replace(',', '.')) || 0;
         novaLinha.querySelector('.input-largura').value = larguraVal.toFixed(3).replace('.', ',');
-        
+
         const alturaVal = parseFloat(String(estadoLinha.altura || '0').replace(',', '.')) || 0;
         novaLinha.querySelector('.input-altura').value = alturaVal.toFixed(3).replace('.', ',');
 
@@ -431,22 +684,23 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
         novaLinha.querySelector('.select-codTecidoForro').value = estadoLinha.codTecidoForro || 'SEM TECIDO';
         novaLinha.querySelector('.select-franzBlackout').value = estadoLinha.franzBlackout || '1.2';
         novaLinha.querySelector('.select-codTecidoBlackout').value = estadoLinha.codTecidoBlackout || 'SEM TECIDO';
-        
+
         const selectConfecao = novaLinha.querySelector('.select-confecao');
         if (selectConfecao) {
             selectConfecao.value = estadoLinha.confecaoTexto || '-';
         }
         const selectTrilho = novaLinha.querySelector('.select-trilho');
         if (selectTrilho) {
-             selectTrilho.value = estadoLinha.trilhoTexto || '-';
+            selectTrilho.value = estadoLinha.trilhoTexto || '-';
         }
-        
+
         novaLinha.querySelector('.select-instalacao').value = estadoLinha.instalacao || '0';
         const inputOutros = novaLinha.querySelector('.input-outros');
         if (inputOutros) {
             const v = parseFloat(String(estadoLinha.outros || '0').replace(/[R$\.\s]/g, "").replace(",", ".")) || 0;
             inputOutros.value = v > 0 ? formatadorReaisCalc.format(v) : '';
         }
+        novaLinha.querySelector('.input-observacao').value = estadoLinha.observacao || '';
 
         const checkbox = novaLinha.querySelector('.select-linha-checkbox');
         if (checkbox) {
@@ -459,28 +713,28 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
     const gatilhos = novaLinha.querySelectorAll('input, select');
     gatilhos.forEach(gatilho => {
         const eventType = (gatilho.tagName === 'SELECT') ? 'change' : 'input';
-        
+
         if (gatilho.classList.contains('select-linha-checkbox')) {
             gatilho.addEventListener('change', () => {
                 recalcularTotaisSelecionados();
                 setDirty(); 
             });
         } else if (gatilho.type !== 'text') { 
-             gatilho.addEventListener(eventType, () => {
-                 setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
-                 setDirty();
+            gatilho.addEventListener(eventType, () => {
+                setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
+                setDirty();
             });
-        } else if (gatilho.classList.contains('input-ambiente')) {
-             gatilho.addEventListener('input', () => {
-                 setDirty();
+        } else if (gatilho.classList.contains('input-ambiente') || gatilho.classList.contains('input-observacao')) {
+            gatilho.addEventListener('input', () => {
+                setDirty();
             });
         }
     });
     const inputsTexto = novaLinha.querySelectorAll('.input-largura, .input-altura');
     inputsTexto.forEach(input => {
         input.addEventListener('blur', () => {
-             setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
-             setDirty();
+            setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
+            setDirty();
         });
     });
 
@@ -492,10 +746,10 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
             e.target.value = parseFloat(v) || '';
         });
         inputOutros.addEventListener('blur', (e) => {
-             let n = parseFloat(e.target.value) || 0;
-             e.target.value = n !== 0 ? formatadorReaisCalc.format(n) : '';
-             calcularOrcamentoLinha(novaLinha);
-             setDirty();
+            let n = parseFloat(e.target.value) || 0;
+            e.target.value = n !== 0 ? formatadorReaisCalc.format(n) : '';
+            calcularOrcamentoLinha(novaLinha);
+            setDirty();
         });
     }
 
@@ -505,8 +759,7 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
             removerLinhaCalculadora(novaLinha);
         });
     }
-
-    elements.calculatorTableBody.appendChild(novaLinha);
+    tableBody.appendChild(novaLinha);
 
     if (!estadoLinha) {
         calcularOrcamentoLinha(novaLinha);
@@ -514,9 +767,171 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
     }
 }
 
+function adicionarLinhaAmorim(tableBody, estadoLinha = null) {
+    if (!tableBody) return;
+    const template = document.getElementById('template-linha-amorim');
+    if (!template) return;
+
+    const novaLinha = template.content.cloneNode(true).querySelector('tr');
+
+    preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-cortina'), DADOS_MODELO_CORTINA, false, "Nenhum");
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
+    preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS, false, "Nenhum");
+    preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO, false, "Nenhum");
+
+    setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
+    setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
+    const inputValorManual = novaLinha.querySelector('.input-valor-manual');
+    setupCurrencyFormatting(inputValorManual); 
+
+    const selectComando = novaLinha.querySelector('.select-comando');
+    const inputManual = novaLinha.querySelector('.input-altura-comando-manual');
+    const selectMotor = novaLinha.querySelector('.select-altura-comando-motor');
+
+    const toggleComandoInput = () => {
+        if (selectComando.value === 'MOTORIZADO') {
+            inputManual.classList.add('hidden');
+            selectMotor.classList.remove('hidden');
+        } else { 
+            inputManual.classList.remove('hidden');
+            selectMotor.classList.add('hidden');
+        }
+    };
+
+    if (estadoLinha) {
+        novaLinha.querySelector('.input-ambiente').value = estadoLinha.ambiente || '';
+        novaLinha.querySelector('.input-largura').value = (parseFloat(String(estadoLinha.largura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
+        novaLinha.querySelector('.input-altura').value = (parseFloat(String(estadoLinha.altura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
+        novaLinha.querySelector('.select-modelo-cortina').value = estadoLinha.modelo_cortina || DADOS_MODELO_CORTINA[0];
+        novaLinha.querySelector('.select-codTecidoCortina').value = estadoLinha.codigo_tecido || 'SEM TECIDO';
+        novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
+
+        selectComando.value = estadoLinha.comando || DADOS_COMANDO[0];
+        if (estadoLinha.comando === 'MOTORIZADO') {
+            selectMotor.value = estadoLinha.altura_comando || '127v';
+        } else {
+            inputManual.value = estadoLinha.altura_comando || '';
+        }
+        toggleComandoInput();
+
+        novaLinha.querySelector('.input-valor-manual').value = estadoLinha.valor_manual || '';
+        novaLinha.querySelector('.input-observacao').value = estadoLinha.observacao || '';
+        novaLinha.querySelector('.select-linha-checkbox').checked = estadoLinha.selecionado === true;
+    } else {
+        toggleComandoInput();
+    }
+
+    const gatilhos = novaLinha.querySelectorAll('input, select');
+    gatilhos.forEach(gatilho => {
+        const eventType = (gatilho.tagName === 'SELECT') ? 'change' : 'input';
+
+        gatilho.addEventListener(eventType, () => {
+            recalcularTotaisSelecionados(); 
+            setDirty();
+        });
+    });
+
+    selectComando.addEventListener('change', toggleComandoInput);
+
+    inputValorManual.addEventListener('blur', () => {
+        recalcularTotaisSelecionados();
+        setDirty();
+    });
+
+    const btnRemover = novaLinha.querySelector('.btn-remover-linha');
+    if (btnRemover) {
+        btnRemover.addEventListener('click', () => {
+            removerLinhaCalculadora(novaLinha); 
+        });
+    }
+
+    tableBody.appendChild(novaLinha);
+    if (!estadoLinha) setDirty();
+}
+
+function adicionarLinhaToldos(tableBody, estadoLinha = null) {
+    if (!tableBody) return;
+    const template = document.getElementById('template-linha-toldos');
+    if (!template) return;
+
+    const novaLinha = template.content.cloneNode(true).querySelector('tr');
+
+    preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-toldo'), DADOS_MODELO_TOLDO, false, "Nenhum");
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
+    preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS, false, "Nenhum");
+    preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO, false, "Nenhum");
+
+    setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
+    setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
+    const inputValorManual = novaLinha.querySelector('.input-valor-manual');
+    setupCurrencyFormatting(inputValorManual);
+
+    const selectComando = novaLinha.querySelector('.select-comando');
+    const inputManual = novaLinha.querySelector('.input-altura-comando-manual');
+    const selectMotor = novaLinha.querySelector('.select-altura-comando-motor');
+
+    const toggleComandoInput = () => {
+        if (selectComando.value === 'MOTORIZADO') {
+            inputManual.classList.add('hidden');
+            selectMotor.classList.remove('hidden');
+        } else { 
+            inputManual.classList.remove('hidden');
+            selectMotor.classList.add('hidden');
+        }
+    };
+
+    if (estadoLinha) {
+        novaLinha.querySelector('.input-ambiente').value = estadoLinha.ambiente || '';
+        novaLinha.querySelector('.input-largura').value = (parseFloat(String(estadoLinha.largura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
+        novaLinha.querySelector('.input-altura').value = (parseFloat(String(estadoLinha.altura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
+        novaLinha.querySelector('.select-modelo-toldo').value = estadoLinha.modelo_toldo || DADOS_MODELO_TOLDO[0];
+        novaLinha.querySelector('.select-codTecidoCortina').value = estadoLinha.codigo_tecido || 'SEM TECIDO';
+        novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
+
+        selectComando.value = estadoLinha.comando || DADOS_COMANDO[0];
+        if (estadoLinha.comando === 'MOTORIZADO') {
+            selectMotor.value = estadoLinha.altura_comando || '127v';
+        } else {
+            inputManual.value = estadoLinha.altura_comando || '';
+        }
+        toggleComandoInput();
+
+        novaLinha.querySelector('.input-valor-manual').value = estadoLinha.valor_manual || '';
+        novaLinha.querySelector('.input-observacao').value = estadoLinha.observacao || '';
+        novaLinha.querySelector('.select-linha-checkbox').checked = estadoLinha.selecionado === true;
+    } else {
+        toggleComandoInput();
+    }
+
+    const gatilhos = novaLinha.querySelectorAll('input, select');
+    gatilhos.forEach(gatilho => {
+        const eventType = (gatilho.tagName === 'SELECT') ? 'change' : 'input';
+        gatilho.addEventListener(eventType, () => {
+            recalcularTotaisSelecionados();
+            setDirty();
+        });
+    });
+
+    selectComando.addEventListener('change', toggleComandoInput);
+
+    inputValorManual.addEventListener('blur', () => {
+        recalcularTotaisSelecionados();
+        setDirty();
+    });
+
+    const btnRemover = novaLinha.querySelector('.btn-remover-linha');
+    if (btnRemover) {
+        btnRemover.addEventListener('click', () => {
+            removerLinhaCalculadora(novaLinha);
+        });
+    }
+
+    tableBody.appendChild(novaLinha);
+    if (!estadoLinha) setDirty();
+}
 function recalcularTodasLinhas() {
-    const todasLinhas = elements.calculatorTableBody.querySelectorAll('.linha-calculo-cliente');
-    todasLinhas.forEach(linha => {
+    const todasLinhasTecido = document.querySelectorAll('#quote-sections-container .linha-calculo-cliente[data-linha-type="tecido"]');
+    todasLinhasTecido.forEach(linha => {
         calcularOrcamentoLinha(linha);
     });
 }
@@ -546,20 +961,24 @@ function parseCurrencyValue(value) {
 function recalcularTotaisSelecionados() {
     let totalAvista = 0;
     let algumaLinhaSelecionada = false;
-    let totalInstalacao = 0;
+    let totalInstalacao = 0; 
+    
     const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
     const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
-
-    const todasLinhas = elements.calculatorTableBody.querySelectorAll('.linha-calculo-cliente');
+    const todasLinhas = document.querySelectorAll('#quote-sections-container .linha-calculo-cliente');
     
     todasLinhas.forEach(linha => {
         const checkbox = linha.querySelector('.select-linha-checkbox');
         if (checkbox && checkbox.checked) {
             algumaLinhaSelecionada = true;
-            const inputAvista = linha.querySelector('td:nth-last-child(2) input');
+
+            const inputAvista = linha.querySelector('.resultado-preco-total'); 
             
             totalAvista += parseCurrencyValue(inputAvista.value);
-            totalInstalacao += parseFloat(linha.querySelector('.select-instalacao')?.value) || 0;
+            
+            if (linha.dataset.linhaType === 'tecido') {
+                totalInstalacao += parseFloat(linha.querySelector('.select-instalacao')?.value) || 0;
+            }
         }
     });
 
@@ -573,13 +992,14 @@ function recalcularTotaisSelecionados() {
     if (algumaLinhaSelecionada) {
         valorTotalFinal = totalAvista + valorFreteGlobal;
         valorRestanteFinal = valorTotalFinal - valorEntradaGlobal;
+        
         let valorParaParcelar = (totalAvista - totalInstalacao) - valorEntradaGlobal;
         if (valorParaParcelar < 0) {
             valorParaParcelar = 0; 
         }
+        
         const valorParceladoComTaxa = valorParaParcelar * (1 + taxaParcelamento);
         valorParceladoFinal = valorParceladoComTaxa + valorFreteGlobal + totalInstalacao;
-
     }
     
     if (elements.summaryContainer) {
@@ -697,53 +1117,31 @@ async function calcularOrcamentoLinha(linha) {
     recalcularTotaisSelecionados();
 }
 
-function obterEstadoAbaAtual() {
-    const todasLinhas = elements.calculatorTableBody.querySelectorAll('.linha-calculo-cliente');
-    const dadosOrcamento = [];
-
-    todasLinhas.forEach(linhaCalc => {
-        const confecaoSelect = linhaCalc.querySelector('.select-confecao');
-        const confecaoTexto = confecaoSelect ? confecaoSelect.value : '-';
-
-        const trilhoSelect = linhaCalc.querySelector('.select-trilho');
-        const trilhoTexto = trilhoSelect ? trilhoSelect.value : '-';
-        
-        const checkbox = linhaCalc.querySelector('.select-linha-checkbox');
-
-        const estadoLinha = {
-            ambiente: linhaCalc.querySelector('.input-ambiente')?.value || '',
-            largura: linhaCalc.querySelector('.input-largura')?.value || '',
-            altura: linhaCalc.querySelector('.input-altura')?.value || '',
-            franzCortina: linhaCalc.querySelector('.select-franzCortina')?.value || '',
-            codTecidoCortina: linhaCalc.querySelector('.select-codTecidoCortina')?.value || 'SEM TECIDO',
-            codTecidoForro: linhaCalc.querySelector('.select-codTecidoForro')?.value || 'SEM TECIDO',
-            franzBlackout: linhaCalc.querySelector('.select-franzBlackout')?.value || '1.2',
-            codTecidoBlackout: linhaCalc.querySelector('.select-codTecidoBlackout')?.value || 'SEM TECIDO',
-            confecaoTexto: confecaoTexto,
-            trilhoTexto: trilhoTexto,
-            instalacao: linhaCalc.querySelector('.select-instalacao')?.value || '',
-            outros: linhaCalc.querySelector('.input-outros')?.value || '',
-            selecionado: checkbox ? checkbox.checked : false 
-        };
-        dadosOrcamento.push(estadoLinha);
-    });
-    return dadosOrcamento;
-}
-
 async function salvarEstadoCalculadora(clientId) {
-    if (!elements.calculatorView || !elements.calculatorTableBody) return;
     if (abaAtivaIndex < 0 || abaAtivaIndex >= estadoAbas.length) {
          console.warn("Salvamento ignorado, aba ativa inválida:", abaAtivaIndex);
          return;
     }
 
-    estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
+    const sectionsData = {};
+    const sectionElements = document.querySelectorAll('#quote-sections-container .quote-section');
+    sectionElements.forEach(sectionEl => {
+        const sectionType = sectionEl.dataset.sectionType;
+        sectionsData[sectionType] = {
+            active: true,
+            ambientes: obterEstadoSection(sectionEl)
+        };
+    });
+
+    estadoAbas[abaAtivaIndex].sections = sectionsData;
+    estadoAbas[abaAtivaIndex].venda_realizada = elements.chkSummaryVendaRealizada ? elements.chkSummaryVendaRealizada.checked : false;
 
     const estadoCompleto = {
         abas: estadoAbas, 
         markup: elements.calculatorMarkupInput?.value || '100',
         parcelamento: elements.selectParcelamentoGlobal?.value || 'DÉBITO', 
         frete: elements.selectFreteGlobal?.value || '0', 
+        entrada: elements.inputValorEntradaGlobal?.value || ''
     };
 
      try {
@@ -761,14 +1159,14 @@ async function salvarEstadoCalculadora(clientId) {
 
        const result = await response.json();
        isDirty = false;
-    if (elements.btnManualSave) {
-        elements.btnManualSave.classList.add('hidden');
-    }
-    if (elements.saveStatusMessage) {
-        elements.saveStatusMessage.textContent = `Salvo às ${new Date(result.updated_at).toLocaleTimeString()}`;
-        elements.saveStatusMessage.className = 'save-status-message saved';
-    }
-    console.log("Estado da calculadora salvo:", result);
+        if (elements.btnManualSave) {
+            elements.btnManualSave.classList.add('hidden');
+        }
+        if (elements.saveStatusMessage) {
+            elements.saveStatusMessage.textContent = `Salvo às ${new Date(result.updated_at).toLocaleTimeString()}`;
+            elements.saveStatusMessage.className = 'save-status-message saved';
+        }
+        console.log("Estado da calculadora salvo:", result);
     } catch (error) {
         console.error("Erro ao salvar estado da calculadora:", error.message);
         if (elements.saveStatusMessage) {
@@ -790,7 +1188,9 @@ async function carregarEstadoCalculadora(clientId) {
         elements.saveStatusMessage.className = 'save-status-message';
     }
 
-    if (elements.calculatorTableBody) elements.calculatorTableBody.innerHTML = '';
+    const container = document.getElementById('quote-sections-container');
+    if (container) container.innerHTML = '';
+    
     estadoAbas = []; 
     abaAtivaIndex = 0;
 
@@ -802,44 +1202,51 @@ async function carregarEstadoCalculadora(clientId) {
                 if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
                 if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = 'DÉBITO';
                 
-                estadoAbas = [{ nome: "Orçamento 1", ambientes: [], venda_realizada: false }];
+                estadoAbas = [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
                 abaAtivaIndex = 0;
                 
-                renderizarTabs();
-                ativarAba(0, true); 
-                setDirty();
-                return;
+             } else {
+                 const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido ao carregar orçamento.' }));
+                 console.error('Erro da API ao carregar:', response.status, errorData);
+                 throw new Error(errorData.message || 'Erro API carregar.');
              }
-             const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido ao carregar orçamento.' }));
-             console.error('Erro da API ao carregar:', response.status, errorData);
-             throw new Error(errorData.message || 'Erro API carregar.');
-        }
-        const estado = await response.json();
-
-        if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = estado.markup || '100';
-        if(elements.selectParcelamentoGlobal) {
-            elements.selectParcelamentoGlobal.value = estado.parcelamento || 'DÉBITO'; 
-        }
-        if(elements.selectFreteGlobal) elements.selectFreteGlobal.value = estado.frete || '0';
-        if (estado && Array.isArray(estado.abas) && estado.abas.length > 0) {
-            estadoAbas = estado.abas;
-            estadoAbas.forEach(aba => {
-                if (aba.venda_realizada === undefined) {
-                    aba.venda_realizada = false;
-                }
-            });
-            abaAtivaIndex = 0; 
-        } else if (estado && Array.isArray(estado.ambientes)) {
-            console.log("Migrando orçamento de formato antigo...");
-            estadoAbas = [{ nome: "Principal", ambientes: estado.ambientes, venda_realizada: false }];
-            abaAtivaIndex = 0;
         } else {
-            console.log("Orçamento salvo vazio ou inválido. Criando novo.");
-            estadoAbas = [{ nome: "Orçamento 1", ambientes: [], venda_realizada: false }];
-            abaAtivaIndex = 0;
+            const estado = await response.json();
+
+            if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = estado.markup || '100';
+            if(elements.selectParcelamentoGlobal) {
+                elements.selectParcelamentoGlobal.value = estado.parcelamento || 'DÉBITO'; 
+            }
+            if(elements.selectFreteGlobal) elements.selectFreteGlobal.value = estado.frete || '0';
+            if(elements.inputValorEntradaGlobal) elements.inputValorEntradaGlobal.value = estado.entrada || '';
+            if (estado && Array.isArray(estado.abas) && estado.abas.length > 0) {
+                estadoAbas = estado.abas;
+                estadoAbas.forEach(aba => {
+                    if (aba.venda_realizada === undefined) {
+                        aba.venda_realizada = false;
+                    }
+                });
+                abaAtivaIndex = 0; 
+                
+            } else if (estado && Array.isArray(estado.ambientes)) {
+                console.log("Migrando orçamento de formato antigo...");
+                estadoAbas = [{ 
+                    nome: "Principal", 
+                    sections: { 
+                        'tecido': { active: true, ambientes: estado.ambientes } 
+                    }, 
+                    venda_realizada: false 
+                }];
+                abaAtivaIndex = 0;
+                
+            } else {
+                console.log("Orçamento salvo vazio ou inválido. Criando novo.");
+                estadoAbas = [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
+                abaAtivaIndex = 0;
+            }
         }
         
-        renderizarTabs();
+        renderizarTabs(); 
         ativarAba(abaAtivaIndex, true); 
         
         if (elements.saveStatusMessage) { elements.saveStatusMessage.textContent = ''; }
@@ -847,12 +1254,12 @@ async function carregarEstadoCalculadora(clientId) {
     } catch (error) {
         console.error("Erro ao carregar estado da calculadora:", error.message);
         if (elements.saveStatusMessage) {
-        elements.saveStatusMessage.textContent = 'Erro ao carregar.';
-        elements.saveStatusMessage.className = 'save-status-message error';
-    }
+            elements.saveStatusMessage.textContent = 'Erro ao carregar.';
+            elements.saveStatusMessage.className = 'save-status-message error';
+        }
         showToast(`Erro ao carregar orçamento: ${error.message}`, "error"); 
         
-        estadoAbas = [{ nome: "Orçamento 1", ambientes: [], venda_realizada: false }];
+        estadoAbas = [{ nome: "Orçamento 1 (Erro)", sections: {}, venda_realizada: false }];
         abaAtivaIndex = 0;
         renderizarTabs();
         ativarAba(0, true); 
@@ -889,9 +1296,17 @@ function ativarAba(index, isInitialLoad = false) {
          console.error("Tentativa de ativar aba inválida:", index);
          return;
     }
-    
     if (!isInitialLoad && abaAtivaIndex >= 0 && abaAtivaIndex < estadoAbas.length) {
-         estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
+         const sectionsData = {};
+         const sectionElements = document.querySelectorAll('#quote-sections-container .quote-section');
+         sectionElements.forEach(sectionEl => {
+            const sectionType = sectionEl.dataset.sectionType;
+            sectionsData[sectionType] = {
+                active: true,
+                ambientes: obterEstadoSection(sectionEl) 
+            };
+         });
+         estadoAbas[abaAtivaIndex].sections = sectionsData;
     }
     
     abaAtivaIndex = index;
@@ -900,43 +1315,90 @@ function ativarAba(index, isInitialLoad = false) {
     abasAtuais.forEach((tab, i) => {
         tab.classList.toggle('active', i === index);
     });
-
-    if (elements.calculatorTableBody) elements.calculatorTableBody.innerHTML = '';
+    const container = document.getElementById('quote-sections-container');
+    if (container) container.innerHTML = '';
+    
+    document.getElementById('btn-add-section-tecido').classList.remove('hidden'); 
+    document.getElementById('btn-add-section-amorim').classList.remove('hidden'); 
+    document.getElementById('btn-add-section-toldos').classList.remove('hidden'); 
     
     const abaAtiva = estadoAbas[index];
-    const ambientesDaAba = abaAtiva.ambientes || [];
-    
-    if (ambientesDaAba.length > 0) {
-        ambientesDaAba.forEach(estadoLinha => {
-            adicionarLinhaCalculadora(estadoLinha);
-        });
-    } else {
-        adicionarLinhaCalculadora(null);
+    const sectionsDaAba = abaAtiva.sections || {};
+
+    if (!abaAtiva.sections && Array.isArray(abaAtiva.ambientes)) {
+        console.log("Migrando aba de formato antigo...");
+        sectionsDaAba['tecido'] = { active: true, ambientes: abaAtiva.ambientes };
+        abaAtiva.sections = sectionsDaAba;
+        delete abaAtiva.ambientes;
     }
+    ['tecido', 'amorim', 'toldos'].forEach(sectionType => {
+        const sectionData = sectionsDaAba[sectionType];
+        if (sectionData && sectionData.active) {
+            addSection(sectionType, document.getElementById(`btn-add-section-${sectionType}`));
+            
+            const sectionEl = container.querySelector(`.quote-section[data-section-type="${sectionType}"]`);
+            const tableBody = sectionEl.querySelector('.tabela-calculo-body');
+            tableBody.innerHTML = ''; 
+            if (sectionData.ambientes && sectionData.ambientes.length > 0) {
+                sectionData.ambientes.forEach(estadoLinha => {
+                    switch (sectionType) {
+                        case 'tecido':
+                            adicionarLinhaTecido(tableBody, estadoLinha);
+                            break;
+                        case 'amorim':
+                            adicionarLinhaAmorim(tableBody, estadoLinha);
+                            break;
+                        case 'toldos':
+                            adicionarLinhaToldos(tableBody, estadoLinha);
+                            break;
+                    }
+                });
+            } else {
+                 switch (sectionType) {
+                        case 'tecido':
+                            adicionarLinhaTecido(tableBody, null);
+                            break;
+                        case 'amorim':
+                            adicionarLinhaAmorim(tableBody, null);
+                            break;
+                        case 'toldos':
+                            adicionarLinhaToldos(tableBody, null);
+                            break;
+                    }
+            }
+        }
+    });
 
     if (elements.chkSummaryVendaRealizada) {
         elements.chkSummaryVendaRealizada.checked = abaAtiva.venda_realizada === true;
     }
-
+checkSectionControls();
     atualizarHeaderParcelado();
     recalcularTotaisSelecionados();
 }
 
 function adicionarAba() {
-
     if (abaAtivaIndex >= 0 && abaAtivaIndex < estadoAbas.length) {
-        estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
+         const sectionsData = {};
+         const sectionElements = document.querySelectorAll('#quote-sections-container .quote-section');
+         sectionElements.forEach(sectionEl => {
+            const sectionType = sectionEl.dataset.sectionType;
+            sectionsData[sectionType] = {
+                active: true,
+                ambientes: obterEstadoSection(sectionEl) 
+            };
+         });
+         estadoAbas[abaAtivaIndex].sections = sectionsData;
+         estadoAbas[abaAtivaIndex].venda_realizada = elements.chkSummaryVendaRealizada ? elements.chkSummaryVendaRealizada.checked : false;
     }
     
     const novaAba = {
         nome: `Orçamento ${estadoAbas.length + 1}`,
-        ambientes: [],
+        sections: {},
         venda_realizada: false 
     };
     estadoAbas.push(novaAba);
-    
     const novoIndex = estadoAbas.length - 1;
-
     renderizarTabs();
     ativarAba(novoIndex); 
     setDirty();

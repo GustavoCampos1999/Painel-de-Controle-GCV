@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Controle Primor</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="calculadora.css">
-    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="styles.css"> <link rel="stylesheet" href="calculadora.css"> <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
 
@@ -26,6 +24,7 @@
             <a href="#" id="btn-logout" style="margin-left: 15px;">Sair</a>
         </div>
     </header>
+
     <nav class="tabs">
         <button class="tab-button active" data-tab="tab-clientes">Clientes & Orçamentos</button>
         <button class="tab-button" data-tab="tab-gerenciar-dados">Gerenciar Dados</button>
@@ -33,7 +32,7 @@
 
     <main>
         <div id="tab-clientes" class="tab-content active">
-            
+
             <div id="client-list-view">
                 <div class="list-container">
                     <div class="list-header">
@@ -58,143 +57,87 @@
             </div>
 
             <div id="calculator-view" style="display: none;">
+
                 <div class="calculator-header">
-                     <button id="btn-voltar-clientes">&larr; Voltar para Clientes</button>
-                     <h2 id="calculator-client-name">Calculadora para Cliente</h2>
-                     <button id="btn-add-linha-calc" class="btn-adicionar" style="margin-left: 15px;">+ Ambiente</button>
-                     <div id="save-status-wrapper" class="save-status-wrapper">
-                         <span id="save-status-message" class="save-status-message"></span>
-                         <button id="btn-manual-save" class="btn-manual-save hidden">Salvar</button>
-                    </div>
+                    <button id="btn-voltar-clientes">&larr; Voltar para Clientes</button>
+                    <h2 id="calculator-client-name">Calculadora para Cliente</h2>
+                    <div id="save-status-wrapper" class="save-status-wrapper">
+    <span id="save-status-message" class="save-status-message"></span>
+    <button id="btn-print-orcamento" class="btn-print-orcamento" title="Imprimir Orçamento">🖨️</button>
+    <button id="btn-manual-save" class="btn-manual-save hidden">Salvar</button>
+</div>
                 </div>
 
                 <div id="calc-tabs-container">
                     <button id="btn-add-aba-calc" title="Adicionar novo orçamento (aba)">+</button>
-                </div>
-                <template id="template-calc-tab">
-                    <div class="calc-tab" tabindex="0">
-                        <span class="calc-tab-name" title="Duplo clique para renomear">Orçamento 1</span>
-                        <button class="btn-close-aba" title="Fechar aba">×</button>
                     </div>
-                </template>
 
-                <div class="tabela-container calculator-container">
-                    <table id="tabela-calculo-cliente">
-                       <thead>
-                            <tr>
-                                <th rowspan="2" class="col-acoes-calc">AÇÕES</th>
-                                <th rowspan="2" class="col-selecionar-calc" title="Selecionar para somar">✓</th>
-                                <th rowspan="2" class="col-ambiente-calc">AMBIENTE</th>
-                                <th colspan="2" class="sessao-medidas">MEDIDAS</th>
-                                <th colspan="2" class="sessao-cortina">TECIDO CORTINA</th> <th colspan="1" class="sessao-forro">TECIDO FORRO</th>   <th colspan="2" class="sessao-blackout">BLACKOUT</th>
-                                <th colspan="4" class="sessao-valores">VALORES</th>
-                                <th colspan="2" class="sessao-orcamento">ORÇAMENTO</th>
-                            </tr>
-                            <tr>
-                                <th class="sessao-medidas">LARGURA</th>
-                                <th class="sessao-medidas">ALTURA</th>
-                                <th class="sessao-cortina">FRANZIDO</th>
-                                <th class="sessao-cortina">CÓDIGO TECIDO</th>
-                                <th class="sessao-cortina">QTD.</th>
-                                <th class="sessao-forro">CÓDIGO TECIDO</th>
-                                <th class="sessao-forro">QTD.</th>
-                                <th class="sessao-blackout">FRANZIDO</th>
-                                <th class="sessao-blackout">CÓDIGO TECIDO</th>
-                                <th class="sessao-blackout">QTD.</th>
-                                <th class="sessao-valores">CONFECÇÃO</th>
-                                <th class="sessao-valores">TRILHO</th>
-                                <th class="sessao-valores">INSTALAÇÃO</th>
-                                <th class="sessao-valores">OUTROS</th>
-                                <th class="sessao-orcamento">TOTAL</th>
-                                <th id="th-parcelado-header" class="sessao-orcamento">DÉBITO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="corpo-tabela-calculo-cliente"></tbody>
-                    </table>
+                <div id="section-controls" class="section-controls-container">
+                    <span>Adicionar Seção de Orçamento:</span>
+                    <button id="btn-add-section-tecido" class="btn-add-section">Cortinas Tecido</button>
+                    <button id="btn-add-section-amorim" class="btn-add-section">Cortinas Amorim</button>
+                    <button id="btn-add-section-toldos" class="btn-add-section">Toldos Amorim</button>
                 </div>
-                
-                <div class="wrapper-markups calculator-markups">
-                   <button id="btn-abrir-config-calculadora" class="btn-config-calc" title="Configurações">&#9881;</button> 
 
-                   <div class="grupo-markups">
+                <div id="quote-sections-container">
+                    </div>
+
+                <div class="wrapper-markups calculator-markups">
+                    <div class="grupo-markups">
+                        <button id="btn-abrir-config-calculadora" title="Configurações de Cálculo">⚙️</button>
                         <div>
-                            <label for="input-valor-entrada-global">VALOR DE ENTRADA</label>
+                            <label for="input-valor-entrada-global">ENTRADA</label>
                             <input type="text" id="input-valor-entrada-global" class="global-calc-trigger format-money" inputmode="decimal">
                         </div>
                         <div>
-                            <label for="select-parcelamento-global">CONDIÇÃO DE PAGAMENTO</label>
+                            <label for="select-parcelamento-global">PARCELAMENTO</label>
                             <select id="select-parcelamento-global" class="global-calc-trigger"></select>
                         </div>
                         <div>
                             <label for="select-frete-global">FRETE</label>
                             <select id="select-frete-global" class="global-calc-trigger"></select>
                         </div>
+
                     </div>
+                    
                 </div>
+
                 <div id="calculator-summary" class="calculator-container" style="display: none;">
-                    <h3>Total Selecionado</h3>
-                   <div class="summary-totals-container">
-                        <div class="summary-total-box">
-                            <label id="summary-avista-label">TOTAL</label>
+                    <h3>Resumo do Orçamento Selecionado</h3>
+                    <div class="summary-totals-container">
+                        <div class="summary-total-box" id="summary-total-avista-box">
+                            <label>TOTAL</label>
                             <span id="summary-total-avista">R$ 0,00</span>
                         </div>
                         
-                        <div id="summary-total-entrada" class="summary-total-box" style="display: none;">
-                            <label id="summary-entrada-label">ENTRADA</label>
+                         <div class="summary-total-box" id="summary-total-entrada" style="display: none;">
+                            <label>ENTRADA</label>
                             <span id="summary-total-entrada-value">R$ 0,00</span>
                         </div>
-
-                        <div id="summary-total-restante" class="summary-total-box" style="display: none;">
+                        <div class="summary-total-box" id="summary-total-restante" style="display: none;">
                             <label id="summary-restante-label">RESTANTE</label>
                             <span id="summary-total-restante-value">R$ 0,00</span>
                         </div>
-                        <div class="summary-total-box">
+                        <div class="summary-total-box" id="summary-total-parcelado-box">
                             <label id="summary-parcelado-label">DÉBITO</label>
                             <span id="summary-total-parcelado">R$ 0,00</span>
                         </div>
                     </div>
-                    </div>
                     <div class="summary-venda-container">
                         <input type="checkbox" id="chk-summary-venda-realizada">
-                        <label for="chk-summary-venda-realizada">Venda Realizada</label>
+                        <label for="chk-summary-venda-realizada">Marcar como Venda Realizada</label>
                     </div>
                 </div>
 
-                <template id="template-linha-calculadora">
-                     <tr class="linha-calculo-cliente">
-                         <td class="col-acoes-calc"><button class="btn-remover-linha btn-excluir">×</button></td>
-                         <td class="col-selecionar-calc"><input type="checkbox" class="select-linha-checkbox" title="Selecionar linha"></td>
-                         <td class="col-ambiente-calc"><input type="text" class="input-ambiente" placeholder="Ex: Sala"></td>
-                         
-                         <td><input type="text" inputmode="decimal" class="input-largura"></td>
-                         <td><input type="text" inputmode="decimal" class="input-altura"></td>
-                         <td><select class="select-franzCortina"></select></td>
-                         <td><select class="select-codTecidoCortina"></select></td>
-                         <td><input type="text" class="resultado" readonly></td>
-                         <td><select class="select-codTecidoForro"></select></td>
-                         <td><input type="text" class="resultado" readonly></td>
-                         <td><select class="select-franzBlackout"></select></td>
-                         <td><select class="select-codTecidoBlackout"></select></td>
-                         <td><input type="text" class="resultado" readonly></td>
-                         <td><select class="select-confecao"></select></td>
-                         <td><select class="select-trilho"></select></td>
-                         <td><select class="select-instalacao"></select></td>
-                         <td><input type="text" class="input-outros"></td>
-                         <td><input type="text" class="resultado-preco" readonly></td>
-                         <td><input type="text" class="resultado-preco" readonly></td>
-                     </tr>
-                 </template>
-            </div>
-        </div>
-
-        <div id="tab-gerenciar-dados" class="tab-content">
-            
+            </div> </div> <div id="tab-gerenciar-dados" class="tab-content">
             <div class="gerenciar-dados-container">
                 <nav class="sub-tabs">
                     <button class="subtab-button active" data-subtab="subtab-tecidos">Tecidos</button>
                     <button class="subtab-button" data-subtab="subtab-confeccao">Confecção</button>
                     <button class="subtab-button" data-subtab="subtab-trilho">Trilho</button>
-                    <button class="subtab-button" data-subtab="subtab-outros">Outros</button> </nav>
+                    <button class="subtab-button" data-subtab="subtab-outros">Outros</button>
+                </nav>
+
                 <div id="subtab-tecidos" class="subtab-content active">
                     <section class="gerenciar-dados-secao">
                         <div class="secao-header">
@@ -212,8 +155,7 @@
                                     <th>Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-tecidos-body">
-                                </tbody>
+                            <tbody id="tabela-tecidos-body"></tbody>
                         </table>
                     </section>
                 </div>
@@ -226,7 +168,7 @@
                         </div>
                         <input type="text" id="input-pesquisa-confeccao" class="input-pesquisa-dados" placeholder="Pesquisar por nome da opção...">
                         <table id="tabela-confeccao">
-                            <thead>
+                             <thead>
                                 <tr>
                                     <th title="Favorito">★</th>
                                     <th class="sortable-header" data-sort-key="opcao">Opção <span class="sort-arrow"></span></th>
@@ -234,8 +176,7 @@
                                     <th>Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-confeccao-body">
-                                </tbody>
+                            <tbody id="tabela-confeccao-body"></tbody>
                         </table>
                     </section>
                 </div>
@@ -244,10 +185,11 @@
                      <section class="gerenciar-dados-secao">
                         <div class="secao-header">
                             <h2>Gerenciar Tipos de Trilho</h2>
-                            <button id="btn-abrir-modal-add-trilho" class="btn-adicionar">Adicionar Trilho</button> </div>
+                            <button id="btn-abrir-modal-add-trilho" class="btn-adicionar">Adicionar Trilho</button>
+                         </div>
                         <input type="text" id="input-pesquisa-trilho" class="input-pesquisa-dados" placeholder="Pesquisar por nome da opção...">
                        <table id="tabela-trilho">
-                            <thead>
+                             <thead>
                                 <tr>
                                     <th title="Favorito">★</th>
                                     <th class="sortable-header" data-sort-key="opcao">Opção <span class="sort-arrow"></span></th>
@@ -255,8 +197,7 @@
                                     <th>Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-trilho-body">
-                                </tbody>
+                            <tbody id="tabela-trilho-body"></tbody>
                         </table>
                     </section>
                </div>
@@ -268,37 +209,228 @@
                             <button id="btn-abrir-modal-add-frete" class="btn-adicionar">Adicionar Frete</button>
                         </div>
                         <table id="tabela-frete">
-                            <thead>
+                             <thead>
                                 <tr>
                                     <th class="sortable-header" data-sort-key="valor">Valor <span class="sort-arrow"></span></th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-frete-body">
-                                </tbody>
+                            <tbody id="tabela-frete-body"></tbody>
                         </table>
                     </section>
-                    
+
                     <section class="gerenciar-dados-secao" style="margin-top: 20px; border-top: 1px solid #dee2e6;">
                         <div class="secao-header">
                             <h2>Gerenciar Opções de Instalação</h2>
                             <button id="btn-abrir-modal-add-instalacao" class="btn-adicionar">Adicionar Instalação</button>
                         </div>
                         <table id="tabela-instalacao">
-                            <thead>
+                             <thead>
                                 <tr>
                                     <th class="sortable-header" data-sort-key="valor">Valor <span class="sort-arrow"></span></th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-instalacao-body">
-                                </tbody>
+                            <tbody id="tabela-instalacao-body"></tbody>
                         </table>
                     </section>
                 </div>
-                </div> 
-        </div> 
-    </main>
+            </div> </div> </main>
+
+    <template id="template-calc-tab">
+        <div class="calc-tab" data-index="0">
+            <span class="calc-tab-name">Orçamento</span>
+            <button class="btn-close-aba" title="Fechar aba">×</button>
+        </div>
+    </template>
+<template id="template-section-tecido">
+        <div class="quote-section" data-section-type="tecido">
+            <div class="quote-section-header">
+                <h3>Cortinas Tecido</h3>
+                <div>
+                    <button class="btn-drag-secao" title="Mover seção">☰</button>
+                    <button class="btn-add-linha btn-adicionar">+ Ambiente</button>
+                    <button class="btn-remover-secao btn-excluir" title="Remover seção">×</button>
+                </div>
+            </div>
+            <div class="tabela-container calculator-container">
+                <table class="tabela-calculo">
+<thead>
+    <tr>
+        <th rowspan="2" class="col-acoes-calc">AÇÕES</th>
+        <th rowspan="2" class="col-selecionar-calc" title="Selecionar para somar">✓</th>
+        <th rowspan="2" class="col-ambiente-calc">AMBIENTE</th>
+        <th colspan="2" class="sessao-medidas">MEDIDAS</th>
+
+        <th colspan="2" class="sessao-cortina">TECIDO CORTINA</th> 
+
+        <th colspan="1" class="sessao-forro">TECIDO FORRO</th> 
+
+        <th colspan="2" class="sessao-blackout">BLACKOUT</th> 
+
+        <th colspan="4" class="sessao-valores">VALORES</th> 
+        <th colspan="3" class="sessao-orcamento">ORÇAMENTO</th>
+    </tr>
+    <tr>
+        <th class="sessao-medidas">LARGURA</th>
+        <th class="sessao-medidas">ALTURA</th>
+        <th class="sessao-cortina">FRANZIDO</th>
+        <th class="sessao-cortina">CÓDIGO TECIDO</th>
+        <th class="sessao-cortina">QTD.</th>
+        <th class="sessao-forro">CÓDIGO TECIDO</th>
+        <th class="sessao-forro">QTD.</th>
+        <th class="sessao-blackout">FRANZIDO</th>
+        <th class="sessao-blackout">CÓDIGO TECIDO</th>
+        <th class="sessao-blackout">QTD.</th>
+        <th class="sessao-valores">CONFECÇÃO</th>
+        <th class="sessao-valores">TRILHO</th>
+        <th class="sessao-valores">INSTALAÇÃO</th>
+        <th class="sessao-valores">OUTROS</th>
+        <th class="sessao-orcamento">TOTAL</th>
+        <th id="th-parcelado-header" class="th-parcelado-header sessao-orcamento">DÉBITO</th>
+        <th class="sessao-orcamento">OBSERVAÇÃO</th>
+    </tr>
+</thead>
+                    <tbody class="tabela-calculo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+  <template id="template-section-amorim">
+        <div class="quote-section" data-section-type="amorim">
+            <div class="quote-section-header">
+                <h3>Cortinas Amorim</h3>
+                 <div>
+                    <button class="btn-drag-secao" title="Mover seção">☰</button>
+                    <button class="btn-add-linha btn-adicionar">+ Ambiente</button>
+                    <button class="btn-remover-secao btn-excluir" title="Remover seção">×</button>
+                 </div>
+            </div>
+            <div class="tabela-container calculator-container">
+                <table class="tabela-calculo tabela-amorim-cortina">
+                    <thead>
+                        <tr>
+                            <th class="col-acoes-calc">AÇÕES</th>
+                            <th class="col-selecionar-calc" title="Selecionar para somar">✓</th>
+                            <th class="col-ambiente-calc">AMBIENTE</th>
+                            <th>LARGURA</th>
+                            <th>ALTURA</th>
+                            <th>MODELO CORTINA</th>
+                            <th>CÓDIGO TECIDO</th>
+                            <th>COR ACESSÓRIOS</th>
+                            <th>COMANDO</th>
+                            <th>ALTURA COMANDO</th>
+                            <th>VALOR</th>
+                            <th>OBSERVAÇÃO</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tabela-calculo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+<template id="template-section-toldos">
+        <div class="quote-section" data-section-type="toldos">
+            <div class="quote-section-header">
+                <h3>Toldos Amorim</h3>
+                 <div>
+                   <button class="btn-drag-secao" title="Mover seção">☰</button>
+                    <button class="btn-add-linha btn-adicionar">+ Ambiente</button>
+                    <button class="btn-remover-secao btn-excluir" title="Remover seção">×</button>
+                </div>
+            </div>
+            <div class="tabela-container calculator-container">
+                <table class="tabela-calculo tabela-amorim-toldos">
+                    <thead>
+                        <tr>
+                            <th class="col-acoes-calc">AÇÕES</th>
+                            <th class="col-selecionar-calc" title="Selecionar para somar">✓</th>
+                            <th class="col-ambiente-calc">AMBIENTE</th>
+                            <th>LARGURA</th>
+                            <th>ALTURA</th>
+                            <th>MODELO TOLDO</th>
+                            <th>CÓDIGO TECIDO</th>
+                            <th>COR ACESSÓRIOS</th>
+                            <th>COMANDO</th>
+                            <th>ALTURA COMANDO</th>
+                            <th>VALOR</th>
+                            <th>OBSERVAÇÃO</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tabela-calculo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <template id="template-linha-tecido">
+<tr class="linha-calculo-cliente" data-linha-type="tecido">
+    <td class="col-acoes-calc"><button class="btn-remover-linha btn-excluir">×</button></td>
+    <td class="col-selecionar-calc"><input type="checkbox" class="select-linha-checkbox" title="Selecionar linha"></td>
+    <td class="col-ambiente-calc"><input type="text" class="input-ambiente" placeholder="Ex: Sala"></td>
+    <td><input type="text" inputmode="decimal" class="input-largura"></td>
+    <td><input type="text" inputmode="decimal" class="input-altura"></td>
+    <td><select class="select-franzCortina"></select></td>
+    <td><select class="select-codTecidoCortina"></select></td>
+    <td><input type="text" class="resultado" readonly></td> <td><select class="select-codTecidoForro"></select></td>
+    <td><input type="text" class="resultado" readonly></td> <td><select class="select-franzBlackout"></select></td>
+    <td><select class="select-codTecidoBlackout"></select></td>
+    <td><input type="text" class="resultado" readonly></td> <td><select class="select-confecao"></select></td>
+    <td><select class="select-trilho"></select></td>
+    <td><select class="select-instalacao"></select></td>
+    <td><input type="text" class="input-outros format-money"></td>
+    <td><input type="text" class="resultado-preco-total" readonly></td>
+    <td><input type="text" class="resultado-preco-parcelado" readonly></td>
+    <td><input type="text" class="input-observacao" placeholder="Obs..."></td>
+</tr>
+    </template>
+
+    <template id="template-linha-amorim">
+        <tr class="linha-calculo-cliente" data-linha-type="amorim">
+            <td class="col-acoes-calc"><button class="btn-remover-linha btn-excluir">×</button></td>
+            <td class="col-selecionar-calc"><input type="checkbox" class="select-linha-checkbox" title="Selecionar linha"></td>
+            <td class="col-ambiente-calc"><input type="text" class="input-ambiente" placeholder="Ex: Sala"></td>
+            <td><input type="text" inputmode="decimal" class="input-largura"></td>
+            <td><input type="text" inputmode="decimal" class="input-altura"></td>
+            <td><select class="select-modelo-cortina"></select></td>
+            <td><select class="select-codTecidoCortina"></select></td>
+            <td><select class="select-cor-acessorios"></select></td>
+<td><select class="select-comando"></select></td>
+<td class="col-altura-comando">
+    <input type="text" class="input-altura-comando-manual" placeholder="Ex: 1.50">
+    <select class="select-altura-comando-motor hidden">
+        <option value="127v">127v</option>
+        <option value="220v">220v</option>
+    </select>
+</td>
+            <td><input type="text" class="input-valor-manual format-money resultado-preco-total" inputmode="decimal"></td>
+            <td><input type="text" class="input-observacao" placeholder="Obs..."></td>
+        </tr>
+    </template>
+
+    <template id="template-linha-toldos">
+        <tr class="linha-calculo-cliente" data-linha-type="toldos">
+            <td class="col-acoes-calc"><button class="btn-remover-linha btn-excluir">×</button></td>
+            <td class="col-selecionar-calc"><input type="checkbox" class="select-linha-checkbox" title="Selecionar linha"></td>
+            <td class="col-ambiente-calc"><input type="text" class="input-ambiente" placeholder="Ex: Garagem"></td>
+            <td><input type="text" inputmode="decimal" class="input-largura"></td>
+            <td><input type="text" inputmode="decimal" class="input-altura"></td>
+            <td><select class="select-modelo-toldo"></select></td>
+            <td><select class="select-codTecidoCortina"></select></td>
+            <td><select class="select-cor-acessorios"></select></td>
+<td><select class="select-comando"></select></td>
+<td class="col-altura-comando">
+    <input type="text" class="input-altura-comando-manual" placeholder="Ex: 1.80">
+    <select class="select-altura-comando-motor hidden">
+        <option value="127v">127v</option>
+        <option value="220v">220v</option>
+    </select>
+</td>
+            <td><input type="text" class="input-valor-manual format-money resultado-preco-total" inputmode="decimal"></td>
+            <td><input type="text" class="input-observacao" placeholder="Obs..."></td>
+        </tr>
+    </template>
+
 
     <div id="toast-notification" class="toast"></div>
 
@@ -317,7 +449,6 @@
             </form>
         </div>
     </div>
-    
     <div id="modal-editar-cliente" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Editar Cliente</h2>
@@ -334,7 +465,6 @@
             </form>
         </div>
     </div>
-
     <div id="modal-confirm-excluir-cliente" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Confirmar Exclusão</h2>
@@ -360,7 +490,6 @@
             </form>
         </div>
     </div>
-    
     <div id="modal-edit-tecido" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Editar Tecido</h2>
@@ -431,71 +560,71 @@
                 </div>
             </form>
        </div>
-</div>
+    </div>
 
-<div id="modal-add-frete" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <h2>Adicionar Opção de Frete</h2>
-        <form id="form-add-frete">
-            <div><label for="add-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="add-frete-valor" name="valor"></div>
-            <div class="modal-actions">
-                <button type="button" id="btn-cancelar-add-frete" class="btn-cancelar">Cancelar</button>
-                <button type="submit" class="btn-salvar">Salvar</button>
-            </div>
-        </form>
-    </div>
-</div>
-<div id="modal-edit-frete" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <h2>Editar Opção de Frete</h2>
-        <form id="form-edit-frete">
-            <input type="hidden" name="id">
-            <div><label for="edit-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-frete-valor" name="valor"></div>
-            <div class="modal-actions">
-                <button type="button" id="btn-cancelar-edit-frete" class="btn-cancelar">Cancelar</button>
-                <button type="submit" class="btn-salvar">Salvar Alterações</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="modal-add-instalacao" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <h2>Adicionar Opção de Instalação</h2>
-        <form id="form-add-instalacao">
-            <div><label for="add-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="add-instalacao-valor" name="valor"></div>
-            <div class="modal-actions">
-                <button type="button" id="btn-cancelar-add-instalacao" class="btn-cancelar">Cancelar</button>
-                <button type="submit" class="btn-salvar">Salvar</button>
-            </div>
-        </form>
-    </div>
-</div>
-<div id="modal-edit-instalacao" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <h2>Editar Opção de Instalação</h2>
-        <form id="form-edit-instalacao">
-            <input type="hidden" name="id">
-            <div><label for="edit-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-instalacao-valor" name="valor"></div>
-            <div class="modal-actions">
-                <button type="button" id="btn-cancelar-edit-instalacao" class="btn-cancelar">Cancelar</button>
-                <button type="submit" class="btn-salvar">Salvar Alterações</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="modal-confirm-excluir-generico" class="modal-overlay" style="display: none;">
+    <div id="modal-add-frete" class="modal-overlay" style="display: none;">
         <div class="modal-content">
-            <h2>Confirmar Exclusão</h2>
-            <p>Tem certeza que deseja excluir <strong id="item-nome-excluir"></strong>?</p>
-            <div class="modal-actions">
-                <button type="button" id="btn-cancelar-excluir-generico" class="btn-cancelar">Cancelar</button>
-                <button type="button" id="btn-confirmar-excluir-generico" class="btn-excluir">Excluir</button>
-            </div>
+            <h2>Adicionar Opção de Frete</h2>
+            <form id="form-add-frete">
+                <div><label for="add-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="add-frete-valor" name="valor"></div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancelar-add-frete" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
-    
+    <div id="modal-edit-frete" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Editar Opção de Frete</h2>
+            <form id="form-edit-frete">
+                <input type="hidden" name="id">
+                <div><label for="edit-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-frete-valor" name="valor"></div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancelar-edit-frete" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-add-instalacao" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Adicionar Opção de Instalação</h2>
+            <form id="form-add-instalacao">
+                <div><label for="add-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="add-instalacao-valor" name="valor"></div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancelar-add-instalacao" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="modal-edit-instalacao" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Editar Opção de Instalação</h2>
+            <form id="form-edit-instalacao">
+                <input type="hidden" name="id">
+                <div><label for="edit-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-instalacao-valor" name="valor"></div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancelar-edit-instalacao" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-confirm-excluir-generico" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <h2>Confirmar Exclusão</h2>
+                <p>Tem certeza que deseja excluir <strong id="item-nome-excluir"></strong>?</p>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancelar-excluir-generico" class="btn-cancelar">Cancelar</button>
+                    <button type="button" id="btn-confirmar-excluir-generico" class="btn-excluir">Excluir</button>
+                </div>
+            </div>
+        </div>
+
     <div id="modal-confirm-excluir-linha" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Confirmar Exclusão</h2>
@@ -507,13 +636,22 @@
         </div>
     </div>
 
+     <div id="modal-confirm-excluir-secao" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja remover a seção <strong id="secao-nome-excluir"></strong> deste orçamento?</p>
+            <div class="modal-actions">
+                <button type="button" id="btn-cancelar-excluir-secao" class="btn-cancelar">Cancelar</button>
+                <button type="button" id="btn-confirmar-excluir-secao" class="btn-excluir">Excluir</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-config-calculadora" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Configurações do Orçamento</h2>
-            
             <div class="config-calculadora-content">
                 <p>Ajuste o valor base para o cálculo do orçamento.</p>
-                
                 <div class="grupo-markups-modal">
                     <div>
                         <label for="input-markup-base-calc">MARKUP (%)</label>
@@ -521,7 +659,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="modal-actions">
                 <button type="button" id="btn-fechar-config-calculadora" class="btn-cancelar">Fechar</button>
             </div>
@@ -538,17 +675,19 @@
             </div>
         </div>
     </div>
-<div id="modal-confirm-sair" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h2>Alterações não salvas</h2>
-            <p>Você possui alterações não salvas. Deseja realmente sair sem salvar?</p>
-            <div class="modal-actions">
-                <button type="button" id="btn-cancelar-sair" class="btn-cancelar">Cancelar</button>
-                <button type="button" id="btn-confirmar-sair" class="btn-excluir">Sair sem Salvar</button>
-                <button type="button" id="btn-salvar-e-sair" class="btn-salvar">Sair e Salvar</button>
+
+    <div id="modal-confirm-sair" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <h2>Alterações não salvas</h2>
+                <p>Você possui alterações não salvas. Deseja realmente sair sem salvar?</p>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancelar-sair" class="btn-cancelar">Cancelar</button>
+                    <button type="button" id="btn-confirmar-sair" class="btn-excluir">Sair sem Salvar</button>
+                    <button type="button" id="btn-salvar-e-sair" class="btn-salvar">Sair e Salvar</button>
+                </div>
             </div>
         </div>
-    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="script.js"></script>
 </body>

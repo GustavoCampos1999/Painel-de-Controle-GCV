@@ -680,12 +680,10 @@ body.dark-mode .grupo-markups-modal input {
     border-color: #555;
 }
 
-body.dark-mode .sessao-medidas   { background-color: #2c2b27; }
-body.dark-mode .sessao-cortina { background-color: #272c2d; }
-body.dark-mode .sessao-forro { background-color: #282c29; }
-body.dark-mode .sessao-blackout{ background-color: #2e292b; }
-body.dark-mode .sessao-valores { background-color: #2d292e; }
-body.dark-mode .sessao-orcamento { background-color: #292a2e; }
+body.dark-mode .tabela-calculo th {
+    background-color: #2a2a2a;
+    border-color: #444; 
+}
 
 body.dark-mode #tabela-calculo-cliente th {
     background-color: #303030;
@@ -777,7 +775,148 @@ body.dark-mode .client-filter-select {
     color: #e0e0e0;
     border-color: #555;
 }
+.section-controls-container {
+    padding: 10px 15px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.section-controls-container span {
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+}
+.btn-add-section {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+.btn-add-section:hover {
+    background-color: #0056b3;
+}
+.btn-add-section:disabled {
+    background-color: #6c757d;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
 
+.quote-section {
+    margin-bottom: 25px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.quote-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #ddd;
+}
+.quote-section-header h3 {
+    margin: 0;
+    color: #931011;
+}
+.quote-section-header .btn-add-linha {
+    font-size: 14px;
+    padding: 8px 12px;
+}
+
+.tabela-calculo {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1600px; 
+}
+.tabela-calculo th,
+.tabela-calculo td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 13px;
+    vertical-align: middle;
+}
+.tabela-calculo th {
+    background-color: #e9ecef;
+    font-size: 12px;
+    padding: 8px 5px;
+    white-space: nowrap;
+}
+
+.tabela-calculo tbody input,
+.tabela-calculo tbody select {
+    width: 100%;
+    max-width: 180px; 
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 13px;
+}
+.tabela-calculo .input-ambiente { min-width: 130px; }
+.tabela-calculo .input-largura,
+.tabela-calculo .input-altura { width: 80px; max-width: 80px; }
+.tabela-calculo .input-valor-manual {
+    font-weight: bold;
+    text-align: right;
+    background-color: #fffde7;
+    min-width: 120px;
+}
+.tabela-calculo .input-observacao {
+    min-width: 150px;
+}
+.tabela-calculo .resultado-preco-total {
+    min-width: 120px;
+}
+.tabela-calculo .resultado-preco-parcelado {
+     min-width: 120px;
+}
+
+body.dark-mode .section-controls-container {
+    background-color: #2a2a2a;
+    border-color: #333;
+}
+body.dark-mode .section-controls-container span {
+    color: #ccc;
+}
+body.dark-mode .quote-section {
+    border-color: #333;
+    background-color: #1e1e1e;
+}
+body.dark-mode .quote-section-header {
+    background-color: #252525;
+    border-bottom-color: #333;
+}
+body.dark-mode .quote-section-header h3 {
+    color: #e06c6e;
+}
+body.dark-mode .tabela-calculo th {
+    background-color: #2a2a2a;
+}
+body.dark-mode .tabela-calculo td {
+    border-color: #444;
+}
+body.dark-mode .tabela-calculo tbody input,
+body.dark-mode .tabela-calculo tbody select {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #555;
+}
+body.dark-mode .tabela-calculo .input-valor-manual {
+    background-color: #3b3a30; 
+}
 
 @media (max-width: 768px) {
     header {

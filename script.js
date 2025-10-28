@@ -140,6 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
         calculatorTableBody: document.getElementById('corpo-tabela-calculo-cliente'),
         saveStatusMessage: document.getElementById('save-status-message'),
         btnManualSave: document.getElementById('btn-manual-save'),
+        btnPrintOrcamento: document.getElementById('btn-print-orcamento'), 
+    calculatorMarkupInput: document.getElementById('input-markup-base-calc'),
         calculatorMarkupInput: document.getElementById('input-markup-base-calc'),
         selectParcelamentoGlobal: document.getElementById('select-parcelamento-global'),
         inputValorEntradaGlobal: document.getElementById('input-valor-entrada-global'),
@@ -173,7 +175,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCancelarSair: document.getElementById('btn-cancelar-sair'),
         btnConfirmarSair: document.getElementById('btn-confirmar-sair'),
         btnSalvarESair: document.getElementById('btn-salvar-e-sair'),
-        btnThemeToggle: document.getElementById('btn-theme-toggle')
+        btnThemeToggle: document.getElementById('btn-theme-toggle'),
+        modalExcluirSecao: document.getElementById('modal-confirm-excluir-secao'),
+        btnConfirmarExcluirSecao: document.getElementById('btn-confirmar-excluir-secao'),
+        btnCancelarExcluirSecao: document.getElementById('btn-cancelar-excluir-secao'),
+        quoteSectionsContainer: document.getElementById('quote-sections-container'), 
+        sectionControlsContainer: document.getElementById('section-controls'),
+        spanSecaoNomeExcluir: document.getElementById('secao-nome-excluir')
+        
     };
 
     const dataRefs = {
