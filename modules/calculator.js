@@ -90,39 +90,6 @@ let linhaParaExcluir = null;
 let abaParaExcluir = { index: null, element: null };
 let secaoParaExcluir = { element: null, type: null, button: null };
 let isDirty = false;
-let dragElement = null;
-function handleDragStart(e, sectionElement) {
-    // Previne seleção de texto (mouse) ou scroll (touch)
-    e.preventDefault(); 
-    dragElement = sectionElement;
-    dragElement.classList.add('dragging');
-}
-
-function handleDragMove(e) {
-    if (!dragElement) return;
-
-    // Previne o scroll da página enquanto arrasta
-    if (e.cancelable) {
-        e.preventDefault();
-    }
-
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
-
-    const afterElement = getDragAfterElement(elements.quoteSectionsContainer, y);
-
-    if (afterElement == null) {
-        elements.quoteSectionsContainer.appendChild(dragElement);
-    } else {
-        elements.quoteSectionsContainer.insertBefore(dragElement, afterElement);
-    }
-}
-
-function handleDragEnd() {
-    if (!dragElement) return;
-    dragElement.classList.remove('dragging');
-    dragElement = null;
-    setDirty();
-}
 
 function setDirty() {
     if (isDirty) return; 
@@ -185,31 +152,7 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             }
         });
     }
-if (elements.quoteSectionsContainer) {
-    // Eventos de Mouse
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('mouseup', handleDragEnd);
 
-    // Eventos de Toque
-    // Usamos 'document' para 'touchmove' e 'touchend' para que o usuário
-    // possa mover o dedo para fora do container sem quebrar o "arrastar".
-    document.addEventListener('touchmove', handleDragMove, { passive: false });
-    document.addEventListener('touchend', handleDragEnd);
-}
-
-function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.quote-section:not(.dragging)')];
-
-    return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
-        }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
     const btnAddSectionTecido = document.getElementById('btn-add-section-tecido');
     const btnAddSectionAmorim = document.getElementById('btn-add-section-amorim');
     const btnAddSectionToldos = document.getElementById('btn-add-section-toldos');
@@ -306,12 +249,13 @@ if (elements.btnPrintOrcamento) {
     }
 
     if (elements.selectParcelamentoGlobal) {
-        elements.selectParcelamentoGlobal.addEventListener('change', () => {
-             atualizarHeaderParcelado();
-             recalcularTotaisSelecionados(); 
-             setDirty();
-        });
-    }
+    elements.selectParcelamentoGlobal.addEventListener('change', () => {
+         atualizarHeaderParcelado();
+         recalcularParceladoAmorimToldos(); 
+         recalcularTotaisSelecionados(); 
+         setDirty();
+    });
+}
 
     setupCurrencyFormatting(elements.inputValorEntradaGlobal);
 
@@ -397,6 +341,7 @@ function executarExclusaoSecao() {
         secaoParaExcluir.element.remove();
         secaoParaExcluir.button.classList.remove('hidden');
         checkSectionControls();
+        updateMoveButtonsVisibility();
         recalcularTotaisSelecionados();
         setDirty();
     }
@@ -406,8 +351,6 @@ function executarExclusaoSecao() {
 
 function checkSectionControls() {
     if (!elements.sectionControlsContainer) return;
-    const span = elements.sectionControlsContainer.querySelector('span');
-    if (!span) return;
 
     const btnTecido = document.getElementById('btn-add-section-tecido');
     const btnAmorim = document.getElementById('btn-add-section-amorim');
@@ -417,7 +360,7 @@ function checkSectionControls() {
                       btnAmorim.classList.contains('hidden') &&
                       btnToldos.classList.contains('hidden');
 
-    span.style.display = allHidden ? 'none' : 'inline';
+    elements.sectionControlsContainer.style.display = allHidden ? 'none' : 'flex';
 }
 
 function addSection(sectionType, buttonElement) {
@@ -438,20 +381,31 @@ function addSection(sectionType, buttonElement) {
     const tableBody = sectionElement.querySelector('.tabela-calculo-body');
     const btnAddLinha = sectionElement.querySelector('.btn-add-linha');
     const btnRemoverSecao = sectionElement.querySelector('.btn-remover-secao'); 
-    const btnDrag = sectionElement.querySelector('.btn-drag-secao');
 
-   // Adiciona listeners para iniciar o "arrastar" (mouse e touch)
-if (btnDrag) {
-    btnDrag.addEventListener('mousedown', (e) => {
-        e.stopPropagation(); // Impede que o evento suba
-        handleDragStart(e, sectionElement);
-    });
+    const btnMoveUp = sectionElement.querySelector('.btn-move-up');
+    const btnMoveDown = sectionElement.querySelector('.btn-move-down');
 
-    btnDrag.addEventListener('touchstart', (e) => {
-        e.stopPropagation(); // Impede que o evento suba
-        handleDragStart(e, sectionElement);
-    }, { passive: false }); // 'passive: false' é necessário para o preventDefault()
-}
+    if (btnMoveUp) {
+        btnMoveUp.addEventListener('click', () => {
+            const prev = sectionElement.previousElementSibling;
+            if (prev) {
+                elements.quoteSectionsContainer.insertBefore(sectionElement, prev);
+                updateMoveButtonsVisibility();
+                setDirty();
+            }
+        });
+    }
+
+    if (btnMoveDown) {
+        btnMoveDown.addEventListener('click', () => {
+            const next = sectionElement.nextElementSibling;
+            if (next) {
+                elements.quoteSectionsContainer.insertBefore(sectionElement, next.nextElementSibling);
+                updateMoveButtonsVisibility();
+                setDirty();
+            }
+        });
+    }
 
     if (btnAddLinha) {
         btnAddLinha.addEventListener('click', () => {
@@ -503,7 +457,48 @@ if (btnDrag) {
 
     atualizarHeaderParcelado();
     checkSectionControls(); 
+    updateMoveButtonsVisibility();
     setDirty();
+}
+function calcularParceladoLinhaAmorim(linha, taxaParcelamento) {
+    if (!linha) return;
+
+    const inputValorTotal = linha.querySelector('.resultado-preco-total');
+    const inputValorParcelado = linha.querySelector('.resultado-preco-parcelado');
+
+    if (!inputValorTotal || !inputValorParcelado) return;
+
+    const valorTotal = parseCurrencyValue(inputValorTotal.value);
+    const valorParcelado = valorTotal * (1 + taxaParcelamento);
+
+    inputValorParcelado.value = formatadorReaisCalc.format(valorParcelado);
+}
+function recalcularParceladoAmorimToldos() {
+    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
+    const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
+
+    const todasLinhas = document.querySelectorAll('#quote-sections-container .linha-calculo-cliente[data-linha-type="amorim"], #quote-sections-container .linha-calculo-cliente[data-linha-type="toldos"]');
+
+    todasLinhas.forEach(linha => {
+        calcularParceladoLinhaAmorim(linha, taxaParcelamento);
+    });
+}
+
+function updateMoveButtonsVisibility() {
+    if (!elements.quoteSectionsContainer) return;
+    const sections = elements.quoteSectionsContainer.querySelectorAll('.quote-section');
+
+    sections.forEach((section, index) => {
+        const btnUp = section.querySelector('.btn-move-up');
+        const btnDown = section.querySelector('.btn-move-down');
+
+        if (btnUp) {
+            btnUp.style.display = (index === 0) ? 'none' : 'inline-block';
+        }
+        if (btnDown) {
+            btnDown.style.display = (index === sections.length - 1) ? 'none' : 'inline-block';
+        }
+    });
 }
 async function atualizarStatusVendaCliente() {
     if (!currentClientIdRef.value) return;
@@ -542,13 +537,16 @@ function preencherSelectParcelamento() {
 }
 
 function atualizarHeaderParcelado() {
-    const header = elements.thParceladoHeader;
     const select = elements.selectParcelamentoGlobal;
-    if (header && select) {
-        header.textContent = select.value;
-    }
+    if (!select) return;
+
+    const novoTextoHeader = select.value; 
+    const headers = document.querySelectorAll('#quote-sections-container .th-parcelado-header');
+    headers.forEach(header => {
+        header.textContent = novoTextoHeader;
+    });
     if(elements.summaryParceladoLabel) {
-        elements.summaryParceladoLabel.textContent = select.value;
+        elements.summaryParceladoLabel.textContent = novoTextoHeader;
     }
 }
 
@@ -833,10 +831,14 @@ function adicionarLinhaAmorim(tableBody, estadoLinha = null) {
 
     selectComando.addEventListener('change', toggleComandoInput);
 
-    inputValorManual.addEventListener('blur', () => {
-        recalcularTotaisSelecionados();
-        setDirty();
-    });
+   inputValorManual.addEventListener('blur', () => {
+    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
+    const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
+    calcularParceladoLinhaAmorim(novaLinha, taxaParcelamento); 
+
+    recalcularTotaisSelecionados();
+    setDirty();
+});
 
     const btnRemover = novaLinha.querySelector('.btn-remover-linha');
     if (btnRemover) {
@@ -846,6 +848,9 @@ function adicionarLinhaAmorim(tableBody, estadoLinha = null) {
     }
 
     tableBody.appendChild(novaLinha);
+    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
+const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
+calcularParceladoLinhaAmorim(novaLinha, taxaParcelamento);
     if (!estadoLinha) setDirty();
 }
 
@@ -914,10 +919,14 @@ function adicionarLinhaToldos(tableBody, estadoLinha = null) {
 
     selectComando.addEventListener('change', toggleComandoInput);
 
-    inputValorManual.addEventListener('blur', () => {
-        recalcularTotaisSelecionados();
-        setDirty();
-    });
+   inputValorManual.addEventListener('blur', () => {
+    const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
+    const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
+    calcularParceladoLinhaAmorim(novaLinha, taxaParcelamento);
+
+    recalcularTotaisSelecionados();
+    setDirty();
+});
 
     const btnRemover = novaLinha.querySelector('.btn-remover-linha');
     if (btnRemover) {
@@ -927,6 +936,9 @@ function adicionarLinhaToldos(tableBody, estadoLinha = null) {
     }
 
     tableBody.appendChild(novaLinha);
+const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
+const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
+calcularParceladoLinhaAmorim(novaLinha, taxaParcelamento);
     if (!estadoLinha) setDirty();
 }
 function recalcularTodasLinhas() {
@@ -1100,9 +1112,8 @@ async function calcularOrcamentoLinha(linha) {
         const valorInstalacaoLinha = dadosDeEntrada.valorInstalacao;
         const valorBaseParaParcelar = valorAVista - valorInstalacaoLinha;
         const valorParcelado = (valorBaseParaParcelar * (1 + taxaParcelamento)) + valorInstalacaoLinha;
-
-        const ora = linha.querySelector('td:nth-last-child(2) input'); if(ora) ora.value = formatadorReaisCalc.format(valorAVista);
-        const orx = linha.querySelector('td:nth-last-child(1) input'); if(orx) orx.value = formatadorReaisCalc.format(valorParcelado);
+        const ora = linha.querySelector('td:nth-last-child(3) input'); if(ora) ora.value = formatadorReaisCalc.format(valorAVista);
+        const orx = linha.querySelector('td:nth-last-child(2) input'); if(orx) orx.value = formatadorReaisCalc.format(valorParcelado);
 
 } catch (error) {
         console.error("Erro ao calcular orçamento:", error.message);
@@ -1373,9 +1384,10 @@ function ativarAba(index, isInitialLoad = false) {
         elements.chkSummaryVendaRealizada.checked = abaAtiva.venda_realizada === true;
     }
 checkSectionControls();
-    atualizarHeaderParcelado();
-    recalcularTotaisSelecionados();
-}
+atualizarHeaderParcelado();
+recalcularParceladoAmorimToldos(); 
+recalcularTotaisSelecionados();
+updateMoveButtonsVisibility();}
 
 function adicionarAba() {
     if (abaAtivaIndex >= 0 && abaAtivaIndex < estadoAbas.length) {

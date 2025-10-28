@@ -248,14 +248,37 @@
             <div class="quote-section-header">
                 <h3>Cortinas Tecido</h3>
                 <div>
-                    <button class="btn-drag-secao" title="Mover seção">☰</button>
+                    <button class="btn-move-secao btn-move-up" title="Mover para cima">▲</button>
+<button class="btn-move-secao btn-move-down" title="Mover para baixo">▼</button>
                     <button class="btn-add-linha btn-adicionar">+ Ambiente</button>
                     <button class="btn-remover-secao btn-excluir" title="Remover seção">×</button>
                 </div>
             </div>
             <div class="tabela-container calculator-container">
                 <table class="tabela-calculo">
-<thead>
+    <colgroup>
+        <col class="print-col-acoes">
+        <col class="print-col-selecionar">
+        <col class="print-col-ambiente">
+        <col class="print-col-largura">
+        <col class="print-col-altura">
+        <col class="print-col-franz-cortina">
+        <col class="print-col-cod-cortina">
+        <col class="print-col-qtd-cortina">
+        <col class="print-col-cod-forro">
+        <col class="print-col-qtd-forro">
+        <col class="print-col-franz-blackout">
+        <col class="print-col-cod-blackout">
+        <col class="print-col-qtd-blackout">
+        <col class="print-col-confeccao">
+        <col class="print-col-trilho">
+        <col class="print-col-instalacao">
+        <col class="print-col-outros">
+        <col class="print-col-total">
+        <col class="print-col-parcelado">
+        <col class="print-col-observacao">
+    </colgroup>
+    <thead>
     <tr>
         <th rowspan="2" class="col-acoes-calc">AÇÕES</th>
         <th rowspan="2" class="col-selecionar-calc" title="Selecionar para somar">✓</th>
@@ -301,14 +324,30 @@
             <div class="quote-section-header">
                 <h3>Cortinas Amorim</h3>
                  <div>
-                    <button class="btn-drag-secao" title="Mover seção">☰</button>
+                    <button class="btn-move-secao btn-move-up" title="Mover para cima">▲</button>
+<button class="btn-move-secao btn-move-down" title="Mover para baixo">▼</button>
                     <button class="btn-add-linha btn-adicionar">+ Ambiente</button>
                     <button class="btn-remover-secao btn-excluir" title="Remover seção">×</button>
                  </div>
             </div>
             <div class="tabela-container calculator-container">
-                <table class="tabela-calculo tabela-amorim-cortina">
-                    <thead>
+<table class="tabela-calculo tabela-amorim-cortina">
+    <colgroup>
+        <col class="print-col-acoes">
+        <col class="print-col-selecionar">
+        <col class="print-col-ambiente">
+        <col class="print-col-largura">
+        <col class="print-col-altura">
+        <col class="print-col-modelo">
+        <col class="print-col-cod-tecido">
+        <col class="print-col-cor-acessorios">
+        <col class="print-col-comando">
+        <col class="print-col-alt-comando">
+        <col class="print-col-valor">
+        <col class="print-col-parcelado">
+        <col class="print-col-observacao">
+    </colgroup>
+    <thead>
                         <tr>
                             <th class="col-acoes-calc">AÇÕES</th>
                             <th class="col-selecionar-calc" title="Selecionar para somar">✓</th>
@@ -321,6 +360,7 @@
                             <th>COMANDO</th>
                             <th>ALTURA COMANDO</th>
                             <th>VALOR</th>
+                            <th class="th-parcelado-header">DÉBITO</th>
                             <th>OBSERVAÇÃO</th>
                         </tr>
                     </thead>
@@ -334,14 +374,30 @@
             <div class="quote-section-header">
                 <h3>Toldos Amorim</h3>
                  <div>
-                   <button class="btn-drag-secao" title="Mover seção">☰</button>
+                 <button class="btn-move-secao btn-move-up" title="Mover para cima">▲</button>
+<button class="btn-move-secao btn-move-down" title="Mover para baixo">▼</button>
                     <button class="btn-add-linha btn-adicionar">+ Ambiente</button>
                     <button class="btn-remover-secao btn-excluir" title="Remover seção">×</button>
                 </div>
             </div>
             <div class="tabela-container calculator-container">
-                <table class="tabela-calculo tabela-amorim-toldos">
-                    <thead>
+<table class="tabela-calculo tabela-amorim-toldos">
+    <colgroup>
+        <col class="print-col-acoes">
+        <col class="print-col-selecionar">
+        <col class="print-col-ambiente">
+        <col class="print-col-largura">
+        <col class="print-col-altura">
+        <col class="print-col-modelo">
+        <col class="print-col-cod-tecido">
+        <col class="print-col-cor-acessorios">
+        <col class="print-col-comando">
+        <col class="print-col-alt-comando">
+        <col class="print-col-valor">
+        <col class="print-col-parcelado">
+        <col class="print-col-observacao">
+    </colgroup>
+    <thead>
                         <tr>
                             <th class="col-acoes-calc">AÇÕES</th>
                             <th class="col-selecionar-calc" title="Selecionar para somar">✓</th>
@@ -354,6 +410,7 @@
                             <th>COMANDO</th>
                             <th>ALTURA COMANDO</th>
                             <th>VALOR</th>
+                            <th class="th-parcelado-header">DÉBITO</th>
                             <th>OBSERVAÇÃO</th>
                         </tr>
                     </thead>
@@ -403,8 +460,9 @@
         <option value="220v">220v</option>
     </select>
 </td>
-            <td><input type="text" class="input-valor-manual format-money resultado-preco-total" inputmode="decimal"></td>
-            <td><input type="text" class="input-observacao" placeholder="Obs..."></td>
+          <td><input type="text" class="input-valor-manual format-money resultado-preco-total" inputmode="decimal"></td>
+<td><input type="text" class="resultado-preco-parcelado" readonly></td>
+<td><input type="text" class="input-observacao" placeholder="Obs..."></td>
         </tr>
     </template>
 
@@ -426,8 +484,9 @@
         <option value="220v">220v</option>
     </select>
 </td>
-            <td><input type="text" class="input-valor-manual format-money resultado-preco-total" inputmode="decimal"></td>
-            <td><input type="text" class="input-observacao" placeholder="Obs..."></td>
+<td><input type="text" class="input-valor-manual format-money resultado-preco-total" inputmode="decimal"></td>
+<td><input type="text" class="resultado-preco-parcelado" readonly></td>
+<td><input type="text" class="input-observacao" placeholder="Obs..."></td>
         </tr>
     </template>
 

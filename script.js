@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         selectParcelamentoGlobal: document.getElementById('select-parcelamento-global'),
         inputValorEntradaGlobal: document.getElementById('input-valor-entrada-global'),
         selectFreteGlobal: document.getElementById('select-frete-global'),
-        thParceladoHeader: document.getElementById('th-parcelado-header'),
         btnVoltarClientes: document.getElementById('btn-voltar-clientes'),
         modalExcluirLinha: document.getElementById('modal-confirm-excluir-linha'),
         btnConfirmarExcluirLinha: document.getElementById('btn-confirmar-excluir-linha'),
