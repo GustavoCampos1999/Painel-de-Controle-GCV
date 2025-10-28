@@ -6,7 +6,9 @@
     --cor-valores: #f3e5f5;   
     --cor-orcamento: #e8eaf6; 
 }
-
+.hidden {
+    display: none !important;
+}
 .calculator-header {
     display: flex;
     align-items: center;
@@ -41,17 +43,50 @@
     margin-left: 0; 
 }
 
-.save-status {
+.save-status-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    order: 3;
+    min-width: 150px;
+    justify-content: flex-end; 
+}
+.save-status-message {
     font-style: italic;
     font-size: 14px;
     color: #6c757d;
-    min-width: 150px; 
     text-align: right;
-    order: 3; 
 }
-.save-status.saving { color: #ffc107; } 
-.save-status.saved { color: #28a745; }  
-.save-status.error { color: #dc3545; }  
+.save-status-message.saving { color: #ffc107; }
+.save-status-message.saved { color: #28a745; }
+.save-status-message.error { color: #dc3545; }
+
+.btn-manual-save {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+.btn-manual-save:hover {
+    background-color: #0056b3;
+}
+.btn-manual-save:disabled {
+    background-color: #6c757d;
+    cursor: wait;
+    opacity: 0.7;
+}
+body.dark-mode .save-status-message { color: #888; }
+body.dark-mode .save-status-message.saving { color: #ffc107; }
+body.dark-mode .save-status-message.saved { color: #28a745; }
+body.dark-mode .save-status-message.error { color: #dc3545; }
+body.dark-mode .btn-manual-save { background-color: #007bff; }
+body.dark-mode .btn-manual-save:hover { background-color: #0056b3; }
+body.dark-mode .btn-manual-save:disabled { background-color: #5a6268; }
 
 .tabela-container.calculator-container {
     width: 100%;
@@ -141,9 +176,8 @@
 #tabela-calculo-cliente tbody td:has(.select-trilho) {
     min-width: 110px;
 }
-#tabela-calculo-cliente tbody td:has(.select-instalacao),
-#tabela-calculo-cliente tbody td:has(.select-frete) {
-    min-width: 60px;
+#tabela-calculo-cliente tbody td:has(.select-instalacao) {
+    min-width: 100px;
 }
 
 #tabela-calculo-cliente tbody td:has(.input-motor),
@@ -201,7 +235,6 @@
     width: 170px;
     padding: 6px;
     font-size: 14px;
-    text-align: center;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
@@ -264,7 +297,7 @@
 }
 #input-valor-entrada-global,
 #select-frete-global {
-    width: 100px;
+    width: 120px;
 }
 
 #calc-tabs-container {
@@ -684,7 +717,6 @@ body.dark-mode .summary-venda-container label {
         padding: 6px 10px;
         margin-left: 0; 
     }
-
     .calculator-header h2 {
         order: 3;
         flex-basis: 100%; 
@@ -697,17 +729,19 @@ body.dark-mode .summary-venda-container label {
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-
-    .save-status {
-        order: 4;
+   .save-status-wrapper {
+        order: 4; 
         flex-basis: 100%; 
-        text-align: center; 
-        flex-grow: 0;
-        flex-shrink: 0;
-        min-width: 0;
-        font-size: 11px;
-        margin-top: 2px; 
-        margin-right: 0; 
+        justify-content: center; 
+        margin-top: 5px; 
+        min-width: 0; 
+    }
+    .save-status-message {
+        font-size: 11px; 
+    }
+    .btn-manual-save {
+        font-size: 13px; 
+        padding: 6px 12px; 
     }
     #tabela-calculo-cliente th,
     #tabela-calculo-cliente td {

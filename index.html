@@ -26,9 +26,6 @@
             <a href="#" id="btn-logout" style="margin-left: 15px;">Sair</a>
         </div>
     </header>
-
-    
-
     <nav class="tabs">
         <button class="tab-button active" data-tab="tab-clientes">Clientes & Orçamentos</button>
         <button class="tab-button" data-tab="tab-gerenciar-dados">Gerenciar Dados</button>
@@ -65,7 +62,10 @@
                      <button id="btn-voltar-clientes">&larr; Voltar para Clientes</button>
                      <h2 id="calculator-client-name">Calculadora para Cliente</h2>
                      <button id="btn-add-linha-calc" class="btn-adicionar" style="margin-left: 15px;">+ Ambiente</button>
-                     <span id="save-status" class="save-status"></span>
+                     <div id="save-status-wrapper" class="save-status-wrapper">
+                         <span id="save-status-message" class="save-status-message"></span>
+                         <button id="btn-manual-save" class="btn-manual-save hidden">Salvar</button>
+                    </div>
                 </div>
 
                 <div id="calc-tabs-container">
@@ -538,7 +538,17 @@
             </div>
         </div>
     </div>
-
+<div id="modal-confirm-sair" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Alterações não salvas</h2>
+            <p>Você possui alterações não salvas. Deseja realmente sair sem salvar?</p>
+            <div class="modal-actions">
+                <button type="button" id="btn-cancelar-sair" class="btn-cancelar">Cancelar</button>
+                <button type="button" id="btn-confirmar-sair" class="btn-excluir">Sair sem Salvar</button>
+                <button type="button" id="btn-salvar-e-sair" class="btn-salvar">Sair e Salvar</button>
+            </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="script.js"></script>
 </body>

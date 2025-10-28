@@ -138,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         spanItemNomeExcluir: document.getElementById('item-nome-excluir'),
         calculatorClientName: document.getElementById('calculator-client-name'),
         calculatorTableBody: document.getElementById('corpo-tabela-calculo-cliente'),
-        saveStatusElement: document.getElementById('save-status'),
+        saveStatusMessage: document.getElementById('save-status-message'),
+        btnManualSave: document.getElementById('btn-manual-save'),
         calculatorMarkupInput: document.getElementById('input-markup-base-calc'),
         selectParcelamentoGlobal: document.getElementById('select-parcelamento-global'),
         inputValorEntradaGlobal: document.getElementById('input-valor-entrada-global'),
@@ -168,6 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCancelarExcluirAba: document.getElementById('btn-cancelar-excluir-aba'),
         spanAbaNomeExcluir: document.getElementById('aba-nome-excluir'),
         chkSummaryVendaRealizada: document.getElementById('chk-summary-venda-realizada'),
+        modalConfirmSair: document.getElementById('modal-confirm-sair'),
+        btnCancelarSair: document.getElementById('btn-cancelar-sair'),
+        btnConfirmarSair: document.getElementById('btn-confirmar-sair'),
+        btnSalvarESair: document.getElementById('btn-salvar-e-sair'),
         btnThemeToggle: document.getElementById('btn-theme-toggle')
     };
 

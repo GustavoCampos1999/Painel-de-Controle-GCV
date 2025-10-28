@@ -14,38 +14,20 @@ let elements = {};
 let dataRefs = {};
 let currentClientIdRef = { value: null };
 let isDataLoadedRef = { value: false };
-
-let autoSaveTimer = null;
+const formatadorReaisCalc = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+let estadoAbas = [];
+let abaAtivaIndex = 0;
 let linhaParaExcluir = null;
 let abaParaExcluir = { index: null, element: null };
+let isDirty = false;
 
-let estadoAbas = []; 
-let abaAtivaIndex = 0;
-
-function debounce(func, delay) {
-    return function() {
-        const context = this;
-        const args = arguments;
-        clearTimeout(autoSaveTimer);
-        autoSaveTimer = setTimeout(() => {
-            func.apply(context, args);
-        }, delay);
+function setDirty() {
+    if (isDirty) return; 
+    isDirty = true;
+    if (elements.btnManualSave && !elements.btnManualSave.disabled) {
+        elements.btnManualSave.classList.remove('hidden');
     }
 }
-
-const triggerAutoSave = debounce(async () => {
-    if (!currentClientIdRef.value) {
-        console.log("Auto-save: Nenhum cliente selecionado.");
-        return;
-    }
-    if (elements.saveStatusElement) {
-        elements.saveStatusElement.textContent = 'Salvando...';
-        elements.saveStatusElement.className = 'save-status saving';
-    }
-    await salvarEstadoCalculadora(currentClientIdRef.value);
-}, 1000);
-
-const formatadorReaisCalc = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 function setupDecimalFormatting(inputElement, decimalPlaces = 2) {
     if (!inputElement) return;
@@ -80,9 +62,8 @@ function setupCurrencyFormatting(inputElement) {
     inputElement.addEventListener('blur', (e) => {
          let n = parseFloat(String(e.target.value).replace(',', '.')) || 0;
          e.target.value = n !== 0 ? formatadorReaisCalc.format(n) : '';
-         
-         recalcularTotaisSelecionados(); 
-         triggerAutoSave();
+         recalcularTotaisSelecionados();
+         setDirty();
     });
 }
 
@@ -91,32 +72,17 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     dataRefs = dataArrays;
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
-if (elements.btnVoltarClientes) {
+    
+    if (elements.btnVoltarClientes) {
         elements.btnVoltarClientes.addEventListener('click', async () => {
-            if (elements.saveStatusElement && elements.saveStatusElement.textContent.includes('Salvando...')) {
-
-                showToast("Aguarde, salvando alterações...", "warning"); 
-                return; 
-            }
-
-            if (elements.saveStatusElement) {
-                elements.saveStatusElement.textContent = 'Salvando...';
-                elements.saveStatusElement.className = 'save-status saving';
-            }
-            
-          await salvarEstadoCalculadora(currentClientIdRef.value);
-            document.dispatchEvent(new CustomEvent('clienteAtualizado'));
-            window.location.hash = '';
-        });
-
-        elements.btnVoltarClientes.addEventListener('mouseover', () => {
-            if (elements.saveStatusElement && elements.saveStatusElement.textContent.includes('Salvando...')) {
-                elements.btnVoltarClientes.style.cursor = 'wait';
+            if (isDirty) {
+                openModal(elements.modalConfirmSair);
             } else {
-                elements.btnVoltarClientes.style.cursor = 'pointer';
+                window.location.hash = '';
             }
         });
     }
+
     const btnAddLinha = document.getElementById('btn-add-linha-calc');
     if (btnAddLinha) {
         btnAddLinha.addEventListener('click', () => {
@@ -125,9 +91,9 @@ if (elements.btnVoltarClientes) {
                  return;
             }
             adicionarLinhaCalculadora(null);
-            triggerAutoSave();
         });
     }
+
     const globalTriggers = document.querySelectorAll('.global-calc-trigger');
     globalTriggers.forEach(input => {
         const eventType = (input.tagName === 'SELECT') ? 'change' : 'input';
@@ -135,7 +101,7 @@ if (elements.btnVoltarClientes) {
         input.addEventListener(eventType, () => {
             recalcularTodasLinhas();
             recalcularTotaisSelecionados(); 
-            triggerAutoSave();
+            setDirty();
         });
     });
 
@@ -144,7 +110,7 @@ if (elements.btnVoltarClientes) {
             if (linhaParaExcluir) {
                 linhaParaExcluir.remove();
                 recalcularTotaisSelecionados();
-                triggerAutoSave(); 
+                setDirty();
             }
             closeModal(elements.modalExcluirLinha); 
             linhaParaExcluir = null;
@@ -157,13 +123,70 @@ if (elements.btnVoltarClientes) {
             linhaParaExcluir = null;
         });
     }
-   
+
+    if (elements.btnManualSave) {
+        elements.btnManualSave.addEventListener('click', async () => {
+            if (!currentClientIdRef.value) {
+                console.log("Save: Nenhum cliente selecionado.");
+                return;
+            }
+            
+            elements.btnManualSave.disabled = true;
+            if (elements.saveStatusMessage) {
+                elements.saveStatusMessage.textContent = 'Salvando...';
+                elements.saveStatusMessage.className = 'save-status-message saving';
+            }
+            
+            await salvarEstadoCalculadora(currentClientIdRef.value);
+            
+            elements.btnManualSave.disabled = false;
+        });
+    }
+
+    if (elements.btnConfirmarSair) {
+        elements.btnConfirmarSair.addEventListener('click', () => {
+            isDirty = false; 
+            closeModal(elements.modalConfirmSair);
+            window.location.hash = ''; 
+        });
+    }
+    if (elements.btnCancelarSair) {
+        elements.btnCancelarSair.addEventListener('click', () => {
+            closeModal(elements.modalConfirmSair);
+        });
+    }
+    
+    if (elements.btnSalvarESair) {
+        elements.btnSalvarESair.addEventListener('click', async () => {
+            elements.btnSalvarESair.disabled = true;
+            elements.btnConfirmarSair.disabled = true;
+            elements.btnCancelarSair.disabled = true;
+            elements.btnSalvarESair.textContent = "Salvando...";
+
+            await salvarEstadoCalculadora(currentClientIdRef.value);
+
+            elements.btnSalvarESair.disabled = false;
+            elements.btnConfirmarSair.disabled = false;
+            elements.btnCancelarSair.disabled = false;
+            elements.btnSalvarESair.textContent = "Sair e Salvar";
+
+            if (!isDirty) {
+                closeModal(elements.modalConfirmSair);
+                window.location.hash = '';
+            }
+        });
+    }
+
     if (elements.selectParcelamentoGlobal) {
         elements.selectParcelamentoGlobal.addEventListener('change', () => {
              atualizarHeaderParcelado();
              recalcularTotaisSelecionados(); 
+             setDirty();
         });
     }
+
+    setupCurrencyFormatting(elements.inputValorEntradaGlobal);
+
     if (elements.btnAddAba) {
         elements.btnAddAba.addEventListener('click', adicionarAba);
     }
@@ -223,12 +246,10 @@ if (elements.btnVoltarClientes) {
             
             const newState = elements.chkSummaryVendaRealizada.checked;
             estadoAbas[abaAtivaIndex].venda_realizada = newState;
-            
+    
             renderizarTabs();
-            
             atualizarStatusVendaCliente();
-            
-            triggerAutoSave();
+            setDirty();
         });
     }
 }
@@ -251,7 +272,6 @@ async function atualizarStatusVendaCliente() {
         document.dispatchEvent(new CustomEvent('clienteAtualizado'));
     }
 }
-
 
 function preencherSelectParcelamento() {
     const select = elements.selectParcelamentoGlobal;
@@ -389,9 +409,9 @@ function adicionarLinhaCalculadora(estadoLinha = null) {
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro'));
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout'));
-   preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), dataRefs.confeccao, true, "NENHUM", false);
-preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM", false);
-preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "SEM INSTALAÇÃO", true);   
+    preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), dataRefs.confeccao, true, "NENHUM", false);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM", false);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "N/A", true);   
 
     if (!estadoLinha || !estadoLinha.franzBlackout) {
         const selectFranzBk = novaLinha.querySelector('.select-franzBlackout');
@@ -443,16 +463,16 @@ preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRe
         if (gatilho.classList.contains('select-linha-checkbox')) {
             gatilho.addEventListener('change', () => {
                 recalcularTotaisSelecionados();
-                triggerAutoSave();
+                setDirty(); 
             });
         } else if (gatilho.type !== 'text') { 
              gatilho.addEventListener(eventType, () => {
                  setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
-                 triggerAutoSave();
+                 setDirty();
             });
         } else if (gatilho.classList.contains('input-ambiente')) {
              gatilho.addEventListener('input', () => {
-                 triggerAutoSave();
+                 setDirty();
             });
         }
     });
@@ -460,7 +480,7 @@ preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRe
     inputsTexto.forEach(input => {
         input.addEventListener('blur', () => {
              setTimeout(() => calcularOrcamentoLinha(novaLinha), 10);
-             triggerAutoSave();
+             setDirty();
         });
     });
 
@@ -475,7 +495,7 @@ preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRe
              let n = parseFloat(e.target.value) || 0;
              e.target.value = n !== 0 ? formatadorReaisCalc.format(n) : '';
              calcularOrcamentoLinha(novaLinha);
-             triggerAutoSave();
+             setDirty();
         });
     }
 
@@ -490,6 +510,7 @@ preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRe
 
     if (!estadoLinha) {
         calcularOrcamentoLinha(novaLinha);
+        setDirty();
     }
 }
 
@@ -525,6 +546,7 @@ function parseCurrencyValue(value) {
 function recalcularTotaisSelecionados() {
     let totalAvista = 0;
     let algumaLinhaSelecionada = false;
+    let totalInstalacao = 0;
     const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
     const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
 
@@ -537,6 +559,7 @@ function recalcularTotaisSelecionados() {
             const inputAvista = linha.querySelector('td:nth-last-child(2) input');
             
             totalAvista += parseCurrencyValue(inputAvista.value);
+            totalInstalacao += parseFloat(linha.querySelector('.select-instalacao')?.value) || 0;
         }
     });
 
@@ -550,12 +573,12 @@ function recalcularTotaisSelecionados() {
     if (algumaLinhaSelecionada) {
         valorTotalFinal = totalAvista + valorFreteGlobal;
         valorRestanteFinal = valorTotalFinal - valorEntradaGlobal;
-        let valorParaParcelar = totalAvista - valorEntradaGlobal;
+        let valorParaParcelar = (totalAvista - totalInstalacao) - valorEntradaGlobal;
         if (valorParaParcelar < 0) {
             valorParaParcelar = 0; 
         }
         const valorParceladoComTaxa = valorParaParcelar * (1 + taxaParcelamento);
-        valorParceladoFinal = valorParceladoComTaxa + valorFreteGlobal;
+        valorParceladoFinal = valorParceladoComTaxa + valorFreteGlobal + totalInstalacao;
 
     }
     
@@ -628,7 +651,7 @@ async function calcularOrcamentoLinha(linha) {
         valorConfecao: valorConfecao,
         valorTrilho: valorTrilho,
         valorInstalacao: parseFloat(linha.querySelector('.select-instalacao')?.value) || 0,
-        valorFrete: parseFloat(elements.selectFreteGlobal?.value) || 0,
+        valorFrete: 0, 
         valorOutros: vOutrosN,
         markupBase: markupP / 100.0
     };
@@ -651,8 +674,12 @@ async function calcularOrcamentoLinha(linha) {
         const qtc = linha.querySelector('td:nth-child(8) input'); if(qtc) qtc.value = fmtDecQtd(resultados.qtdTecidoCortina);
         const qtf = linha.querySelector('td:nth-child(10) input'); if(qtf) qtf.value = fmtDecQtd(resultados.qtdTecidoForro);
         const qtb = linha.querySelector('td:nth-child(13) input'); if(qtb) qtb.value = fmtDecQtd(resultados.qtdTecidoBlackout);
+        
         const valorAVista = resultados.orcamentoBase ?? 0;
-        const valorParcelado = valorAVista * (1 + taxaParcelamento);
+
+        const valorInstalacaoLinha = dadosDeEntrada.valorInstalacao;
+        const valorBaseParaParcelar = valorAVista - valorInstalacaoLinha;
+        const valorParcelado = (valorBaseParaParcelar * (1 + taxaParcelamento)) + valorInstalacaoLinha;
 
         const ora = linha.querySelector('td:nth-last-child(2) input'); if(ora) ora.value = formatadorReaisCalc.format(valorAVista);
         const orx = linha.querySelector('td:nth-last-child(1) input'); if(orx) orx.value = formatadorReaisCalc.format(valorParcelado);
@@ -712,7 +739,7 @@ async function salvarEstadoCalculadora(clientId) {
 
     estadoAbas[abaAtivaIndex].ambientes = obterEstadoAbaAtual();
 
-const estadoCompleto = {
+    const estadoCompleto = {
         abas: estadoAbas, 
         markup: elements.calculatorMarkupInput?.value || '100',
         parcelamento: elements.selectParcelamentoGlobal?.value || 'DÉBITO', 
@@ -732,26 +759,35 @@ const estadoCompleto = {
              throw new Error(errorData.message || 'Erro na API ao salvar.');
         }
 
-        const result = await response.json();
-        if (elements.saveStatusElement) {
-            elements.saveStatusElement.textContent = `Salvo às ${new Date(result.updated_at).toLocaleTimeString()}`;
-            elements.saveStatusElement.className = 'save-status saved';
-        }
-        console.log("Estado da calculadora salvo:", result);
+       const result = await response.json();
+       isDirty = false;
+    if (elements.btnManualSave) {
+        elements.btnManualSave.classList.add('hidden');
+    }
+    if (elements.saveStatusMessage) {
+        elements.saveStatusMessage.textContent = `Salvo às ${new Date(result.updated_at).toLocaleTimeString()}`;
+        elements.saveStatusMessage.className = 'save-status-message saved';
+    }
+    console.log("Estado da calculadora salvo:", result);
     } catch (error) {
         console.error("Erro ao salvar estado da calculadora:", error.message);
-        if (elements.saveStatusElement) {
-            elements.saveStatusElement.textContent = 'Erro ao salvar';
-            elements.saveStatusElement.className = 'save-status error';
+        if (elements.saveStatusMessage) {
+            elements.saveStatusMessage.textContent = 'Erro ao salvar';
+            elements.saveStatusMessage.className = 'save-status-message error';
         }
         showToast(`Erro ao salvar: ${error.message}`, "error"); 
     }
 }
 
 async function carregarEstadoCalculadora(clientId) {
-      if (elements.saveStatusElement) {
-        elements.saveStatusElement.textContent = '';
-        elements.saveStatusElement.className = 'save-status';
+    isDirty = false; 
+    if (elements.btnManualSave) { 
+        elements.btnManualSave.classList.add('hidden');
+    }
+    
+    if (elements.saveStatusMessage) {
+        elements.saveStatusMessage.textContent = '';
+        elements.saveStatusMessage.className = 'save-status-message';
     }
 
     if (elements.calculatorTableBody) elements.calculatorTableBody.innerHTML = '';
@@ -771,7 +807,7 @@ async function carregarEstadoCalculadora(clientId) {
                 
                 renderizarTabs();
                 ativarAba(0, true); 
-                triggerAutoSave();
+                setDirty();
                 return;
              }
              const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido ao carregar orçamento.' }));
@@ -806,23 +842,21 @@ async function carregarEstadoCalculadora(clientId) {
         renderizarTabs();
         ativarAba(abaAtivaIndex, true); 
         
-        if (elements.saveStatusElement) {
-            elements.saveStatusElement.textContent = '';
-        }
+        if (elements.saveStatusMessage) { elements.saveStatusMessage.textContent = ''; }
 
     } catch (error) {
         console.error("Erro ao carregar estado da calculadora:", error.message);
-        if (elements.saveStatusElement) {
-            elements.saveStatusElement.textContent = 'Erro ao carregar.';
-            elements.saveStatusElement.className = 'save-status error';
-        }
+        if (elements.saveStatusMessage) {
+        elements.saveStatusMessage.textContent = 'Erro ao carregar.';
+        elements.saveStatusMessage.className = 'save-status-message error';
+    }
         showToast(`Erro ao carregar orçamento: ${error.message}`, "error"); 
         
         estadoAbas = [{ nome: "Orçamento 1", ambientes: [], venda_realizada: false }];
         abaAtivaIndex = 0;
         renderizarTabs();
         ativarAba(0, true); 
-        triggerAutoSave();
+        setDirty();
     }
 }
 function renderizarTabs() {
@@ -905,8 +939,7 @@ function adicionarAba() {
 
     renderizarTabs();
     ativarAba(novoIndex); 
-
-    triggerAutoSave();
+    setDirty();
 }
 
 function prepararExclusaoAba(index, element) {
@@ -937,13 +970,10 @@ function executarExclusaoAba(index) {
 
     renderizarTabs();
     ativarAba(abaAtivaIndex);
-    
     atualizarStatusVendaCliente();
-    
-    triggerAutoSave();
-
     closeModal(elements.modalExcluirAba);
     abaParaExcluir = { index: null, element: null };
+    setDirty();
 }
 
 function renomearAba(tabNameElement) {
@@ -969,7 +999,7 @@ function renomearAba(tabNameElement) {
         if (novoNome && novoNome !== nomeAntigo) {
             estadoAbas[abaIndex].nome = novoNome;
             tabNameElement.textContent = novoNome;
-            triggerAutoSave();
+            setDirty();
         } else {
              tabNameElement.textContent = nomeAntigo;
         }
@@ -993,14 +1023,15 @@ export async function showCalculatorView(clientId, clientName) {
     elements.clientListView.style.display = 'none';
     elements.calculatorView.style.display = 'block';
     elements.calculatorClientName.textContent = `Orçamento para: ${clientName || 'Cliente'}`;
-    if (elements.saveStatusElement) {
-        elements.saveStatusElement.textContent = 'Carregando dados...';
-        elements.saveStatusElement.className = 'save-status loading';
-    }
+    if (elements.saveStatusMessage) {
+    elements.saveStatusMessage.textContent = 'Carregando dados...';
+    elements.saveStatusMessage.className = 'save-status-message loading';
+}
 
 
     try {
         await aguardarDadosBase();
+        preencherSelectParcelamento();
         preencherSelectCalculadora(elements.selectFreteGlobal, dataRefs.frete, true, "SEM FRETE", true);
         await carregarEstadoCalculadora(clientId); 
         atualizarHeaderParcelado(); 
@@ -1008,9 +1039,9 @@ export async function showCalculatorView(clientId, clientName) {
     } catch (err) {
         console.error("Erro ao preparar calculadora para o cliente:", err);
         showToast(err.message || "Erro ao carregar dados da calculadora.", "error"); 
-        if (elements.saveStatusElement) {
-            elements.saveStatusElement.textContent = 'Erro ao carregar';
-            elements.saveStatusElement.className = 'save-status error';
-        }
+        if (elements.saveStatusMessage) {
+        elements.saveStatusMessage.textContent = 'Erro ao carregar';
+        elements.saveStatusMessage.className = 'save-status-message error';
     }
+}
 }

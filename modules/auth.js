@@ -1,5 +1,4 @@
 import { _supabase } from '../supabaseClient.js';
-import { showToast } from './ui.js'; 
 
 export async function checkUserSession() {
     const { data: { session } } = await _supabase.auth.getSession();
