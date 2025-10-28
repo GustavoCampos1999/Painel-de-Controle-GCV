@@ -50,7 +50,8 @@ function obterEstadoSection(sectionElement) {
 
         } else if (sectionType === 'amorim') {
             estadoLinha.modelo_cortina = linhaCalc.querySelector('.select-modelo-cortina')?.value || '';
-            estadoLinha.codigo_tecido = linhaCalc.querySelector('.select-codTecidoCortina')?.value || 'SEM TECIDO';
+            estadoLinha.codigo_tecido = linhaCalc.querySelector('.input-cod-tecido')?.value || '';
+            estadoLinha.colecao = linhaCalc.querySelector('.input-colecao')?.value || '';
             estadoLinha.cor_acessorios = linhaCalc.querySelector('.select-cor-acessorios')?.value || '';
             estadoLinha.comando = linhaCalc.querySelector('.select-comando')?.value || '';
             if (estadoLinha.comando === 'MOTORIZADO') {
@@ -63,7 +64,8 @@ function obterEstadoSection(sectionElement) {
 
         } else if (sectionType === 'toldos') {
             estadoLinha.modelo_toldo = linhaCalc.querySelector('.select-modelo-toldo')?.value || '';
-            estadoLinha.codigo_tecido = linhaCalc.querySelector('.select-codTecidoCortina')?.value || 'SEM TECIDO';
+            estadoLinha.codigo_tecido = linhaCalc.querySelector('.input-cod-tecido')?.value || '';
+            estadoLinha.colecao = linhaCalc.querySelector('.input-colecao')?.value || '';
             estadoLinha.cor_acessorios = linhaCalc.querySelector('.select-cor-acessorios')?.value || '';
             estadoLinha.comando = linhaCalc.querySelector('.select-comando')?.value || '';
             if (estadoLinha.comando === 'MOTORIZADO') {
@@ -335,6 +337,12 @@ if (elements.btnPrintOrcamento) {
             secaoParaExcluir = { element: null, type: null, button: null };
         });
     }
+
+    if (elements.btnFecharConfigCalculadora) {
+        elements.btnFecharConfigCalculadora.addEventListener('click', () => {
+            closeModal(elements.modalConfigCalculadora);
+        });
+    }
 }
 function executarExclusaoSecao() {
     if (secaoParaExcluir && secaoParaExcluir.element && secaoParaExcluir.button) {
@@ -384,6 +392,17 @@ function addSection(sectionType, buttonElement) {
 
     const btnMoveUp = sectionElement.querySelector('.btn-move-up');
     const btnMoveDown = sectionElement.querySelector('.btn-move-down');
+
+    if (sectionType === 'tecido') {
+        const btnConfig = sectionElement.querySelector('.btn-abrir-config-calculadora');
+        if (btnConfig) {
+            btnConfig.addEventListener('click', () => {
+                if (elements.modalConfigCalculadora) {
+                    openModal(elements.modalConfigCalculadora);
+                }
+            });
+        }
+    }
 
     if (btnMoveUp) {
         btnMoveUp.addEventListener('click', () => {
@@ -773,7 +792,6 @@ function adicionarLinhaAmorim(tableBody, estadoLinha = null) {
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
 
     preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-cortina'), DADOS_MODELO_CORTINA, false, "Nenhum");
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
     preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS, false, "Nenhum");
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO, false, "Nenhum");
 
@@ -801,7 +819,8 @@ function adicionarLinhaAmorim(tableBody, estadoLinha = null) {
         novaLinha.querySelector('.input-largura').value = (parseFloat(String(estadoLinha.largura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
         novaLinha.querySelector('.input-altura').value = (parseFloat(String(estadoLinha.altura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
         novaLinha.querySelector('.select-modelo-cortina').value = estadoLinha.modelo_cortina || DADOS_MODELO_CORTINA[0];
-        novaLinha.querySelector('.select-codTecidoCortina').value = estadoLinha.codigo_tecido || 'SEM TECIDO';
+        novaLinha.querySelector('.input-cod-tecido').value = estadoLinha.codigo_tecido || '';
+        novaLinha.querySelector('.input-colecao').value = estadoLinha.colecao || '';
         novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
 
         selectComando.value = estadoLinha.comando || DADOS_COMANDO[0];
@@ -862,7 +881,6 @@ function adicionarLinhaToldos(tableBody, estadoLinha = null) {
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
 
     preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-toldo'), DADOS_MODELO_TOLDO, false, "Nenhum");
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
     preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS, false, "Nenhum");
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO, false, "Nenhum");
 
@@ -890,7 +908,8 @@ function adicionarLinhaToldos(tableBody, estadoLinha = null) {
         novaLinha.querySelector('.input-largura').value = (parseFloat(String(estadoLinha.largura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
         novaLinha.querySelector('.input-altura').value = (parseFloat(String(estadoLinha.altura || '0').replace(',', '.')) || 0).toFixed(3).replace('.', ',');
         novaLinha.querySelector('.select-modelo-toldo').value = estadoLinha.modelo_toldo || DADOS_MODELO_TOLDO[0];
-        novaLinha.querySelector('.select-codTecidoCortina').value = estadoLinha.codigo_tecido || 'SEM TECIDO';
+        novaLinha.querySelector('.input-cod-tecido').value = estadoLinha.codigo_tecido || '';
+        novaLinha.querySelector('.input-colecao').value = estadoLinha.colecao || '';
         novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
 
         selectComando.value = estadoLinha.comando || DADOS_COMANDO[0];

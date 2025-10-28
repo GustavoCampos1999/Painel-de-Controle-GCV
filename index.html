@@ -84,7 +84,6 @@
 
                 <div class="wrapper-markups calculator-markups">
                     <div class="grupo-markups">
-                        <button id="btn-abrir-config-calculadora" title="Configurações de Cálculo">⚙️</button>
                         <div>
                             <label for="input-valor-entrada-global">ENTRADA</label>
                             <input type="text" id="input-valor-entrada-global" class="global-calc-trigger format-money" inputmode="decimal">
@@ -250,6 +249,7 @@
                 <div>
                     <button class="btn-move-secao btn-move-up" title="Mover para cima">▲</button>
 <button class="btn-move-secao btn-move-down" title="Mover para baixo">▼</button>
+                    <button class="btn-abrir-config-calculadora" title="Configurações de Cálculo">⚙️</button>
                     <button class="btn-add-linha btn-adicionar">+ Ambiente</button>
                     <button class="btn-remover-secao btn-excluir" title="Remover seção">×</button>
                 </div>
@@ -340,6 +340,7 @@
         <col class="print-col-altura">
         <col class="print-col-modelo">
         <col class="print-col-cod-tecido">
+        <col class="print-col-colecao">
         <col class="print-col-cor-acessorios">
         <col class="print-col-comando">
         <col class="print-col-alt-comando">
@@ -356,6 +357,7 @@
                             <th>ALTURA</th>
                             <th>MODELO CORTINA</th>
                             <th>CÓDIGO TECIDO</th>
+                            <th>COLEÇÃO</th>
                             <th>COR ACESSÓRIOS</th>
                             <th>COMANDO</th>
                             <th>ALTURA COMANDO</th>
@@ -390,6 +392,7 @@
         <col class="print-col-altura">
         <col class="print-col-modelo">
         <col class="print-col-cod-tecido">
+        <col class="print-col-colecao">
         <col class="print-col-cor-acessorios">
         <col class="print-col-comando">
         <col class="print-col-alt-comando">
@@ -406,6 +409,7 @@
                             <th>ALTURA</th>
                             <th>MODELO TOLDO</th>
                             <th>CÓDIGO TECIDO</th>
+                            <th>COLEÇÃO</th>
                             <th>COR ACESSÓRIOS</th>
                             <th>COMANDO</th>
                             <th>ALTURA COMANDO</th>
@@ -450,7 +454,8 @@
             <td><input type="text" inputmode="decimal" class="input-largura"></td>
             <td><input type="text" inputmode="decimal" class="input-altura"></td>
             <td><select class="select-modelo-cortina"></select></td>
-            <td><select class="select-codTecidoCortina"></select></td>
+            <td><input type="text" class="input-cod-tecido" placeholder="Código..."></td>
+            <td><input type="text" class="input-colecao" placeholder="Coleção..."></td>
             <td><select class="select-cor-acessorios"></select></td>
 <td><select class="select-comando"></select></td>
 <td class="col-altura-comando">
@@ -474,7 +479,8 @@
             <td><input type="text" inputmode="decimal" class="input-largura"></td>
             <td><input type="text" inputmode="decimal" class="input-altura"></td>
             <td><select class="select-modelo-toldo"></select></td>
-            <td><select class="select-codTecidoCortina"></select></td>
+            <td><input type="text" class="input-cod-tecido" placeholder="Código..."></td>
+            <td><input type="text" class="input-colecao" placeholder="Coleção..."></td>
             <td><select class="select-cor-acessorios"></select></td>
 <td><select class="select-comando"></select></td>
 <td class="col-altura-comando">

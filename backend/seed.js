@@ -266,7 +266,14 @@ async function popularBanco() {
         opcao TEXT UNIQUE NOT NULL,
         valor REAL
     )`);
+    
+await client.query(`CREATE TABLE IF NOT EXISTS orcamentos (
+        client_id INTEGER PRIMARY KEY,
+        data JSONB,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
 
+    console.log('Tabelas criadas (ou já existiam).');
     console.log('Tabelas criadas (ou já existiam).');
 
     console.log('Populando tecidos...');
@@ -302,7 +309,6 @@ async function popularBanco() {
     console.error('Erro ao popular o banco de dados. Nenhuma alteração foi feita.', e);
   } finally {
     client.release();
-    await db.pool.end(); 
   }
 }
 

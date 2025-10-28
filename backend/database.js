@@ -9,7 +9,10 @@ const pool = new Pool({
   port: process.env.DB_PORT,
   ssl: {
     rejectUnauthorized: false 
-  }
+  },
+  max: 5,
+  idleTimeoutMillis: 30000, 
+  connectionTimeoutMillis: 10000, 
 });
 
 pool.on('connect', () => {
