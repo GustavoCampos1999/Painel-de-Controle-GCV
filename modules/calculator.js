@@ -404,27 +404,87 @@ function addSection(sectionType, buttonElement) {
         }
     }
 
-    if (btnMoveUp) {
-        btnMoveUp.addEventListener('click', () => {
-            const prev = sectionElement.previousElementSibling;
-            if (prev) {
-                elements.quoteSectionsContainer.insertBefore(sectionElement, prev);
-                updateMoveButtonsVisibility();
-                setDirty();
-            }
-        });
-    }
+if (btnMoveUp) {
+    btnMoveUp.addEventListener('click', () => {
+        const prev = sectionElement.previousElementSibling;
+        if (prev) {
+            const secPos = sectionElement.getBoundingClientRect();
+            const prevPos = prev.getBoundingClientRect();
+            elements.quoteSectionsContainer.insertBefore(sectionElement, prev);
+            const newSecPos = sectionElement.getBoundingClientRect();
+            const newPrevPos = prev.getBoundingClientRect();
+            const secDeltaY = secPos.top - newSecPos.top;
+            const prevDeltaY = prevPos.top - newPrevPos.top;
 
-    if (btnMoveDown) {
-        btnMoveDown.addEventListener('click', () => {
-            const next = sectionElement.nextElementSibling;
-            if (next) {
-                elements.quoteSectionsContainer.insertBefore(sectionElement, next.nextElementSibling);
-                updateMoveButtonsVisibility();
-                setDirty();
-            }
-        });
-    }
+            requestAnimationFrame(() => {
+                sectionElement.style.transition = 'none';
+                prev.style.transition = 'none';
+                sectionElement.style.transform = `translateY(${secDeltaY}px)`;
+                prev.style.transform = `translateY(${prevDeltaY}px)`;
+                requestAnimationFrame(() => {
+                    sectionElement.classList.add('animating');
+                    prev.classList.add('animating');
+                    sectionElement.style.transition = ''; 
+                    prev.style.transition = '';
+                    sectionElement.style.transform = '';
+                    prev.style.transform = '';
+                    setTimeout(() => {
+                        sectionElement.classList.remove('animating');
+                        prev.classList.remove('animating');
+                        sectionElement.style.transform = '';
+                        prev.style.transform = '';
+                        updateMoveButtonsVisibility();
+                        setDirty();
+                    }, 300); 
+                });
+            });
+        }
+    });
+}
+
+if (btnMoveDown) {
+    btnMoveDown.addEventListener('click', () => {
+        const next = sectionElement.nextElementSibling;
+        if (next) {
+            const secPos = sectionElement.getBoundingClientRect();
+            const nextPos = next.getBoundingClientRect();
+
+            elements.quoteSectionsContainer.insertBefore(sectionElement, next.nextElementSibling);
+
+            const newSecPos = sectionElement.getBoundingClientRect();
+            const newNextPos = next.getBoundingClientRect();
+
+            const secDeltaY = secPos.top - newSecPos.top;
+            const nextDeltaY = nextPos.top - newNextPos.top;
+
+            requestAnimationFrame(() => {
+                sectionElement.style.transition = 'none';
+                next.style.transition = 'none';
+                sectionElement.style.transform = `translateY(${secDeltaY}px)`;
+                next.style.transform = `translateY(${nextDeltaY}px)`;
+
+                requestAnimationFrame(() => {
+                    sectionElement.classList.add('animating');
+                    next.classList.add('animating');
+                    sectionElement.style.transition = ''; 
+                    next.style.transition = '';
+
+                    sectionElement.style.transform = '';
+                    next.style.transform = '';
+
+                    setTimeout(() => {
+                        sectionElement.classList.remove('animating');
+                        next.classList.remove('animating');
+                        sectionElement.style.transform = '';
+                        next.style.transform = '';
+                        updateMoveButtonsVisibility();
+                        setDirty();
+                    }, 300); 
+                });
+            });
+        }
+    });
+}
 
     if (btnAddLinha) {
         btnAddLinha.addEventListener('click', () => {
