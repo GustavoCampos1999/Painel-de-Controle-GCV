@@ -1,6 +1,8 @@
 import { showToast, openModal, closeModal } from './ui.js';
 import { _supabase } from '../supabaseClient.js'; 
 
+const BACKEND_API_URL = 'https://paineldecontrole.fly.dev';
+
 const DADOS_FRANZ_CORTINA = ["3.0", "2.8", "2.5", "2.0", "1.5", "1.2", "1.0"];
 const DADOS_FRANZ_BLACKOUT = ["2.5", "2.0", "1.5", "1.2", "1.0"];
 const TAXAS_PARCELAMENTO = {
@@ -23,6 +25,17 @@ const DADOS_COR_ACESSORIOS = [
   "PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"
 ];
 const DADOS_COMANDO = ["MANUAL", "MOTORIZADO"];
+
+async function getAuthToken() {
+  const { data: { session }, error } = await _supabase.auth.getSession();
+  if (error || !session) {
+    showToast("Sessão inválida ou expirada. Faça login novamente.", "error");
+    console.error("Erro ao obter sessão:", error);
+    return null;
+  }
+  return session.access_token;
+}
+
 
 function obterEstadoSection(sectionElement) {
     const sectionType = sectionElement.dataset.sectionType;
@@ -583,15 +596,14 @@ async function atualizarStatusVendaCliente() {
     if (!currentClientIdRef.value) return;
 
     const algumaVendaRealizada = estadoAbas.some(aba => aba.venda_realizada === true);
-
     const { error } = await _supabase
         .from('clientes')
         .update({ venda_realizada: algumaVendaRealizada })
         .match({ id: currentClientIdRef.value });
 
     if (error) {
-        console.error("Erro ao atualizar status de venda do cliente:", error);
-        showToast("Erro ao atualizar status do cliente.", "error");
+        console.error("Erro ao atualizar status de venda do cliente (RLS pode ter bloqueado):", error);
+        showToast(`Erro ao atualizar status: ${error.message}`, "error");
     } else {
         console.log("Status de venda do cliente atualizado para:", algumaVendaRealizada);
         document.dispatchEvent(new CustomEvent('clienteAtualizado'));
@@ -634,24 +646,26 @@ function aguardarDadosBase() {
         if (isDataLoadedRef.value) {
             console.log("Dados base já carregados.");
             resolve();
-        } else {
-            console.log("Calculadora: Aguardando dados base (tecidos, etc.)...");
-            const timeout = 10000;
-            let timeElapsed = 0;
-            const interval = setInterval(() => {
-                if (isDataLoadedRef.value) {
-                    clearInterval(interval);
-                    console.log("Calculadora: Dados base carregados!");
-                    resolve();
-                }
-                timeElapsed += 100;
-                if (timeElapsed >= timeout) {
-                    clearInterval(interval);
-                    console.error("Calculadora: Timeout ao esperar dados base.");
-                    reject(new Error("Timeout ao carregar dados base."));
-                }
-            }, 100);
-        }
+            return;
+        } 
+        
+        console.log("Calculadora: Aguardando evento 'dadosBaseCarregados'...");
+        const timeout = 15000; 
+
+        const onDadosCarregados = () => {
+            clearTimeout(timer);
+            console.log("Calculadora: Evento 'dadosBaseCarregados' recebido!");
+            resolve();
+        };
+
+        const onTimeout = () => {
+            document.removeEventListener('dadosBaseCarregados', onDadosCarregados);
+            console.error("Calculadora: Timeout ao esperar dados base.");
+            reject(new Error("Timeout ao carregar dados base. Verifique a conexão com o backend."));
+        };
+
+        const timer = setTimeout(onTimeout, timeout);
+        document.addEventListener('dadosBaseCarregados', onDadosCarregados, { once: true });
     });
 }
 
@@ -691,7 +705,7 @@ function preencherSelectTecidosCalculadora(selectElement) {
     if (!selectElement) return;
     selectElement.innerHTML = '';
 
-    const tecidos = dataRefs.tecidos || [];
+    const tecidos = dataRefs.tecidos || []; 
 
     const optionSemTecido = new Option('SEM TECIDO', 'SEM TECIDO');
     selectElement.appendChild(optionSemTecido);
@@ -720,13 +734,13 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null) {
     const template = document.getElementById('template-linha-tecido'); 
     if (!template) return;
 
-    if (!dataRefs.tecidos || !dataRefs.confeccao || !dataRefs.trilho ||
+    if (!dataRefs.tecidos || !calculatorDataRefs.confeccao || !calculatorDataRefs.trilho ||
         dataRefs.tecidos.length === 0 || 
-        (typeof dataRefs.confeccao !== 'object' || Object.keys(dataRefs.confeccao).length === 0) || 
-        (typeof dataRefs.trilho !== 'object' || Object.keys(dataRefs.trilho).length === 0)) 
+        (typeof calculatorDataRefs.confeccao !== 'object' || Object.keys(calculatorDataRefs.confeccao).length === 0) || 
+        (typeof calculatorDataRefs.trilho !== 'object' || Object.keys(calculatorDataRefs.trilho).length === 0)) 
     {
-        console.error("adicionarLinhaTecido: Tentativa de adicionar linha falhou. Os dados (tecidos, confeccao, trilho) ainda não estão prontos em dataRefs.", dataRefs);
-        showToast("Erro: Dados de confecção/trilho não carregados. Saia e entre no cliente novamente.", "error"); 
+        console.error("adicionarLinhaTecido: Dados (tecidos, confeccao, trilho) não estão prontos em dataRefs/calculatorDataRefs.", dataRefs, calculatorDataRefs);
+        showToast("Erro: Dados de confecção/trilho não carregados.", "error"); 
         return; 
     }
 
@@ -736,12 +750,12 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null) {
 
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzCortina'), DADOS_FRANZ_CORTINA);
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzBlackout'), DADOS_FRANZ_BLACKOUT);
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro'));
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout'));
-    preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), dataRefs.confeccao, true, "NENHUM", false);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM", false);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "N/A", true);   
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina')); 
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro')); 
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout')); 
+    preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), calculatorDataRefs.confeccao, true, "NENHUM", false);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), calculatorDataRefs.trilho, true, "NENHUM", false);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), calculatorDataRefs.instalacao, true, "N/A", true);   
 
     if (!estadoLinha || !estadoLinha.franzBlackout) {
         const selectFranzBk = novaLinha.querySelector('.select-franzBlackout');
@@ -1132,25 +1146,22 @@ function recalcularTotaisSelecionados() {
 
 async function calcularOrcamentoLinha(linha) {
      if (!linha || !isDataLoadedRef.value) return;
-
     const nomeCortina = linha.querySelector('.select-codTecidoCortina')?.value;
     const tecCortina = (dataRefs.tecidos || []).find(t => t.produto === nomeCortina);
     const nomeForro = linha.querySelector('.select-codTecidoForro')?.value;
     const tecForro = (dataRefs.tecidos || []).find(t => t.produto === nomeForro);
     const nomeBk = linha.querySelector('.select-codTecidoBlackout')?.value;
     const tecBk = (dataRefs.tecidos || []).find(t => t.produto === nomeBk);
-
     const inputOutros = linha.querySelector('.input-outros');
     const vOutrosF = inputOutros ? inputOutros.value : "";
     const vOutrosL = vOutrosF.replace(/[R$\.\s]/g, "").replace(",", ".");
     const vOutrosN = parseFloat(vOutrosL) || 0;
-
     const markupP = parseFloat(elements.calculatorMarkupInput?.value) || 100;
     const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
     const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
-
     const valorConfecao = obterValorRealSelect(linha.querySelector('.select-confecao'));
     const valorTrilho = obterValorRealSelect(linha.querySelector('.select-trilho'));
+
     const dadosDeEntrada = {
         largura: parseFloat(String(linha.querySelector('.input-largura')?.value).replace(',', '.')) || 0,
         altura: parseFloat(String(linha.querySelector('.input-altura')?.value).replace(',', '.')) || 0,
@@ -1168,16 +1179,22 @@ async function calcularOrcamentoLinha(linha) {
     };
 
      try {
-        const response = await fetch('https://api-calculadora-hgy8.onrender.com/api/calcular', {
+        const token = await getAuthToken();
+        if (!token) return; 
+
+        const response = await fetch(`${BACKEND_API_URL}/api/calcular`, { 
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
             body: JSON.stringify(dadosDeEntrada)
         });
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido na API de cálculo.' }));
             console.error('Erro da API:', response.status, errorData);
-            throw new Error(errorData.message || 'Erro na API de cálculo.');
+            throw new Error(errorData.erro || errorData.message || 'Erro na API de cálculo.');
         }
 
         const resultados = await response.json();
@@ -1215,36 +1232,29 @@ async function salvarEstadoCalculadora(clientId) {
 
     const sectionsData = {};
     const sectionElements = document.querySelectorAll('#quote-sections-container .quote-section');
-    sectionElements.forEach(sectionEl => {
-        const sectionType = sectionEl.dataset.sectionType;
-        sectionsData[sectionType] = {
-            active: true,
-            ambientes: obterEstadoSection(sectionEl)
-        };
-    });
-
+    sectionElements.forEach(sectionEl => { });
     estadoAbas[abaAtivaIndex].sections = sectionsData;
     estadoAbas[abaAtivaIndex].venda_realizada = elements.chkSummaryVendaRealizada ? elements.chkSummaryVendaRealizada.checked : false;
+    const estadoCompleto = { abas: estadoAbas,};
 
-    const estadoCompleto = {
-        abas: estadoAbas, 
-        markup: elements.calculatorMarkupInput?.value || '100',
-        parcelamento: elements.selectParcelamentoGlobal?.value || 'DÉBITO', 
-        frete: elements.selectFreteGlobal?.value || '0', 
-        entrada: elements.inputValorEntradaGlobal?.value || ''
-    };
 
      try {
-        const response = await fetch(`https://api-calculadora-hgy8.onrender.com/api/orcamentos/${clientId}`, {
+        const token = await getAuthToken();
+        if (!token) return; 
+
+        const response = await fetch(`${BACKEND_API_URL}/api/orcamentos/${clientId}`, { 
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
             body: JSON.stringify(estadoCompleto)
         });
 
         if (!response.ok) {
              const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido ao salvar.' }));
              console.error('Erro da API ao salvar:', response.status, errorData);
-             throw new Error(errorData.message || 'Erro na API ao salvar.');
+             throw new Error(errorData.erro || errorData.message || 'Erro na API ao salvar.');
         }
 
        const result = await response.json();
@@ -1285,7 +1295,16 @@ async function carregarEstadoCalculadora(clientId) {
     abaAtivaIndex = 0;
 
     try {
-        const response = await fetch(`https://api-calculadora-hgy8.onrender.com/api/orcamentos/${clientId}`);
+        const token = await getAuthToken();
+        if (!token) return; 
+
+        const response = await fetch(`${BACKEND_API_URL}/api/orcamentos/${clientId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}` 
+            }
+        });
+
         if (!response.ok) {
              if (response.status === 404) {
                 console.log("Nenhum orçamento salvo. Criando novo.");
@@ -1298,7 +1317,7 @@ async function carregarEstadoCalculadora(clientId) {
              } else {
                  const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido ao carregar orçamento.' }));
                  console.error('Erro da API ao carregar:', response.status, errorData);
-                 throw new Error(errorData.message || 'Erro API carregar.');
+                 throw new Error(errorData.erro || errorData.message || 'Erro API carregar.');
              }
         } else {
             const estado = await response.json();
@@ -1585,7 +1604,7 @@ export async function showCalculatorView(clientId, clientName) {
     try {
         await aguardarDadosBase();
         preencherSelectParcelamento();
-        preencherSelectCalculadora(elements.selectFreteGlobal, dataRefs.frete, true, "SEM FRETE", true);
+        preencherSelectCalculadora(elements.selectFreteGlobal, calculatorDataRefs.frete, true, "SEM FRETE", true);
         await carregarEstadoCalculadora(clientId); 
         atualizarHeaderParcelado(); 
 

@@ -2,8 +2,10 @@ import { _supabase } from './supabaseClient.js';
 import { checkUserSession, setupLogoutButton } from './modules/auth.js';
 import { initUI, showToast, openModal, closeModal } from './modules/ui.js'; 
 import { initCRM, carregarClientes } from './modules/crm.js';
-import { initDataManager, carregarDados, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js';
+import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js';
 import { initCalculator, showCalculatorView } from './modules/calculator.js';
+
+const BACKEND_API_URL = 'https://paineldecontrole.fly.dev';
 
 let tecidosDataGlobal = [];
 let confeccaoDataGlobal = [];
@@ -19,6 +21,21 @@ let triggerTrilhoSort = null;
 let triggerFreteSort = null; 
 let triggerInstalacaoSort = null;
 let elements = {}; 
+
+const dataRefs = {
+    tecidos: tecidosDataGlobal,
+    confeccao: confeccaoDataGlobal, 
+    trilho: trilhoDataGlobal,
+    frete: freteDataGlobal, 
+    instalacao: instalacaoDataGlobal
+};
+const calculatorDataRefs = {
+     tecidos: tecidosDataGlobal, 
+     confeccao: {}, 
+     trilho: {}, 
+     frete: {}, 
+     instalacao: {} 
+};
 
 function showClientListLocal() {
     if (document.getElementById('client-list-view')) document.getElementById('client-list-view').style.display = 'block';
@@ -64,6 +81,59 @@ function handleRouting() {
     } else {
         showClientListLocal();
     }
+}
+
+async function buscarDadosBaseDoBackend() {
+  try {
+    const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
+    if (sessionError || !session) {
+      throw new Error(sessionError?.message || "Sessão não encontrada. Faça login.");
+    }
+    const token = session.access_token;
+
+    const response = await fetch(`${BACKEND_API_URL}/api/dados-base`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.erro || `Erro ${response.status} ao buscar dados do backend.`);
+    }
+    
+    const dados = await response.json();
+    console.log("Dados base recebidos do backend:", dados);
+
+    dataRefs.tecidos.length = 0;
+    dataRefs.confeccao.length = 0;
+    dataRefs.trilho.length = 0;
+    dataRefs.frete.length = 0;
+    dataRefs.instalacao.length = 0;
+    
+    dataRefs.tecidos.push(...(dados.tecidos || []));
+    dataRefs.confeccao.push(...(dados.confeccao || []));
+    dataRefs.trilho.push(...(dados.trilho || []));
+    dataRefs.frete.push(...(dados.frete || []));
+    dataRefs.instalacao.push(...(dados.instalacao || []));
+
+    calculatorDataRefs.confeccao = (dados.confeccao || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
+    calculatorDataRefs.trilho = (dados.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
+    calculatorDataRefs.frete = (dados.frete || []).reduce((acc, item) => { const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ','); acc[key] = item.valor; return acc; }, {});
+    calculatorDataRefs.instalacao = (dados.instalacao || []).reduce((acc, item) => { const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ','); acc[key] = item.valor; return acc; }, {});
+
+    isDataLoadedFlag.value = true; 
+    document.dispatchEvent(new CustomEvent('dadosBaseCarregados')); 
+    console.log("Flag isDataLoaded definida como true. dataRefs e calculatorDataRefs populados.");
+
+  } catch (error) {
+    console.error("Erro crítico ao buscar dados base do backend:", error);
+    showToast(`Erro ao carregar dados: ${error.message}`, "error");
+    isDataLoadedFlag.value = false;
+    if (loadingOverlay) {
+        loadingOverlay.innerHTML = `<p style="color: red; padding: 20px; text-align: center;">Erro ao carregar dados base.<br>Verifique o console e a conexão com o backend.</p>`;
+    }
+  }
 }
 
 
@@ -141,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saveStatusMessage: document.getElementById('save-status-message'),
         btnManualSave: document.getElementById('btn-manual-save'),
         btnPrintOrcamento: document.getElementById('btn-print-orcamento'), 
-    calculatorMarkupInput: document.getElementById('input-markup-base-calc'),
         calculatorMarkupInput: document.getElementById('input-markup-base-calc'),
         selectParcelamentoGlobal: document.getElementById('select-parcelamento-global'),
         inputValorEntradaGlobal: document.getElementById('input-valor-entrada-global'),
@@ -181,30 +250,18 @@ document.addEventListener('DOMContentLoaded', () => {
         quoteSectionsContainer: document.getElementById('quote-sections-container'), 
         sectionControlsContainer: document.getElementById('section-controls'),
         spanSecaoNomeExcluir: document.getElementById('secao-nome-excluir')
-        
     };
 
-    const dataRefs = {
-        tecidos: tecidosDataGlobal,
-        confeccao: confeccaoDataGlobal,
-        trilho: trilhoDataGlobal,
-        frete: freteDataGlobal, 
-        instalacao: instalacaoDataGlobal
-    };
-    const calculatorDataRefs = {
-         tecidos: tecidosDataGlobal, 
-         confeccao: {},
-         trilho: {},
-         frete: {}, 
-         instalacao: {} 
-    };
+    initCRM(elements);
+    initDataManager(elements, dataRefs);
+    initCalculator(elements, calculatorDataRefs, currentClientIdGlobal, isDataLoadedFlag); 
 
     checkUserSession(); 
     setupLogoutButton(); 
     initUI(elements); 
-if (elements.btnThemeToggle) {
+    
+    if (elements.btnThemeToggle) {
         const body = document.body;
-        
         const applyTheme = (theme) => {
             if (theme === 'dark') {
                 body.classList.add('dark-mode');
@@ -214,138 +271,52 @@ if (elements.btnThemeToggle) {
                 elements.btnThemeToggle.textContent = '🌙'; 
             }
         };
-        
         const currentTheme = localStorage.getItem('theme') || 'light';
         applyTheme(currentTheme);
-
         elements.btnThemeToggle.addEventListener('click', () => {
             let newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
             localStorage.setItem('theme', newTheme);
             elements.btnThemeToggle.classList.add('toggling');
             applyTheme(newTheme);
-            setTimeout(() => {
-                elements.btnThemeToggle.classList.remove('toggling');
-            }, 400); 
+            setTimeout(() => { elements.btnThemeToggle.classList.remove('toggling'); }, 400); 
         });
     }
-    initCRM(elements);
-    initDataManager(elements, dataRefs);
-    initCalculator(elements, calculatorDataRefs, currentClientIdGlobal, isDataLoadedFlag); 
 
     document.addEventListener('clienteAtualizado', () => {
         console.log("Evento 'clienteAtualizado' recebido, recarregando lista de clientes.");
         carregarClientes(); 
     });
+    if (elements.btnAbrirConfigCalculadora) {  }
+    if (elements.btnFecharConfigCalculadora) {  }
+    if (elements.btnConfirmarExcluirGenerico) {  }
+    if (elements.btnCancelExcluirGenerico) {  }
+    window.prepararExclusaoGenerica = (info) => { };
+    document.addEventListener('tabelaTecidosSortRequest', () => {  });
+    document.addEventListener('tabelaConfeccaoSortRequest', () => {  });
+    document.addEventListener('tabelaTrilhoSortRequest', () => {  });
+    document.addEventListener('tabelaFreteSortRequest', () => {  });
+    document.addEventListener('tabelaInstalacaoSortRequest', () => {  });
 
-    if (elements.btnAbrirConfigCalculadora) {
-        elements.btnAbrirConfigCalculadora.addEventListener('click', () => {
-            openModal(elements.modalConfigCalculadora);
-        });
-    }
-    if (elements.btnFecharConfigCalculadora) {
-        elements.btnFecharConfigCalculadora.addEventListener('click', () => {
-            closeModal(elements.modalConfigCalculadora);
-        });
-    }
 
-    if (elements.btnConfirmarExcluirGenerico) {
-        elements.btnConfirmarExcluirGenerico.addEventListener('click', async () => {
-            if (!itemParaExcluirGenericoInfo) return;
-            const { id, tabela } = itemParaExcluirGenericoInfo;
-            const { error } = await _supabase.from(tabela).delete().match({ id: id });
-            
-            if (error) {
-                console.error(`Erro ao excluir ${tabela}:`, error);
-                showToast(`Erro ao excluir: ${error.message}`, 'error');
-            } else {
-                showToast('Item excluído com sucesso.');
-                itemParaExcluirGenericoInfo.elemento?.remove();
-                document.dispatchEvent(new CustomEvent('dadosBaseAlterados')); 
-            }
-            closeModal(elements.modalExcluirGenerico);
-            itemParaExcluirGenericoInfo = null;
-        });
-    }
-    if (elements.btnCancelExcluirGenerico) {
-        elements.btnCancelExcluirGenerico.addEventListener('click', () => {
-            closeModal(elements.modalExcluirGenerico);
-            itemParaExcluirGenericoInfo = null;
-        });
-    }
-    window.prepararExclusaoGenerica = (info) => {
-        itemParaExcluirGenericoInfo = info;
-        if (elements.spanItemNomeExcluir) {
-            elements.spanItemNomeExcluir.textContent = info.nome || 'este item';
-        }
-        openModal(elements.modalExcluirGenerico);
-    };
-    document.addEventListener('tabelaTecidosSortRequest', () => {
-        if (triggerTecidosSort) {
-            triggerTecidosSort(); 
-        } else {
-            console.warn("triggerTecidosSort não está definido.");
-        }
-    });
-
-    document.addEventListener('tabelaConfeccaoSortRequest', () => {
-        if (triggerConfeccaoSort) {
-            triggerConfeccaoSort();
-        } else {
-            console.warn("triggerConfeccaoSort não está definido.");
-        }
-    });
-
-    document.addEventListener('tabelaTrilhoSortRequest', () => {
-        if (triggerTrilhoSort) {
-            triggerTrilhoSort();
-        } else {
-            console.warn("triggerTrilhoSort não está definido.");
-        }
-    });
-    document.addEventListener('tabelaFreteSortRequest', () => {
-        if (triggerFreteSort) {
-            triggerFreteSort();
-        } else {
-            console.warn("triggerFreteSort não está definido.");
-        }
-    });
-    document.addEventListener('tabelaInstalacaoSortRequest', () => {
-        if (triggerInstalacaoSort) {
-            triggerInstalacaoSort();
-        } else {
-            console.warn("triggerInstalacaoSort não está definido.");
-        }
-    });
-    console.log("Iniciando carregamento de todos os dados...");
+    console.log("Iniciando carregamento de dados...");
+    
     Promise.all([
-        carregarClientes(),
-        carregarDados('tecidos', 'produto'),
-        carregarDados('confeccao', 'opcao'), 
-        carregarDados('trilho', 'opcao'),
-        carregarDados('frete', 'valor'),
-        carregarDados('instalacao', 'valor') 
+        carregarClientes(),             
+        buscarDadosBaseDoBackend()      
     ]).then(() => {
-        console.log("Todos os dados carregados, configurando ordenação...");
+        console.log("Carregamento inicial (clientes e dados base) concluído.");
+        
+        renderizarTabelaTecidos(dataRefs.tecidos);
+        renderizarTabelaConfeccao(dataRefs.confeccao);
+        renderizarTabelaTrilho(dataRefs.trilho);
+        renderizarTabelaFrete(dataRefs.frete);
+        renderizarTabelaInstalacao(dataRefs.instalacao);
+
          setupTableSorting('tabela-tecidos', dataRefs.tecidos, renderizarTabelaTecidos);
          setupTableSorting('tabela-confeccao', dataRefs.confeccao, renderizarTabelaConfeccao);
          setupTableSorting('tabela-trilho', dataRefs.trilho, renderizarTabelaTrilho);
          setupTableSorting('tabela-frete', dataRefs.frete, renderizarTabelaFrete);
          setupTableSorting('tabela-instalacao', dataRefs.instalacao, renderizarTabelaInstalacao);
-
-         calculatorDataRefs.tecidos = dataRefs.tecidos; 
-         calculatorDataRefs.confeccao = (dataRefs.confeccao || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
-         calculatorDataRefs.trilho = (dataRefs.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
-        calculatorDataRefs.frete = (dataRefs.frete || []).reduce((acc, item) => {
-             const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ',');
-             acc[key] = item.valor; 
-             return acc; 
-         }, {});
-         calculatorDataRefs.instalacao = (dataRefs.instalacao || []).reduce((acc, item) => {
-             const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ',');
-             acc[key] = item.valor; 
-             return acc; 
-         }, {});
-         isDataLoadedFlag.value = true;
 
          if (loadingOverlay) {
             loadingOverlay.style.opacity = '0';
@@ -360,10 +331,9 @@ if (elements.btnThemeToggle) {
         console.error("Erro no fluxo de carregamento inicial:", error);
         showToast("Erro crítico ao inicializar. Verifique o console.", 'error');
         if (loadingOverlay) {
-            loadingOverlay.innerHTML = '<p style="color: red; padding: 20px; text-align: center;">Erro crítico ao carregar dados.<br>Verifique o console e sua conexão com o backend.</p>';
+            loadingOverlay.innerHTML = '<p style="color: red; padding: 20px; text-align: center;">Erro crítico ao carregar dados.<br>Verifique o console e sua conexão.</p>';
         }
     });
-
 });
 
 function setupTableSorting(tableId, dataArray, renderFunction) {

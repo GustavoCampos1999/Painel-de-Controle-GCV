@@ -1,107 +1,136 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors'); 
-const db = require('./database.js'); 
-const { calcularOrcamento } = require('./calculo.js');
+const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+const { calcularOrcamento } = require('./calculo.js'); //
 
 const app = express();
-app.use(cors()); 
+app.use(cors());
 app.use(express.json());
 
 const PORTA = process.env.PORT || 3000;
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Erro: Variáveis de ambiente SUPABASE_URL e SUPABASE_ANON_KEY são obrigatórias.");
+  process.exit(1);
+}
+
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.warn('API: Requisição sem token Bearer.');
+    return res.status(401).json({ erro: "Token de autenticação Bearer necessário." });
+  }
+
+  const token = authHeader.split(' ')[1];
+  req.supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } }
+  });
+  console.log('API: Cliente Supabase autenticado criado.');
+  next();
+};
+
+app.use('/api', authMiddleware);
+
 app.get('/health', (req, res) => {
-  res.status(200).send('Servidor está acordado.');
+  res.status(200).send('Servidor backend está operacional.');
 });
 
 app.post('/api/calcular', (req, res) => {
    try {
-    const dadosDeEntrada = req.body;
-    if (dadosDeEntrada == null || typeof dadosDeEntrada !== 'object') {
-        return res.status(400).json({ erro: "Dados de entrada inválidos." });
-    }
-    const resultados = calcularOrcamento(dadosDeEntrada);
+    const resultados = calcularOrcamento(req.body);
     res.json(resultados);
+   } catch (error) {
+    console.error("Erro no endpoint /api/calcular:", error);
+    res.status(500).json({ erro: "Erro ao processar cálculo." });
+   }
+});
+
+app.get('/api/dados-base', async (req, res) => {
+  try {
+    const [tecidosRes, confeccaoRes, trilhoRes, freteRes, instalacaoRes] = await Promise.all([
+      req.supabase.from('tecidos').select('*').order('produto'),
+      req.supabase.from('confeccao').select('*').order('opcao'),
+      req.supabase.from('trilho').select('*').order('opcao'),
+      req.supabase.from('frete').select('*').order('valor'),
+      req.supabase.from('instalacao').select('*').order('valor')
+    ]);
+
+    if (tecidosRes.error) throw tecidosRes.error;
+    if (confeccaoRes.error) throw confeccaoRes.error;
+    if (trilhoRes.error) throw trilhoRes.error;
+    if (freteRes.error) throw freteRes.error;
+    if (instalacaoRes.error) throw instalacaoRes.error;
+
+    res.json({
+      tecidos: tecidosRes.data || [],
+      confeccao: confeccaoRes.data || [],
+      trilho: trilhoRes.data || [],
+      frete: freteRes.data || [],
+      instalacao: instalacaoRes.data || []
+    });
+
   } catch (error) {
-    console.error("Erro no cálculo:", error);
-    res.status(500).json({ erro: "Ocorreu um erro ao processar o cálculo." });
-  }
-});
-
-app.get('/api/tecidos', async (req, res) => {
-  try {
-    const result = await db.query("SELECT * FROM tecidos ORDER BY produto ASC", []);
-    res.json(result.rows || []); 
-  } catch (err) {
-    console.error('Erro ao buscar tecidos:', err);
-    res.status(500).json({ "erro": err.message });
-  }
-});
-
-app.get('/api/confeccao', async (req, res) => {
-  try {
-    const result = await db.query("SELECT * FROM confeccao ORDER BY opcao ASC", []); 
-    res.json(result.rows || []);
-  } catch (err) {
-    console.error('Erro ao buscar confecção:', err);
-    res.status(500).json({ "erro": err.message });
-  }
-});
-
-app.get('/api/trilho', async (req, res) => {
-  try {
-    const result = await db.query("SELECT * FROM trilho ORDER BY opcao ASC", []);
-    res.json(result.rows || []);
-  } catch (err) {
-    console.error('Erro ao buscar trilho:', err);
-    res.status(500).json({ "erro": err.message });
+    console.error('Erro Supabase/inesperado em /api/dados-base:', error);
+    res.status(error.status || 500).json({ erro: error.message || "Erro ao buscar dados base." });
   }
 });
 
 app.get('/api/orcamentos/:clientId', async (req, res) => {
-    const { clientId } = req.params;
+     const { clientId } = req.params;
     if (isNaN(parseInt(clientId))) {
          return res.status(400).json({ erro: "ID do cliente inválido." });
     }
     try {
-        const result = await db.query("SELECT data FROM orcamentos WHERE client_id = $1", [clientId]);
-        
-        if (result.rows.length > 0) {
-            res.json(result.rows[0].data || {});
+        const { data, error } = await req.supabase
+          .from('orcamentos')
+          .select('data')
+          .eq('client_id', clientId)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+            res.json(data.data || {});
         } else {
-            res.status(404).json({ message: 'Orçamento não encontrado.' });
+            res.status(404).json({ message: 'Orçamento não encontrado ou acesso negado.' });
         }
-    } catch (err) {
-        console.error(`Erro ao buscar orçamento para client_id ${clientId}:`, err);
-        res.status(500).json({ "erro": err.message });
+    } catch (error) {
+        console.error(`Erro Supabase/inesperado GET /api/orcamentos/${clientId}:`, error);
+        res.status(error.status || 500).json({ erro: error.message || "Erro interno." });
     }
 });
 
 app.put('/api/orcamentos/:clientId', async (req, res) => {
     const { clientId } = req.params;
-     if (isNaN(parseInt(clientId))) {
+    if (isNaN(parseInt(clientId))) {
          return res.status(400).json({ erro: "ID do cliente inválido." });
     }
-    const orcamentoData = req.body; 
+    const orcamentoData = req.body;
     if (!orcamentoData || typeof orcamentoData !== 'object') {
         return res.status(400).json({ erro: "Dados do orçamento inválidos." });
     }
     try {
-        const result = await db.query(
-            `INSERT INTO orcamentos (client_id, data, updated_at) VALUES ($1, $2, NOW())
-             ON CONFLICT (client_id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
-             RETURNING data, updated_at`, 
-            [clientId, orcamentoData]
-        );
-        res.status(200).json(result.rows[0]); 
+        const { data: perfilData, error: perfilError } = await req.supabase
+            .from('perfis').select('loja_id').single();
+        if (perfilError || !perfilData) throw new Error("Não foi possível identificar a loja do usuário.");
+        const lojaId = perfilData.loja_id;
 
-    } catch (err) {
-        console.error(`Erro ao salvar orçamento para client_id ${clientId}:`, err);
-        res.status(500).json({ "erro": err.message });
+        const { data, error } = await req.supabase
+          .from('orcamentos')
+          .upsert({ client_id: clientId, loja_id: lojaId, data: orcamentoData },
+                  { onConflict: 'client_id, loja_id' })
+          .select('data, updated_at').single();
+        if (error) throw error;
+        res.status(200).json(data);
+    } catch (error) {
+        console.error(`Erro Supabase/inesperado PUT /api/orcamentos/${clientId}:`, error);
+        res.status(error.status || 500).json({ erro: error.message || "Erro interno." });
     }
 });
 
 app.listen(PORTA, '0.0.0.0', () => {
-    console.log(`--- Servidor rodando na porta ${PORTA} ---`); 
-    console.log('API pronta para servir dados do Supabase.');
+    console.log(`--- Backend rodando na porta ${PORTA} ---`);
+    console.log(`Conectado à API Supabase em: ${supabaseUrl.substring(0, 30)}...`);
 });
