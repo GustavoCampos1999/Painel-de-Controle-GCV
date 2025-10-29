@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registre-se - Painel Admin</title>
+    <link rel="stylesheet" href="login.css"> </head>
+<body>
+    <div class="login-container">
+        <img src="../images/logo.webp" alt="Logo Primor" id="login-logo">
+        
+        <h2 style="font-size: 1.2em; margin-bottom: 15px;">Criar Acesso</h2>
+        <form id="form-register">
+            <div>
+                <label for="nome_empresa">Nome da Empresa</label>
+                <input type="text" id="nome_empresa" placeholder="Sua Empresa Ltda" required>
+            </div>
+            <div>
+                <label for="cnpj">CNPJ (Somente números)</label>
+                <input type="text" id="cnpj" placeholder="00111222000199" required>
+            </div>
+             <div>
+                <label for="telefone">Telefone</label>
+                <input type="tel" id="telefone" placeholder="(31) 99999-8888" required>
+            </div>
+            <div>
+                <label for="email">Email (Será seu login de admin)</label>
+                <input type="email" id="email" placeholder="seu@email.com" required>
+            </div>
+            <div>
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" placeholder="Mínimo 6 caracteres" required>
+            </div>
+            <div>
+                <label for="confirmar_senha">Confirmar Senha</label>
+                <input type="password" id="confirmar_senha" placeholder="Repita a senha" required>
+            </div>
+            <button type="submit" id="btn-register">Criar Conta e Iniciar Teste de 7 Dias</button>
+            <p id="mensagem-info" style="color: #007bff; margin-top: 15px; font-size: 14px;"></p>
+            <p id="mensagem-erro" style="color: #dc3545; margin-top: 15px; font-size: 14px;"></p>
+        </form>
+        <div style="text-align: center; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+            <a href="login.html" style="text-decoration: none; color: #555;">Já tem uma conta? Faça Login</a>
+        </div>
+    </div>
+    
+    <script type="module" src="register.js"></script>
+</body>
+</html>
