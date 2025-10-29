@@ -1139,8 +1139,8 @@ async function calcularOrcamentoLinha(linha) {
         const qtc = linha.querySelector('td:nth-child(8) input'); if(qtc) qtc.value = '0,000';
         const qtf = linha.querySelector('td:nth-child(10) input'); if(qtf) qtf.value = '0,000';
         const qtb = linha.querySelector('td:nth-child(13) input'); if(qtb) qtb.value = '0,000';
-        const ora = linha.querySelector('td:nth-last-child(2) input'); if(ora) ora.value = formatadorReaisCalc.format(0);
-        const orx = linha.querySelector('td:nth-last-child(1) input'); if(orx) orx.value = formatadorReaisCalc.format(0);
+        const ora = linha.querySelector('td:nth-last-child(3) input'); if(ora) ora.value = formatadorReaisCalc.format(0);
+        const orx = linha.querySelector('td:nth-last-child(2) input'); if(orx) orx.value = formatadorReaisCalc.format(0);
         showToast(`Erro no cálculo: ${error.message}`, "error"); 
     }
 
