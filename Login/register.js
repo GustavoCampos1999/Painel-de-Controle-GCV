@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const msgInfo = document.getElementById('mensagem-info');
     const btnRegister = document.getElementById('btn-register');
 
-    const BACKEND_API_URL = 'https://paineldecontrole.fly.dev';
+    const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
