@@ -5,7 +5,7 @@ import { initCRM, carregarClientes } from './modules/crm.js';
 import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js'; 
 import { initCalculator, showCalculatorView } from './modules/calculator.js'; 
 
-const BACKEND_API_URL = 'https://paineldecontrole.fly.dev';
+const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 let tecidosDataGlobal = [];
 let confeccaoDataGlobal = []; 

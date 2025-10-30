@@ -1,7 +1,7 @@
 import { showToast, openModal, closeModal } from './ui.js';
 import { _supabase } from '../supabaseClient.js'; 
 
-const BACKEND_API_URL = 'https://paineldecontrole.fly.dev';
+const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 const DADOS_FRANZ_CORTINA = ["3.0", "2.8", "2.5", "2.0", "1.5", "1.2", "1.0"];
 const DADOS_FRANZ_BLACKOUT = ["2.5", "2.0", "1.5", "1.2", "1.0"];
