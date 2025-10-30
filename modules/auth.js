@@ -10,7 +10,23 @@ export async function checkUserSession() {
     } else {
         const userElement = document.getElementById('user-email');
         if (userElement) {
-            userElement.textContent = `Logado como: ${session.user.email}`;
+            try {
+                const { data: perfil, error } = await _supabase
+                    .from('perfis')
+                    .select('nome_usuario')
+                    .single();
+
+                if (error) throw error;
+
+                if (perfil && perfil.nome_usuario) {
+                    userElement.textContent = `Logado como: ${perfil.nome_usuario}`;
+                } else {
+                    userElement.textContent = `Logado como: ${session.user.email}`;
+                }
+            } catch (error) {
+                console.warn("Não foi possível buscar o nome do perfil, exibindo email.", error.message);
+                userElement.textContent = `Logado como: ${session.user.email}`;
+            }
         }
     }
 }

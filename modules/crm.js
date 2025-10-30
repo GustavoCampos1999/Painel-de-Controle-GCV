@@ -1,11 +1,32 @@
 import { _supabase } from '../supabaseClient.js';
-import { showToast, openModal, closeModal } from './ui.js'; 
+import { showToast, openModal, closeModal } from './ui.js';
 
 let listaClientesEl, inputPesquisaClientesEl, formAddClienteEl, formEditarClienteEl;
 let modalAddClienteEl, modalEditarClienteEl, modalExcluirClienteEl;
 let btnConfirmarExcluirClienteEl;
-let clienteParaExcluirInfo = null; 
+let clienteParaExcluirInfo = null;
 let btnToggleFilterEl, selectClientFilterEl;
+let cachedLojaIdCrm = null; 
+
+async function getMyLojaIdCrm() {
+    _supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+            cachedLojaIdCrm = null;
+        }
+    });
+    if (cachedLojaIdCrm) return cachedLojaIdCrm;
+    try {
+        const { data, error, status } = await _supabase.from('perfis').select('loja_id').single();
+        if (error && status !== 406) throw error;
+        if (!data || !data.loja_id) throw new Error("Perfil ou loja_id não encontrados.");
+        cachedLojaIdCrm = data.loja_id;
+        return cachedLojaIdCrm;
+    } catch (error) {
+        console.error("Erro ao buscar loja_id do perfil (CRM):", error);
+        showToast(`Erro crítico: Não foi possível identificar sua loja (${error.message}).`, "error");
+        return null;
+    }
+}
 
 export function initCRM(elements) {
     listaClientesEl = elements.listaClientes;
@@ -20,36 +41,40 @@ export function initCRM(elements) {
     selectClientFilterEl = elements.selectClientFilter;
 
     setupAddClienteButton();
-    setupAddClienteForm();
+    setupAddClienteForm(); 
     setupPesquisaClientes();
     setupAcoesCardCliente();
     setupModaisCliente();
-    setupFiltroClientes(); 
+    setupFiltroClientes();
+    document.addEventListener('clienteAtualizado', () => {
+        console.log("Evento clienteAtualizado recebido, recarregando clientes...");
+        aplicarFiltroEOrdenacao(); 
+    });
 }
 
 export async function carregarClientes(filterOptions = {}) {
-    let query = _supabase.from('clientes').select('*');
+    console.log("Carregando clientes com opções:", filterOptions);
+    let query = _supabase.from('clientes').select('*, updated_by_name'); 
 
-    if (filterOptions.venda_realizada === true) {
-        query = query.eq('venda_realizada', true);
-    } else if (filterOptions.venda_realizada === false) {
-        query = query.eq('venda_realizada', false);
-    }
-        if (filterOptions.searchTerm) {
-         query = _supabase.from('clientes').select('*').ilike('nome', `%${filterOptions.searchTerm}%`);
-    }
+    if (filterOptions.venda_realizada === true) query = query.eq('venda_realizada', true);
+    else if (filterOptions.venda_realizada === false) query = query.or('venda_realizada.is.null,venda_realizada.eq.false');
+    if (filterOptions.searchTerm) query = query.ilike('nome', `%${filterOptions.searchTerm}%`);
 
     const orderBy = filterOptions.orderBy || 'nome';
-    const ascending = filterOptions.ascending !== false; 
+    const ascending = filterOptions.ascending !== false;
     query = query.order(orderBy, { ascending: ascending });
 
-
     const { data: clientes, error } = await query;
-    
+
     if (error) {
-        console.error('Erro ao carregar/filtrar clientes:', error); 
-        showToast("Erro ao carregar/filtrar clientes.", "error"); 
-        renderizarListaClientes([]); 
+        console.error('Erro ao carregar/filtrar clientes:', error);
+        let userMessage = "Erro ao carregar/filtrar clientes.";
+        if (error.message.includes('row-level security policy') || error.code === '42501') {
+             userMessage = "Acesso bloqueado. Verifique o status da sua assinatura.";
+             renderizarListaClientes([]);
+        }
+        showToast(userMessage, "error");
+        if (userMessage.startsWith("Erro")) renderizarListaClientes([]);
     } else {
         renderizarListaClientes(clientes || []);
     }
@@ -58,14 +83,7 @@ export async function carregarClientes(filterOptions = {}) {
 function formatarDataHora(isoString) {
     if (!isoString) return 'N/A';
     try {
-        const data = new Date(isoString);
-        return data.toLocaleString('pt-BR', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        return new Date(isoString).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch (e) {
         console.warn("Erro ao formatar data:", isoString, e);
         return 'Data inválida';
@@ -75,54 +93,32 @@ function formatarDataHora(isoString) {
 function renderizarListaClientes(clientes) {
     if (!listaClientesEl) { console.warn("Elemento listaClientes não encontrado."); return; }
     listaClientesEl.innerHTML = '';
-    if (!clientes || clientes.length === 0) { 
-        listaClientesEl.innerHTML = '<p style="text-align: center; color: #777;">Nenhum cliente encontrado com os filtros atuais.</p>'; 
-        return; 
+    if (!clientes || clientes.length === 0) {
+        listaClientesEl.innerHTML = '<p style="text-align: center; color: #777;">Nenhum cliente encontrado.</p>';
+        return;
     }
-
     clientes.forEach(cliente => {
         const card = document.createElement('div');
-        card.className = 'cliente-card';
-        if (cliente.venda_realizada === true) {
-            card.classList.add('venda-realizada');
-        }
-        card.dataset.id = cliente.id;
-        card.dataset.nome = cliente.nome;
-        card.dataset.telefone = cliente.telefone || '';
-        card.dataset.email = cliente.email || '';
-        card.dataset.endereco = cliente.endereco || '';
-        card.dataset.created = cliente.created_at || ''; 
-        card.dataset.updated = cliente.updated_at || '';
-        
-        const criadoEm = formatarDataHora(cliente.created_at);
-        const atualizadoEm = formatarDataHora(cliente.updated_at);
+        card.className = `cliente-card ${cliente.venda_realizada ? 'venda-realizada' : ''}`;
+card.dataset.id = cliente.id; card.dataset.nome = cliente.nome; card.dataset.telefone = cliente.telefone || ''; card.dataset.email = cliente.email || ''; card.dataset.endereco = cliente.endereco || ''; card.dataset.created = cliente.created_at || ''; card.dataset.updated = cliente.updated_at || '';
+card.dataset.updated_by_name = cliente.updated_by_name || ''; 
 
-        card.innerHTML = `
-            <div class="card-content">
-                <div class="card-header">
-                    <p class="cliente-nome"><strong>${cliente.nome || 'Sem nome'}</strong></p>
-                    <div class="cliente-timestamps">
-                        <span class="timestamp updated">Última Edição: ${atualizadoEm}</span>
-                        <span class="timestamp created">Criado: ${criadoEm}</span>
-                    </div>
-                </div>
-                <div class="cliente-details">
-                    <span>${cliente.telefone || 'Sem telefone'} | ${cliente.email || 'Sem email'}</span>
-                    <p>${cliente.endereco || 'Sem endereço'}</p>
-                </div>
-            </div>
-            <div class="cliente-acoes">
-                <button class="btn-editar">Editar</button>
-                <button class="btn-excluir">Excluir</button>
-            </div>
-        `;
+const criadoEm = formatarDataHora(cliente.created_at); 
+const atualizadoEm = formatarDataHora(cliente.updated_at);
+const atualizadoPor = cliente.updated_by_name ? ` por ${cliente.updated_by_name}` : ''; 
 
+card.innerHTML = `
+    <div class="card-content">
+        <div class="card-header"><p class="cliente-nome"><strong>${cliente.nome || 'Sem nome'}</strong></p><div class="cliente-timestamps"><span class="timestamp updated">Última Edição: ${atualizadoEm}${atualizadoPor}</span><span class="timestamp created">Criado: ${criadoEm}</span></div></div>
+                <div class="cliente-details"><span>${cliente.telefone || 'Sem telefone'} | ${cliente.email || 'Sem email'}</span><p>${cliente.endereco || 'Sem endereço'}</p></div>
+            </div>
+            <div class="cliente-acoes"><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></div>`;
         listaClientesEl.appendChild(card);
     });
 }
 
 function setupAddClienteButton() {
-    const button = document.getElementById('btn-abrir-modal-add'); 
+    const button = document.getElementById('btn-abrir-modal-add');
     if (button) button.addEventListener('click', () => {
         if(formAddClienteEl) formAddClienteEl.reset();
         openModal(modalAddClienteEl);
@@ -133,97 +129,77 @@ function setupAddClienteForm() {
     if (!formAddClienteEl) return;
     formAddClienteEl.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const dadosForm = new FormData(formAddClienteEl);
-        const novoCliente = { 
-            nome: dadosForm.get('nome'), 
-            telefone: dadosForm.get('telefone'), 
-            email: dadosForm.get('email'), 
-            endereco: dadosForm.get('endereco') 
-        };
-        const { error } = await _supabase.from('clientes').insert(novoCliente);
-        if (error) { 
-            console.error('Erro ao salvar cliente:', error); 
-            showToast('Erro ao salvar cliente.', "error"); 
+        const submitButton = formAddClienteEl.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+
+        try { 
+            const dadosForm = new FormData(formAddClienteEl);
+            const lojaId = await getMyLojaIdCrm();
+            if (!lojaId) return; 
+
+            const novoCliente = {
+                nome: dadosForm.get('nome'), telefone: dadosForm.get('telefone'), email: dadosForm.get('email'), endereco: dadosForm.get('endereco'),
+                loja_id: lojaId 
+            };
+
+            const { error } = await _supabase.from('clientes').insert(novoCliente);
+
+            if (error) {
+                console.error('Erro ao salvar cliente:', error);
+                let userMessage = 'Erro ao salvar cliente.';
+                showToast(userMessage, "error");
+            } else {
+                formAddClienteEl.reset();
+                closeModal(modalAddClienteEl);
+                await aplicarFiltroEOrdenacao(); 
+                showToast('✅ Cliente cadastrado!');
+            }
+        
+        } finally {
+            if (submitButton) submitButton.disabled = false; 
         }
-        else { 
-            formAddClienteEl.reset(); 
-            closeModal(modalAddClienteEl); 
-            await carregarClientes(); 
-            showToast('✅ Cliente cadastrado!'); 
-        }
+        
     });
 }
 
 function setupPesquisaClientes() {
     if (!inputPesquisaClientesEl) return;
-    inputPesquisaClientesEl.addEventListener('input', () => { 
+    inputPesquisaClientesEl.addEventListener('input', () => {
         const termo = inputPesquisaClientesEl.value.trim().toLowerCase();
-        if (!termo) {
-            aplicarFiltroEOrdenacao(); 
-        } else {
-             carregarClientes({ searchTerm: termo, orderBy: 'nome', ascending: true }); 
-        }
+        aplicarFiltroEOrdenacao({ searchTerm: termo }); 
     });
 }
 
 function setupFiltroClientes() {
     if (btnToggleFilterEl) {
-        btnToggleFilterEl.addEventListener('click', () => {
-            if (selectClientFilterEl) {
-                const display = selectClientFilterEl.style.display;
-                selectClientFilterEl.style.display = display === 'none' ? 'block' : 'none';
-            }
-        });
     }
-
     if (selectClientFilterEl) {
         selectClientFilterEl.addEventListener('change', () => {
-            if (inputPesquisaClientesEl) {
-                 inputPesquisaClientesEl.value = '';
-            }
+            if (inputPesquisaClientesEl) inputPesquisaClientesEl.value = '';
             aplicarFiltroEOrdenacao();
         });
     }
 }
 
-function aplicarFiltroEOrdenacao() {
+function aplicarFiltroEOrdenacao(additionalOptions = {}) {
     if (!selectClientFilterEl) {
-        carregarClientes(); 
+        carregarClientes(additionalOptions); 
         return;
     }
-
     const valorSelecionado = selectClientFilterEl.value;
-    let options = {};
-
+    let options = { ...additionalOptions }; 
     switch (valorSelecionado) {
-        case 'nome_asc':
-            options = { orderBy: 'nome', ascending: true };
-            break;
-        case 'venda_realizada_true':
-            options = { venda_realizada: true, orderBy: 'nome', ascending: true };
-            break;
-        case 'venda_realizada_false':
-            options = { venda_realizada: false, orderBy: 'nome', ascending: true };
-            break;
-        case 'updated_at_desc':
-            options = { orderBy: 'updated_at', ascending: false };
-            break;
-        case 'created_at_desc':
-            options = { orderBy: 'created_at', ascending: false };
-            break;
-        case 'updated_at_asc':
-            options = { orderBy: 'updated_at', ascending: true };
-            break;
-        case 'created_at_asc':
-            options = { orderBy: 'created_at', ascending: true };
-            break;
-        default:
-            options = { orderBy: 'nome', ascending: true }; 
+        case 'nome_asc': options = { ...options, orderBy: 'nome', ascending: true }; break;
+        case 'venda_realizada_true': options = { ...options, venda_realizada: true, orderBy: 'nome', ascending: true }; break;
+        case 'venda_realizada_false': options = { ...options, venda_realizada: false, orderBy: 'nome', ascending: true }; break;
+        case 'updated_at_desc': options = { ...options, orderBy: 'updated_at', ascending: false }; break;
+        case 'created_at_desc': options = { ...options, orderBy: 'created_at', ascending: false }; break;
+        case 'updated_at_asc': options = { ...options, orderBy: 'updated_at', ascending: true }; break;
+        case 'created_at_asc': options = { ...options, orderBy: 'created_at', ascending: true }; break;
+        default: options = { ...options, orderBy: 'nome', ascending: true };
     }
-    
     carregarClientes(options);
 }
-
 
 function setupAcoesCardCliente() {
     if (!listaClientesEl) return;
@@ -236,19 +212,19 @@ function setupAcoesCardCliente() {
         if (e.target.classList.contains('btn-excluir')) {
             const spanNome = document.getElementById('cliente-nome-excluir');
             if(spanNome) spanNome.textContent = clientName || 'este cliente';
-            clienteParaExcluirInfo = { id: clientId, cardElemento: card };
+            clienteParaExcluirInfo = { id: clientId, cardElemento: card }; 
             openModal(modalExcluirClienteEl);
             return;
         }
         if (e.target.classList.contains('btn-editar')) {
-            if(formEditarClienteEl){
+            if(formEditarClienteEl){ 
                 formEditarClienteEl.querySelector('#edit-id').value = card.dataset.id;
                 formEditarClienteEl.querySelector('#edit-nome').value = card.dataset.nome;
                 formEditarClienteEl.querySelector('#edit-telefone').value = card.dataset.telefone;
                 formEditarClienteEl.querySelector('#edit-email').value = card.dataset.email;
                 formEditarClienteEl.querySelector('#edit-endereco').value = card.dataset.endereco;
             }
-            openModal(modalEditarClienteEl); 
+            openModal(modalEditarClienteEl);
             return;
         }
         window.location.hash = `#cliente/${clientId}`;
@@ -262,25 +238,34 @@ function setupModaisCliente() {
     const btnCancelEdit = document.getElementById('btn-cancelar-editar');
     if(btnCancelEdit) btnCancelEdit.addEventListener('click', () => closeModal(modalEditarClienteEl));
 
-    if(formEditarClienteEl) formEditarClienteEl.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const dadosForm = new FormData(formEditarClienteEl);
-        const id = dadosForm.get('id');
-        const dadosCliente = { 
+    if(formEditarClienteEl) formEditarClienteEl.addEventListener('submit', async (e) => { e.preventDefault(); const dadosForm = new FormData(formEditarClienteEl); 
+let nomeUsuario = null; 
+try {
+    const { data: perfil, error } = await _supabase.from('perfis').select('nome_usuario').single();
+    if (error) throw error;
+    if (perfil && perfil.nome_usuario) nomeUsuario = perfil.nome_usuario;
+} catch (e) {
+    console.warn("Nao foi possivel obter nome do usuario para 'updated_by_name'");
+}   
+const dadosCliente = { 
             nome: dadosForm.get('nome'), 
             telefone: dadosForm.get('telefone'), 
             email: dadosForm.get('email'), 
-            endereco: dadosForm.get('endereco') 
-        };
-        const { error } = await _supabase.from('clientes').update(dadosCliente).match({ id: id });
-        if (error) { 
-            console.error('Erro ao atualizar:', error); 
-            showToast('Erro ao salvar dados.', "error"); 
-        }
-        else { 
-            closeModal(modalEditarClienteEl); 
-            aplicarFiltroEOrdenacao(); 
-            showToast('✅ Dados salvos!'); 
+            endereco: dadosForm.get('endereco')
+    };
+
+    const { error } = await _supabase.from('clientes').update(dadosCliente).match({ id: dadosForm.get('id'), loja_id: lojaId }); 
+
+    if (error) {
+            console.error('Erro ao atualizar cliente:', error);
+            let userMessage = 'Erro ao salvar dados.';
+            if (error.message.includes('violates row-level security policy')) userMessage += " Verifique permissões ou status da assinatura.";
+            else userMessage += ` Detalhe: ${error.message}`;
+            showToast(userMessage, "error");
+        } else {
+            closeModal(modalEditarClienteEl);
+            await aplicarFiltroEOrdenacao();
+            showToast('✅ Dados salvos!');
         }
     });
 
@@ -290,18 +275,25 @@ function setupModaisCliente() {
     });
 
     if(btnConfirmarExcluirClienteEl) btnConfirmarExcluirClienteEl.addEventListener('click', async () => {
-         if (!clienteParaExcluirInfo) return;
+        if (!clienteParaExcluirInfo) return;
         const { id, cardElemento } = clienteParaExcluirInfo;
-        const { error } = await _supabase.from('clientes').delete().match({ id: id });
-        if (error) { 
-            console.error('Erro ao excluir cliente:', error); 
-            showToast('Erro ao excluir cliente.', "error"); 
-        }
-        else { 
+
+        const lojaId = await getMyLojaIdCrm();
+        if (!lojaId) return;
+
+        const { error } = await _supabase.from('clientes').delete().match({ id: id, loja_id: lojaId }); 
+
+        if (error) {
+            console.error('Erro ao excluir cliente:', error);
+            let userMessage = 'Erro ao excluir cliente.';
+            if (error.message.includes('violates row-level security policy')) userMessage += " Você não tem permissão para excluir.";
+            else userMessage += ` Detalhe: ${error.message}`;
+            showToast(userMessage, "error");
+        } else {
             cardElemento.remove();
-            showToast('Cliente excluído.'); 
+            showToast('Cliente excluído.');
         }
-        closeModal(modalExcluirClienteEl); 
+        closeModal(modalExcluirClienteEl);
         clienteParaExcluirInfo = null;
     });
 }

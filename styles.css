@@ -542,7 +542,7 @@ select,
     cursor: pointer;
     padding: 0 10px;
     vertical-align: middle;
-    margin-left: 15px;
+    margin-left: -10px;
 }
 .theme-toggle-button:hover {
     opacity: 0.8;

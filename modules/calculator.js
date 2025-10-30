@@ -384,7 +384,7 @@ function checkSectionControls() {
     elements.sectionControlsContainer.style.display = allHidden ? 'none' : 'flex';
 }
 
-function addSection(sectionType, buttonElement) {
+function addSection(sectionType, buttonElement, isInitialLoad = false) {
     if (!isDataLoadedRef.value) {
         showToast("Aguarde, carregando dados base...", "error"); 
         return;
@@ -447,7 +447,9 @@ if (btnMoveUp) {
                         sectionElement.style.transform = '';
                         prev.style.transform = '';
                         updateMoveButtonsVisibility();
-                        setDirty();
+                        if (!isInitialLoad) {
+        setDirty();
+    }
                     }, 300); 
                 });
             });
@@ -500,20 +502,20 @@ if (btnMoveDown) {
 }
 
     if (btnAddLinha) {
-        btnAddLinha.addEventListener('click', () => {
-            switch (sectionType) {
-                case 'tecido':
-                    adicionarLinhaTecido(tableBody, null);
-                    break;
-                case 'amorim':
-                    adicionarLinhaAmorim(tableBody, null);
-                    break;
-                case 'toldos':
-                    adicionarLinhaToldos(tableBody, null);
-                    break;
-            }
-        });
-    }
+    btnAddLinha.addEventListener('click', () => {
+        switch (sectionType) {
+            case 'tecido':
+                adicionarLinhaTecido(tableBody, null, false); 
+                break;
+            case 'amorim':
+                adicionarLinhaAmorim(tableBody, null, false); 
+                break;
+            case 'toldos':
+                adicionarLinhaToldos(tableBody, null, false);
+                break;
+        }
+    });
+}
 
     if (btnRemoverSecao) {
         btnRemoverSecao.addEventListener('click', () => {
@@ -529,17 +531,17 @@ if (btnMoveDown) {
         });
     }
 
-    switch (sectionType) {
-        case 'tecido':
-            adicionarLinhaTecido(tableBody, null);
-            break;
-        case 'amorim':
-            adicionarLinhaAmorim(tableBody, null);
-            break;
-        case 'toldos':
-            adicionarLinhaToldos(tableBody, null);
-            break;
-    }
+ switch (sectionType) {
+    case 'tecido':
+        adicionarLinhaTecido(tableBody, null, isInitialLoad); 
+        break;
+    case 'amorim':
+        adicionarLinhaAmorim(tableBody, null, isInitialLoad); 
+        break;
+    case 'toldos':
+        adicionarLinhaToldos(tableBody, null, isInitialLoad); 
+        break;
+}
 
     document.getElementById('quote-sections-container').appendChild(sectionElement);
 
@@ -550,7 +552,9 @@ if (btnMoveDown) {
     atualizarHeaderParcelado();
     checkSectionControls(); 
     updateMoveButtonsVisibility();
-    setDirty();
+   if (!isInitialLoad) {
+        setDirty();
+    }
 }
 function calcularParceladoLinhaAmorim(linha, taxaParcelamento) {
     if (!linha) return;
@@ -595,10 +599,22 @@ function updateMoveButtonsVisibility() {
 async function atualizarStatusVendaCliente() {
     if (!currentClientIdRef.value) return;
 
+    let nomeUsuario = null; 
+    try {
+        const { data: perfil, error } = await _supabase.from('perfis').select('nome_usuario').single();
+        if (error) throw error;
+        if (perfil && perfil.nome_usuario) nomeUsuario = perfil.nome_usuario;
+    } catch (e) {
+        console.warn("Nao foi possivel obter nome do usuario para 'updated_by_name' ao salvar status da venda");
+    }
+
     const algumaVendaRealizada = estadoAbas.some(aba => aba.venda_realizada === true);
+    
     const { error } = await _supabase
         .from('clientes')
-        .update({ venda_realizada: algumaVendaRealizada })
+        .update({ 
+        venda_realizada: algumaVendaRealizada
+    })
         .match({ id: currentClientIdRef.value });
 
     if (error) {
@@ -726,23 +742,14 @@ function preencherSelectTecidosCalculadora(selectElement) {
     selectElement.value = 'SEM TECIDO';
 }
 
-function adicionarLinhaTecido(tableBody, estadoLinha = null) {
+function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = false) { 
     if (!tableBody) {
         console.error("adicionarLinhaTecido chamada sem tableBody!");
         return;
     }
+    
     const template = document.getElementById('template-linha-tecido'); 
     if (!template) return;
-
-    if (!dataRefs.tecidos || !calculatorDataRefs.confeccao || !calculatorDataRefs.trilho ||
-        dataRefs.tecidos.length === 0 || 
-        (typeof calculatorDataRefs.confeccao !== 'object' || Object.keys(calculatorDataRefs.confeccao).length === 0) || 
-        (typeof calculatorDataRefs.trilho !== 'object' || Object.keys(calculatorDataRefs.trilho).length === 0)) 
-    {
-        console.error("adicionarLinhaTecido: Dados (tecidos, confeccao, trilho) não estão prontos em dataRefs/calculatorDataRefs.", dataRefs, calculatorDataRefs);
-        showToast("Erro: Dados de confecção/trilho não carregados.", "error"); 
-        return; 
-    }
 
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
@@ -750,12 +757,12 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null) {
 
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzCortina'), DADOS_FRANZ_CORTINA);
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzBlackout'), DADOS_FRANZ_BLACKOUT);
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina')); 
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro')); 
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout')); 
-    preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), calculatorDataRefs.confeccao, true, "NENHUM", false);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), calculatorDataRefs.trilho, true, "NENHUM", false);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), calculatorDataRefs.instalacao, true, "N/A", true);   
+    preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), dataRefs.confeccao, true, "NENHUM", false);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM", false);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "NENHUM", true);
 
     if (!estadoLinha || !estadoLinha.franzBlackout) {
         const selectFranzBk = novaLinha.querySelector('.select-franzBlackout');
@@ -853,12 +860,14 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null) {
     tableBody.appendChild(novaLinha);
 
     if (!estadoLinha) {
-        calcularOrcamentoLinha(novaLinha);
+    calcularOrcamentoLinha(novaLinha);
+    if (!isInitialLoad) { 
         setDirty();
     }
 }
+}
 
-function adicionarLinhaAmorim(tableBody, estadoLinha = null) {
+function adicionarLinhaAmorim(tableBody, estadoLinha = null, isInitialLoad = false) { 
     if (!tableBody) return;
     const template = document.getElementById('template-linha-amorim');
     if (!template) return;
@@ -944,10 +953,10 @@ function adicionarLinhaAmorim(tableBody, estadoLinha = null) {
     const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
 const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
 calcularParceladoLinhaAmorim(novaLinha, taxaParcelamento);
-    if (!estadoLinha) setDirty();
+if (!estadoLinha && !isInitialLoad) setDirty();
 }
 
-function adicionarLinhaToldos(tableBody, estadoLinha = null) {
+function adicionarLinhaToldos(tableBody, estadoLinha = null, isInitialLoad = false) { 
     if (!tableBody) return;
     const template = document.getElementById('template-linha-toldos');
     if (!template) return;
@@ -1032,7 +1041,7 @@ function adicionarLinhaToldos(tableBody, estadoLinha = null) {
 const parcelamentoKey = elements.selectParcelamentoGlobal?.value || 'DÉBITO'; 
 const taxaParcelamento = TAXAS_PARCELAMENTO[parcelamentoKey] || 0.0;
 calcularParceladoLinhaAmorim(novaLinha, taxaParcelamento);
-    if (!estadoLinha) setDirty();
+if (!estadoLinha && !isInitialLoad) setDirty(); 
 }
 function recalcularTodasLinhas() {
     const todasLinhasTecido = document.querySelectorAll('#quote-sections-container .linha-calculo-cliente[data-linha-type="tecido"]');
@@ -1232,8 +1241,20 @@ async function salvarEstadoCalculadora(clientId) {
 
     const sectionsData = {};
     const sectionElements = document.querySelectorAll('#quote-sections-container .quote-section');
-    sectionElements.forEach(sectionEl => { });
+    sectionElements.forEach(sectionEl => {
+        const sectionType = sectionEl.dataset.sectionType;
+        if (sectionType) {
+            sectionsData[sectionType] = {
+                active: true,
+                ambientes: obterEstadoSection(sectionEl) 
+            };
+        }
+    });
+    const sectionOrder = Array.from(sectionElements).map(el => el.dataset.sectionType);
+
     estadoAbas[abaAtivaIndex].sections = sectionsData;
+    estadoAbas[abaAtivaIndex].sectionOrder = sectionOrder; 
+
     estadoAbas[abaAtivaIndex].venda_realizada = elements.chkSummaryVendaRealizada ? elements.chkSummaryVendaRealizada.checked : false;
     const estadoCompleto = { abas: estadoAbas,};
 
@@ -1372,7 +1393,6 @@ async function carregarEstadoCalculadora(clientId) {
         abaAtivaIndex = 0;
         renderizarTabs();
         ativarAba(0, true); 
-        setDirty();
     }
 }
 function renderizarTabs() {
@@ -1434,16 +1454,19 @@ function ativarAba(index, isInitialLoad = false) {
     const abaAtiva = estadoAbas[index];
     const sectionsDaAba = abaAtiva.sections || {};
 
+    const sectionOrder = abaAtiva.sectionOrder || ['tecido', 'amorim', 'toldos'];
+
     if (!abaAtiva.sections && Array.isArray(abaAtiva.ambientes)) {
         console.log("Migrando aba de formato antigo...");
         sectionsDaAba['tecido'] = { active: true, ambientes: abaAtiva.ambientes };
         abaAtiva.sections = sectionsDaAba;
         delete abaAtiva.ambientes;
     }
-    ['tecido', 'amorim', 'toldos'].forEach(sectionType => {
+
+    sectionOrder.forEach(sectionType => {
         const sectionData = sectionsDaAba[sectionType];
         if (sectionData && sectionData.active) {
-            addSection(sectionType, document.getElementById(`btn-add-section-${sectionType}`));
+            addSection(sectionType, document.getElementById(`btn-add-section-${sectionType}`), isInitialLoad);
             
             const sectionEl = container.querySelector(`.quote-section[data-section-type="${sectionType}"]`);
             const tableBody = sectionEl.querySelector('.tabela-calculo-body');
@@ -1498,6 +1521,9 @@ function adicionarAba() {
                 ambientes: obterEstadoSection(sectionEl) 
             };
          });
+         const sectionOrder = Array.from(sectionElements).map(el => el.dataset.sectionType);
+         estadoAbas[abaAtivaIndex].sectionOrder = sectionOrder;
+         
          estadoAbas[abaAtivaIndex].sections = sectionsData;
          estadoAbas[abaAtivaIndex].venda_realizada = elements.chkSummaryVendaRealizada ? elements.chkSummaryVendaRealizada.checked : false;
     }
@@ -1604,7 +1630,7 @@ export async function showCalculatorView(clientId, clientName) {
     try {
         await aguardarDadosBase();
         preencherSelectParcelamento();
-        preencherSelectCalculadora(elements.selectFreteGlobal, calculatorDataRefs.frete, true, "SEM FRETE", true);
+        preencherSelectCalculadora(elements.selectFreteGlobal, dataRefs.frete, true, "SEM FRETE", true);
         await carregarEstadoCalculadora(clientId); 
         atualizarHeaderParcelado(); 
 

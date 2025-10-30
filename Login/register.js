@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputEmail = document.getElementById('email');
     const inputSenha = document.getElementById('senha');
     const inputConfirmarSenha = document.getElementById('confirmar_senha');
+    const inputNomeUsuario = document.getElementById('nome_usuario');
     const msgErro = document.getElementById('mensagem-erro');
     const msgInfo = document.getElementById('mensagem-info');
     const btnRegister = document.getElementById('btn-register');
@@ -45,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     password: inputSenha.value,
                     cnpj: cnpjLimpo,
                     nome_empresa: inputNomeEmpresa.value,
-                    telefone: inputTelefone.value
+                    telefone: inputTelefone.value,
+                    nome_usuario: inputNomeUsuario.value
                 })
             });
 

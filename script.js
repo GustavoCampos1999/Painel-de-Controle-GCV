@@ -1,39 +1,38 @@
 import { _supabase } from './supabaseClient.js';
-import { checkUserSession, setupLogoutButton } from './modules/auth.js';
+import { checkUserSession, setupLogoutButton } from './modules/auth.js'; 
 import { initUI, showToast, openModal, closeModal } from './modules/ui.js'; 
-import { initCRM, carregarClientes } from './modules/crm.js';
-import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js';
-import { initCalculator, showCalculatorView } from './modules/calculator.js';
+import { initCRM, carregarClientes } from './modules/crm.js'; 
+import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js'; 
+import { initCalculator, showCalculatorView } from './modules/calculator.js'; 
 
 const BACKEND_API_URL = 'https://paineldecontrole.fly.dev';
 
 let tecidosDataGlobal = [];
-let confeccaoDataGlobal = [];
-let trilhoDataGlobal = [];
-let freteDataGlobal = []; 
+let confeccaoDataGlobal = []; 
+let trilhoDataGlobal = [];    
+let freteDataGlobal = [];     
 let instalacaoDataGlobal = []; 
 let currentClientIdGlobal = { value: null };
 let isDataLoadedFlag = { value: false }; 
-let itemParaExcluirGenericoInfo = null;
-let triggerTecidosSort = null;
-let triggerConfeccaoSort = null; 
-let triggerTrilhoSort = null; 
-let triggerFreteSort = null; 
+let itemParaExcluirGenericoInfo = null; 
+let triggerTecidosSort = null; 
+let triggerConfeccaoSort = null;
+let triggerTrilhoSort = null;
+let triggerFreteSort = null;
 let triggerInstalacaoSort = null;
 let elements = {}; 
-
 const dataRefs = {
     tecidos: tecidosDataGlobal,
-    confeccao: confeccaoDataGlobal, 
+    confeccao: confeccaoDataGlobal,
     trilho: trilhoDataGlobal,
-    frete: freteDataGlobal, 
+    frete: freteDataGlobal,
     instalacao: instalacaoDataGlobal
 };
 const calculatorDataRefs = {
-     tecidos: tecidosDataGlobal, 
+     tecidos: tecidosDataGlobal,
      confeccao: {}, 
-     trilho: {}, 
-     frete: {}, 
+     trilho: {},    
+     frete: {},    
      instalacao: {} 
 };
 
@@ -41,49 +40,47 @@ function showClientListLocal() {
     if (document.getElementById('client-list-view')) document.getElementById('client-list-view').style.display = 'block';
     if (document.getElementById('calculator-view')) document.getElementById('calculator-view').style.display = 'none';
     currentClientIdGlobal.value = null;
-    
     if (window.location.hash) {
-        window.location.hash = '';
+        window.location.hash = ''; 
     }
 }
 
 function handleRouting() {
     const hash = window.location.hash;
-
     if (hash.startsWith('#cliente/')) {
         const clientId = hash.split('/')[1];
         if (!clientId) {
             showClientListLocal();
             return;
         }
-
-        const card = elements.listaClientes.querySelector(`.cliente-card[data-id="${clientId}"]`);
-        
+        const card = elements.listaClientes?.querySelector(`.cliente-card[data-id="${clientId}"]`);
         if (card) {
             const clientName = card.dataset.nome;
             currentClientIdGlobal.value = clientId;
-            showCalculatorView(clientId, clientName);
+            showCalculatorView(clientId, clientName); 
         } else {
             console.warn(`Roteador: Cliente ${clientId} não encontrado no DOM. Recarregando clientes...`);
             carregarClientes().then(() => {
-                 const cardRetry = elements.listaClientes.querySelector(`.cliente-card[data-id="${clientId}"]`);
+                 const cardRetry = elements.listaClientes?.querySelector(`.cliente-card[data-id="${clientId}"]`);
                  if(cardRetry) {
                      const clientName = cardRetry.dataset.nome;
                      currentClientIdGlobal.value = clientId;
                      showCalculatorView(clientId, clientName);
                  } else {
-                    console.error(`Cliente ${clientId} não encontrado.`);
-                    showToast(`Cliente com ID ${clientId} não encontrado.`, 'error');
-                    showClientListLocal();
+                    console.error(`Cliente ${clientId} não encontrado após recarregar.`);
+                    showToast(`Cliente com ID ${clientId} não encontrado. Voltando para a lista.`, 'error');
+                    showClientListLocal(); 
                  }
             });
         }
     } else {
-        showClientListLocal();
+        showClientListLocal(); 
     }
 }
 
 async function buscarDadosBaseDoBackend() {
+  console.log("Iniciando busca de dados base do backend...");
+  isDataLoadedFlag.value = false; 
   try {
     const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
     if (sessionError || !session) {
@@ -92,35 +89,49 @@ async function buscarDadosBaseDoBackend() {
     const token = session.access_token;
 
     const response = await fetch(`${BACKEND_API_URL}/api/dados-base`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`
+      headers: {
+        'Authorization': `Bearer ${token}` 
       }
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({ erro: `Erro HTTP ${response.status}` }));
       throw new Error(errorData.erro || `Erro ${response.status} ao buscar dados do backend.`);
     }
-    
+
     const dados = await response.json();
     console.log("Dados base recebidos do backend:", dados);
 
-    dataRefs.tecidos.length = 0;
-    dataRefs.confeccao.length = 0;
-    dataRefs.trilho.length = 0;
-    dataRefs.frete.length = 0;
-    dataRefs.instalacao.length = 0;
-    
-    dataRefs.tecidos.push(...(dados.tecidos || []));
-    dataRefs.confeccao.push(...(dados.confeccao || []));
-    dataRefs.trilho.push(...(dados.trilho || []));
-    dataRefs.frete.push(...(dados.frete || []));
-    dataRefs.instalacao.push(...(dados.instalacao || []));
+    tecidosDataGlobal.length = 0;
+    confeccaoDataGlobal.length = 0;
+    trilhoDataGlobal.length = 0;
+    freteDataGlobal.length = 0;
+    instalacaoDataGlobal.length = 0;
+
+    tecidosDataGlobal.push(...(dados.tecidos || []));
+    confeccaoDataGlobal.push(...(dados.confeccao || []));
+    trilhoDataGlobal.push(...(dados.trilho || []));
+    freteDataGlobal.push(...(dados.frete || []));
+    instalacaoDataGlobal.push(...(dados.instalacao || []));
 
     calculatorDataRefs.confeccao = (dados.confeccao || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
     calculatorDataRefs.trilho = (dados.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
-    calculatorDataRefs.frete = (dados.frete || []).reduce((acc, item) => { const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ','); acc[key] = item.valor; return acc; }, {});
-    calculatorDataRefs.instalacao = (dados.instalacao || []).reduce((acc, item) => { const key = 'R$ ' + (item.valor || 0).toFixed(2).replace('.', ','); acc[key] = item.valor; return acc; }, {});
+    calculatorDataRefs.frete = (dados.frete || []).reduce((acc, item) => {
+        const valor = item.valor || 0;
+        const key = `R$ ${valor.toFixed(2).replace('.', ',')}`; 
+        acc[key] = valor;
+        return acc;
+     }, {});
+     if (!calculatorDataRefs.frete.hasOwnProperty('R$ 0,00')) {
+       calculatorDataRefs.frete['SEM FRETE'] = 0; 
+     }
+
+    calculatorDataRefs.instalacao = (dados.instalacao || []).reduce((acc, item) => {
+        const valor = item.valor || 0;
+        const key = `R$ ${valor.toFixed(2).replace('.', ',')}`;
+        acc[key] = valor;
+        return acc;
+     }, {});
 
     isDataLoadedFlag.value = true; 
     document.dispatchEvent(new CustomEvent('dadosBaseCarregados')); 
@@ -128,19 +139,19 @@ async function buscarDadosBaseDoBackend() {
 
   } catch (error) {
     console.error("Erro crítico ao buscar dados base do backend:", error);
-    showToast(`Erro ao carregar dados: ${error.message}`, "error");
+    showToast(`Erro ao carregar dados essenciais: ${error.message}. Recarregue a página.`, "error");
     isDataLoadedFlag.value = false;
-    if (loadingOverlay) {
-        loadingOverlay.innerHTML = `<p style="color: red; padding: 20px; text-align: center;">Erro ao carregar dados base.<br>Verifique o console e a conexão com o backend.</p>`;
+    const loadingOverlayError = document.getElementById('loading-overlay');
+    if (loadingOverlayError && loadingOverlayError.style.display !== 'none') {
+        loadingOverlayError.innerHTML = `<p style="color: red; padding: 20px; text-align: center;">Erro ao carregar dados essenciais.<br>Verifique o console e a conexão com o backend (${BACKEND_API_URL}).</p>`;
     }
   }
 }
 
+document.addEventListener('DOMContentLoaded', async () => { 
 
-document.addEventListener('DOMContentLoaded', () => {
-    
     const loadingOverlay = document.getElementById('loading-overlay');
-    
+
     elements = {
         toast: document.getElementById('toast-notification'),
         userEmail: document.getElementById('user-email'),
@@ -207,10 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCancelExcluirGenerico: document.getElementById('btn-cancelar-excluir-generico'),
         spanItemNomeExcluir: document.getElementById('item-nome-excluir'),
         calculatorClientName: document.getElementById('calculator-client-name'),
-        calculatorTableBody: document.getElementById('corpo-tabela-calculo-cliente'),
+        calculatorTableBody: document.getElementById('corpo-tabela-calculo-cliente'), 
         saveStatusMessage: document.getElementById('save-status-message'),
         btnManualSave: document.getElementById('btn-manual-save'),
-        btnPrintOrcamento: document.getElementById('btn-print-orcamento'), 
+        btnPrintOrcamento: document.getElementById('btn-print-orcamento'),
         calculatorMarkupInput: document.getElementById('input-markup-base-calc'),
         selectParcelamentoGlobal: document.getElementById('select-parcelamento-global'),
         inputValorEntradaGlobal: document.getElementById('input-valor-entrada-global'),
@@ -247,19 +258,17 @@ document.addEventListener('DOMContentLoaded', () => {
         modalExcluirSecao: document.getElementById('modal-confirm-excluir-secao'),
         btnConfirmarExcluirSecao: document.getElementById('btn-confirmar-excluir-secao'),
         btnCancelarExcluirSecao: document.getElementById('btn-cancelar-excluir-secao'),
-        quoteSectionsContainer: document.getElementById('quote-sections-container'), 
+        quoteSectionsContainer: document.getElementById('quote-sections-container'),
         sectionControlsContainer: document.getElementById('section-controls'),
         spanSecaoNomeExcluir: document.getElementById('secao-nome-excluir')
     };
 
     initCRM(elements);
-    initDataManager(elements, dataRefs);
+    initDataManager(elements, dataRefs); 
     initCalculator(elements, calculatorDataRefs, currentClientIdGlobal, isDataLoadedFlag); 
-
-    checkUserSession(); 
-    setupLogoutButton(); 
-    initUI(elements); 
-    
+    await checkUserSession();
+    setupLogoutButton();
+    initUI(elements);
     if (elements.btnThemeToggle) {
         const body = document.body;
         const applyTheme = (theme) => {
@@ -268,72 +277,125 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.btnThemeToggle.textContent = '☀️'; 
             } else {
                 body.classList.remove('dark-mode');
-                elements.btnThemeToggle.textContent = '🌙'; 
+                elements.btnThemeToggle.textContent = '🌙';
             }
+            localStorage.setItem('theme', theme); 
         };
+
         const currentTheme = localStorage.getItem('theme') || 'light';
         applyTheme(currentTheme);
+
         elements.btnThemeToggle.addEventListener('click', () => {
-            let newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
-            localStorage.setItem('theme', newTheme);
+            const newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
             elements.btnThemeToggle.classList.add('toggling');
             applyTheme(newTheme);
-            setTimeout(() => { elements.btnThemeToggle.classList.remove('toggling'); }, 400); 
+            setTimeout(() => {
+                elements.btnThemeToggle.classList.remove('toggling');
+            }, 400); 
         });
     }
 
-    document.addEventListener('clienteAtualizado', () => {
-        console.log("Evento 'clienteAtualizado' recebido, recarregando lista de clientes.");
-        carregarClientes(); 
+    document.addEventListener('dadosBaseAlterados', async () => {
+        console.log("Evento 'dadosBaseAlterados' recebido, recarregando dados base do backend...");
+        await buscarDadosBaseDoBackend(); 
+        renderizarTabelaTecidos(dataRefs.tecidos);
+        renderizarTabelaConfeccao(dataRefs.confeccao);
+        renderizarTabelaTrilho(dataRefs.trilho);
+        renderizarTabelaFrete(dataRefs.frete);
+        renderizarTabelaInstalacao(dataRefs.instalacao);
+        document.dispatchEvent(new CustomEvent('tabelaTecidosSortRequest'));
+        document.dispatchEvent(new CustomEvent('tabelaConfeccaoSortRequest'));
+        document.dispatchEvent(new CustomEvent('tabelaTrilhoSortRequest'));
+        document.dispatchEvent(new CustomEvent('tabelaFreteSortRequest'));
+        document.dispatchEvent(new CustomEvent('tabelaInstalacaoSortRequest'));
     });
-    if (elements.btnAbrirConfigCalculadora) {  }
-    if (elements.btnFecharConfigCalculadora) {  }
-    if (elements.btnConfirmarExcluirGenerico) {  }
-    if (elements.btnCancelExcluirGenerico) {  }
-    window.prepararExclusaoGenerica = (info) => { };
-    document.addEventListener('tabelaTecidosSortRequest', () => {  });
-    document.addEventListener('tabelaConfeccaoSortRequest', () => {  });
-    document.addEventListener('tabelaTrilhoSortRequest', () => {  });
-    document.addEventListener('tabelaFreteSortRequest', () => {  });
-    document.addEventListener('tabelaInstalacaoSortRequest', () => {  });
 
+    if (elements.btnConfirmarExcluirGenerico) {
+        elements.btnConfirmarExcluirGenerico.addEventListener('click', async () => {
+             if (!itemParaExcluirGenericoInfo) return;
+             const { id, tabela, loja_id } = itemParaExcluirGenericoInfo;
+             if (!loja_id) {
+                 showToast("Erro: Loja não identificada para exclusão.", "error");
+                 return;
+             }
+            const { error } = await _supabase.from(tabela).delete().match({ id: id, loja_id: loja_id });
 
-    console.log("Iniciando carregamento de dados...");
-    
-    Promise.all([
-        carregarClientes(),             
-        buscarDadosBaseDoBackend()      
-    ]).then(() => {
-        console.log("Carregamento inicial (clientes e dados base) concluído.");
-        
+            if (error) {
+                 console.error(`Erro ao excluir ${tabela} (ID: ${id}):`, error);
+                 let userMessage = 'Erro ao excluir item.';
+                 if (error.message.includes('violates row-level security policy')) {
+                     userMessage += " Você não tem permissão.";
+                 } else {
+                     userMessage += ` Detalhe: ${error.message}`;
+                 }
+                 showToast(userMessage, 'error');
+            } else {
+                showToast('Item excluído com sucesso.');
+                itemParaExcluirGenericoInfo.elemento?.remove();
+                if (['tecidos', 'confeccao', 'trilho', 'frete', 'instalacao'].includes(tabela)) {
+                    document.dispatchEvent(new CustomEvent('dadosBaseAlterados'));
+                }
+            }
+            closeModal(elements.modalExcluirGenerico);
+            itemParaExcluirGenericoInfo = null;
+        });
+    }
+    if (elements.btnCancelExcluirGenerico) {
+        elements.btnCancelExcluirGenerico.addEventListener('click', () => {
+            closeModal(elements.modalExcluirGenerico);
+            itemParaExcluirGenericoInfo = null;
+        });
+    }
+    window.prepararExclusaoGenerica = (info) => {
+        itemParaExcluirGenericoInfo = info; 
+        if (elements.spanItemNomeExcluir) {
+            elements.spanItemNomeExcluir.textContent = info.nome || 'este item';
+        }
+        openModal(elements.modalExcluirGenerico);
+    };
+
+    document.addEventListener('tabelaTecidosSortRequest', () => { if (triggerTecidosSort) triggerTecidosSort(); });
+    document.addEventListener('tabelaConfeccaoSortRequest', () => { if (triggerConfeccaoSort) triggerConfeccaoSort(); });
+    document.addEventListener('tabelaTrilhoSortRequest', () => { if (triggerTrilhoSort) triggerTrilhoSort(); });
+    document.addEventListener('tabelaFreteSortRequest', () => { if (triggerFreteSort) triggerFreteSort(); });
+    document.addEventListener('tabelaInstalacaoSortRequest', () => { if (triggerInstalacaoSort) triggerInstalacaoSort(); });
+
+    console.log("Iniciando carregamento de dados (Clientes e Dados Base)...");
+    try {
+        await Promise.all([
+            carregarClientes(),             
+            buscarDadosBaseDoBackend()    
+        ]);
+
+        console.log("Carregamento inicial concluído.");
+
         renderizarTabelaTecidos(dataRefs.tecidos);
         renderizarTabelaConfeccao(dataRefs.confeccao);
         renderizarTabelaTrilho(dataRefs.trilho);
         renderizarTabelaFrete(dataRefs.frete);
         renderizarTabelaInstalacao(dataRefs.instalacao);
 
-         setupTableSorting('tabela-tecidos', dataRefs.tecidos, renderizarTabelaTecidos);
-         setupTableSorting('tabela-confeccao', dataRefs.confeccao, renderizarTabelaConfeccao);
-         setupTableSorting('tabela-trilho', dataRefs.trilho, renderizarTabelaTrilho);
-         setupTableSorting('tabela-frete', dataRefs.frete, renderizarTabelaFrete);
-         setupTableSorting('tabela-instalacao', dataRefs.instalacao, renderizarTabelaInstalacao);
+        setupTableSorting('tabela-tecidos', dataRefs.tecidos, renderizarTabelaTecidos);
+        setupTableSorting('tabela-confeccao', dataRefs.confeccao, renderizarTabelaConfeccao);
+        setupTableSorting('tabela-trilho', dataRefs.trilho, renderizarTabelaTrilho);
+        setupTableSorting('tabela-frete', dataRefs.frete, renderizarTabelaFrete);
+        setupTableSorting('tabela-instalacao', dataRefs.instalacao, renderizarTabelaInstalacao);
 
-         if (loadingOverlay) {
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500); 
-        }
-        
-        console.log("Iniciando roteador...");
-        handleRouting();
-        window.addEventListener('hashchange', handleRouting);
-
-    }).catch(error => {
-        console.error("Erro no fluxo de carregamento inicial:", error);
-        showToast("Erro crítico ao inicializar. Verifique o console.", 'error');
         if (loadingOverlay) {
-            loadingOverlay.innerHTML = '<p style="color: red; padding: 20px; text-align: center;">Erro crítico ao carregar dados.<br>Verifique o console e sua conexão.</p>';
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
         }
-    });
+
+        console.log("Iniciando roteador...");
+        handleRouting(); 
+        window.addEventListener('hashchange', handleRouting); 
+
+    } catch (error) {
+        console.error("Erro fatal durante o carregamento inicial:", error);
+        if (loadingOverlay) {
+            loadingOverlay.innerHTML = `<p style="color: red; padding: 20px; text-align: center;">Erro crítico ao inicializar.<br>Verifique o console e a conexão.</p>`;
+        }
+    }
 });
 
 function setupTableSorting(tableId, dataArray, renderFunction) {
@@ -343,57 +405,49 @@ function setupTableSorting(tableId, dataArray, renderFunction) {
         return;
     }
     const headers = table.querySelectorAll('th.sortable-header');
-    let sortConfig = { key: null, asc: true };
+    let sortConfig = { key: null, asc: true }; 
 
     const sortAndRender = () => {
+        if (!sortConfig.key) return; 
+        
         dataArray.sort((a, b) => {
             if (a.hasOwnProperty('favorito') && b.hasOwnProperty('favorito')) {
                 if (a.favorito && !b.favorito) return -1;
                 if (!a.favorito && b.favorito) return 1;
             }
-            
-            if (sortConfig.key) {
-                let valA = a[sortConfig.key];
-                let valB = b[sortConfig.key];
-                if (typeof valA === 'number' && typeof valB === 'number') {
-                    return sortConfig.asc ? valA - valB : valB - valA;
-                }
-                if (typeof valA === 'string' && typeof valB === 'string') {
-                    return sortConfig.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
-                if (valA > valB || valA === null) return sortConfig.asc ? 1 : -1;
-                if (valA < valB || valB === null) return sortConfig.asc ? -1 : 1;
+
+            let valA = a[sortConfig.key];
+            let valB = b[sortConfig.key];
+
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return sortConfig.asc ? valA - valB : valB - valA;
             }
-            return 0;
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                return sortConfig.asc
+                    ? valA.localeCompare(valB, undefined, { sensitivity: 'base' })
+                    : valB.localeCompare(valA, undefined, { sensitivity: 'base' });
+            }
+            if (valA > valB || valA === null || valA === undefined) return sortConfig.asc ? 1 : -1;
+            if (valA < valB || valB === null || valB === undefined) return sortConfig.asc ? -1 : 1;
+            return 0; 
         });
-        renderFunction(dataArray);
+        renderFunction(dataArray); 
     };
 
-   if (tableId === 'tabela-tecidos') {
-        triggerTecidosSort = sortAndRender;
-    } else if (tableId === 'tabela-confeccao') {
-        triggerConfeccaoSort = sortAndRender;
-    } else if (tableId === 'tabela-trilho') { 
-        triggerTrilhoSort = sortAndRender;
-    }
-    else if (tableId === 'tabela-frete') { 
-        triggerFreteSort = sortAndRender;
-    }
-    else if (tableId === 'tabela-instalacao') { 
-        triggerInstalacaoSort = sortAndRender;
-    }
+   if (tableId === 'tabela-tecidos') triggerTecidosSort = sortAndRender;
+   else if (tableId === 'tabela-confeccao') triggerConfeccaoSort = sortAndRender;
+   else if (tableId === 'tabela-trilho') triggerTrilhoSort = sortAndRender;
+   else if (tableId === 'tabela-frete') triggerFreteSort = sortAndRender;
+   else if (tableId === 'tabela-instalacao') triggerInstalacaoSort = sortAndRender;
 
     headers.forEach(header => {
         header.addEventListener('click', () => {
             const sortKey = header.dataset.sortKey;
-            if (!sortKey) {
-                console.warn("Cabeçalho clicável não possui 'data-sort-key'.");
-                return;
-            }
+            if (!sortKey) return;
 
             let newAsc = true;
             if (sortConfig.key === sortKey) {
-                newAsc = !sortConfig.asc; 
+                newAsc = !sortConfig.asc;
             }
 
             headers.forEach(h => {
@@ -401,26 +455,27 @@ function setupTableSorting(tableId, dataArray, renderFunction) {
                 const span = h.querySelector('span.sort-arrow');
                 if (span) span.textContent = '';
             });
-
             header.classList.add(newAsc ? 'asc' : 'desc');
             const arrowSpan = header.querySelector('span.sort-arrow');
-            if (arrowSpan) {
-                arrowSpan.textContent = newAsc ? ' ▲' : ' ▼';
-            }
-            
+            if (arrowSpan) arrowSpan.textContent = newAsc ? ' ▲' : ' ▼';
+
             sortConfig = { key: sortKey, asc: newAsc };
-            sortAndRender(); 
+            sortAndRender();
         });
     });
 
+     let initialSortKey = null;
     if (headers.length > 0) {
-        const initialSortKey = headers[0].dataset.sortKey; 
-        if (initialSortKey) {
-            sortConfig = { key: initialSortKey, asc: true };
-            headers[0].classList.add('asc');
-            const arrowSpan = headers[0].querySelector('span.sort-arrow');
+        initialSortKey = headers[1]?.dataset.sortKey || headers[0].dataset.sortKey;
+    }
+     if (initialSortKey) {
+        sortConfig = { key: initialSortKey, asc: true };
+        const initialHeader = Array.from(headers).find(h => h.dataset.sortKey === initialSortKey);
+        if(initialHeader){
+            initialHeader.classList.add('asc');
+            const arrowSpan = initialHeader.querySelector('span.sort-arrow');
             if (arrowSpan) arrowSpan.textContent = ' ▲';
         }
-    }
-    sortAndRender(); 
+        sortAndRender();
+     }
 }
