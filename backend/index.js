@@ -75,7 +75,8 @@ app.post('/register', async (req, res) => {
             .insert({
                 user_id: newUserId,
                 loja_id: newLojaId,
-                role: 'admin'
+                role: 'admin',
+                nome_usuario: nome_usuario             
             });
         if (perfilError) throw perfilError;
 
