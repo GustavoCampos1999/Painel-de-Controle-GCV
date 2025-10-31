@@ -16,7 +16,15 @@ async function getMyLojaIdCrm() {
     });
     if (cachedLojaIdCrm) return cachedLojaIdCrm;
     try {
-        const { data, error, status } = await _supabase.from('perfis').select('loja_id').single();
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) throw new Error("Usuário não autenticado.");
+
+        const { data, error, status } = await _supabase
+            .from('perfis')
+            .select('loja_id') 
+            .eq('user_id', user.id) 
+            .single();
+
         if (error && status !== 406) throw error;
         if (!data || !data.loja_id) throw new Error("Perfil ou loja_id não encontrados.");
         cachedLojaIdCrm = data.loja_id;
@@ -54,7 +62,17 @@ export function initCRM(elements) {
 
 export async function carregarClientes(filterOptions = {}) {
     console.log("Carregando clientes com opções:", filterOptions);
-    let query = _supabase.from('clientes').select('*, updated_by_name'); 
+
+    const lojaId = await getMyLojaIdCrm(); 
+    if (!lojaId) {
+        showToast("Erro: Não foi possível identificar sua loja. Tente fazer login novamente.", "error");
+        renderizarListaClientes([]); 
+        return;
+    }
+
+    let query = _supabase.from('clientes')
+                       .select('*, updated_by_name')
+                       .eq('loja_id', lojaId); 
 
     if (filterOptions.venda_realizada === true) query = query.eq('venda_realizada', true);
     else if (filterOptions.venda_realizada === false) query = query.or('venda_realizada.is.null,venda_realizada.eq.false');
@@ -244,9 +262,17 @@ function setupModaisCliente() {
 
     let nomeUsuario = null; 
     try {
-        const { data: perfil, error } = await _supabase.from('perfis').select('nome_usuario').single();
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) throw new Error("Usuário não autenticado.");
+
+        const { data: perfil, error } = await _supabase
+            .from('perfis')
+            .select('nome_usuario')
+            .eq('user_id', user.id) 
+            .single(); 
+            
         if (error) throw error;
-        if (perfil && perfil.nome_usuario) nomeUsuario = perfil.nome_usuario;
+        if (perfil && perfil.nome_usuario) nomeUsuario = perfil.nome_usuario; 
     } catch (e) {
         console.warn("Nao foi possivel obter nome do usuario para 'updated_by_name'");
     }   
@@ -256,7 +282,8 @@ function setupModaisCliente() {
         telefone: dadosForm.get('telefone'), 
         email: dadosForm.get('email'), 
         endereco: dadosForm.get('endereco'),
-        updated_by_name: nomeUsuario 
+        updated_by_name: nomeUsuario,
+        updated_at: new Date().toISOString()
     };
     const lojaId = await getMyLojaIdCrm();
     if (!lojaId) {
@@ -266,8 +293,8 @@ function setupModaisCliente() {
 
     const { error } = await _supabase.from('clientes')
         .update(dadosCliente)
-        .match({ id: dadosForm.get('id'), loja_id: lojaId }); 
-
+        .match({ id: dadosForm.get('id'), loja_id: lojaId })
+        .select();
     if (error) {
         console.error('Erro ao atualizar cliente:', error);
         let userMessage = 'Erro ao salvar dados.';

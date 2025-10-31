@@ -18,10 +18,14 @@ async function getMyLojaId() {
     }
     try {
         console.log("Buscando loja_id do perfil...");
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) throw new Error("Usuário não autenticado.");
+        
         const { data, error, status } = await _supabase
             .from('perfis')
-            .select('loja_id')
-            .single(); 
+            .select('loja_id') 
+            .eq('user_id', user.id) 
+            .single();
 
         if (error && status !== 406) { 
             throw error;

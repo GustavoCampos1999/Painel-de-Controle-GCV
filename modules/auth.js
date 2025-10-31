@@ -13,7 +13,8 @@ export async function checkUserSession() {
             try {
                 const { data: perfil, error } = await _supabase
                     .from('perfis')
-                    .select('nome_usuario')
+                    .select('nome_usuario') //
+                    .eq('user_id', session.user.id) 
                     .single();
 
                 if (error) throw error;

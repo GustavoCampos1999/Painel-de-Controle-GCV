@@ -335,7 +335,7 @@ if (elements.btnPrintOrcamento) {
             estadoAbas[abaAtivaIndex].venda_realizada = newState;
     
             renderizarTabs();
-            atualizarStatusVendaCliente();
+            atualizarStatusVendaCliente(true);
             setDirty();
         });        
     }
@@ -596,32 +596,47 @@ function updateMoveButtonsVisibility() {
         }
     });
 }
-async function atualizarStatusVendaCliente() {
+async function atualizarStatusVendaCliente(triggerSave = false) { 
     if (!currentClientIdRef.value) return;
 
     let nomeUsuario = null; 
     try {
-        const { data: perfil, error } = await _supabase.from('perfis').select('nome_usuario').single();
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) throw new Error("Usuário não autenticado.");
+
+        const { data: perfil, error } = await _supabase
+            .from('perfis')
+            .select('nome_usuario')
+            .eq('user_id', user.id) 
+            .single();
+            
         if (error) throw error;
         if (perfil && perfil.nome_usuario) nomeUsuario = perfil.nome_usuario;
     } catch (e) {
-        console.warn("Nao foi possivel obter nome do usuario para 'updated_by_name' ao salvar status da venda");
+        console.warn("Nao foi possivel obter nome do usuario para 'updated_by_name' ao salvar status da venda", e.message);
     }
 
     const algumaVendaRealizada = estadoAbas.some(aba => aba.venda_realizada === true);
     
+    const dadosUpdate = {
+        venda_realizada: algumaVendaRealizada,
+        updated_at: new Date().toISOString(),
+        updated_by_name: nomeUsuario
+    };
+
     const { error } = await _supabase
         .from('clientes')
-        .update({ 
-        venda_realizada: algumaVendaRealizada
-    })
-        .match({ id: currentClientIdRef.value });
+        .update(dadosUpdate)
+        .match({ id: currentClientIdRef.value })
+        .select(); 
 
     if (error) {
         console.error("Erro ao atualizar status de venda do cliente (RLS pode ter bloqueado):", error);
-        showToast(`Erro ao atualizar status: ${error.message}`, "error");
+        if (triggerSave) {
+            showToast(`Erro ao atualizar status: ${error.message}`, "error");
+        }
     } else {
-        console.log("Status de venda do cliente atualizado para:", algumaVendaRealizada);
+        console.log("Status de venda e 'Última Edição' do cliente atualizados para:", algumaVendaRealizada, nomeUsuario);
         document.dispatchEvent(new CustomEvent('clienteAtualizado'));
     }
 }
@@ -1288,6 +1303,7 @@ async function salvarEstadoCalculadora(clientId) {
             elements.saveStatusMessage.className = 'save-status-message saved';
         }
         console.log("Estado da calculadora salvo:", result);
+        atualizarStatusVendaCliente(false);
     } catch (error) {
         console.error("Erro ao salvar estado da calculadora:", error.message);
         if (elements.saveStatusMessage) {
