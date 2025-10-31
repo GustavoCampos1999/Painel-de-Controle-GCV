@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const { calcularOrcamento } = require('./calculo.js');
-
+const app = express();
 const allowedOrigins = [
   'https://gustavocampos1999.github.io', 
   'http://127.0.0.1:5500'               
