@@ -1,7 +1,5 @@
 const db = require('./database.js');
-
 const DADOS_TECIDOS = [
-    { produto: "SEM TECIDO", largura: 0.00, atacado: 0.00 },
     { produto: "LINHO FRANCIS", largura: 3.00, atacado: 14.90 },
     { produto: "LINHO SERENA", largura: 3.00, atacado: 24.90 },
     { produto: "SÊDA ÁRABEIA", largura: 3.00, atacado: 10.90 },
@@ -210,7 +208,6 @@ const DADOS_TECIDOS = [
 ];
 
 const DADOS_CONFECCAO = {
-    "-": 0, 
     "CORTINA": 50, 
     "CORTINA/FORRO": 80, 
     "CORTINA/FORRO/BK": 105, 
@@ -222,7 +219,6 @@ const DADOS_CONFECCAO = {
 };
 
 const DADOS_TRILHO = {
-    "-": 0, 
     "MAX 1 VIA": 20, 
     "MAX 2 VIAS": 40, 
     "BASTÃO BASIC 1 VIA": 50, 
@@ -238,71 +234,144 @@ async function popularBanco() {
   try {
     await client.query('BEGIN'); 
 
-    console.log('Criando tabelas...');
+    console.log('Criando tabelas de TEMPLATE (modelo)...');
     
-    await client.query(`CREATE TABLE IF NOT EXISTS clientes (
-        id SERIAL PRIMARY KEY,
-        nome TEXT,
-        telefone TEXT,
-        email TEXT,
-        endereco TEXT
-    )`);
-
-    await client.query(`CREATE TABLE IF NOT EXISTS tecidos (
+    await client.query(`CREATE TABLE IF NOT EXISTS template_tecidos (
         id SERIAL PRIMARY KEY,
         produto TEXT UNIQUE NOT NULL,
         largura REAL,
-        atacado REAL
+        atacado REAL,
+        favorito BOOLEAN DEFAULT false
     )`);
 
-    await client.query(`CREATE TABLE IF NOT EXISTS confeccao (
+    await client.query(`CREATE TABLE IF NOT EXISTS template_confeccao (
         id SERIAL PRIMARY KEY,
         opcao TEXT UNIQUE NOT NULL,
-        valor REAL
+        valor REAL,
+        favorito BOOLEAN DEFAULT false
     )`);
 
-    await client.query(`CREATE TABLE IF NOT EXISTS trilho (
+    await client.query(`CREATE TABLE IF NOT EXISTS template_trilho (
         id SERIAL PRIMARY KEY,
         opcao TEXT UNIQUE NOT NULL,
-        valor REAL
+        valor REAL,
+        favorito BOOLEAN DEFAULT false
     )`);
     
-await client.query(`CREATE TABLE IF NOT EXISTS orcamentos (
-        client_id INTEGER PRIMARY KEY,
-        data JSONB,
-        updated_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-
-    console.log('Tabelas criadas (ou já existiam).');
-    console.log('Tabelas criadas (ou já existiam).');
-
-    console.log('Populando tecidos...');
+    console.log('Populando tabelas de TEMPLATE...');
     for (const tecido of DADOS_TECIDOS) {
       await client.query(
-        'INSERT INTO tecidos (produto, largura, atacado) VALUES ($1, $2, $3) ON CONFLICT (produto) DO NOTHING',
+        'INSERT INTO template_tecidos (produto, largura, atacado) VALUES ($1, $2, $3) ON CONFLICT (produto) DO NOTHING',
         [tecido.produto, tecido.largura, tecido.atacado]
       );
     }
-
-    console.log('Populando confecção...');
     for (const [opcao, valor] of Object.entries(DADOS_CONFECCAO)) {
       await client.query(
-        'INSERT INTO confeccao (opcao, valor) VALUES ($1, $2) ON CONFLICT (opcao) DO NOTHING',
+        'INSERT INTO template_confeccao (opcao, valor) VALUES ($1, $2) ON CONFLICT (opcao) DO NOTHING',
         [opcao, valor]
       );
     }
-
-    console.log('Populando trilho...');
     for (const [opcao, valor] of Object.entries(DADOS_TRILHO)) {
       await client.query(
-        'INSERT INTO trilho (opcao, valor) VALUES ($1, $2) ON CONFLICT (opcao) DO NOTHING',
+        'INSERT INTO template_trilho (opcao, valor) VALUES ($1, $2) ON CONFLICT (opcao) DO NOTHING',
         [opcao, valor]
       );
     }
 
+    console.log('Tabelas de TEMPLATE populadas.');
+    console.log('---');
+    console.log('Criando tabelas REAIS (vazias) para os dados das lojas...');
+
+    await client.query(`CREATE TABLE IF NOT EXISTS lojas (
+        id BIGSERIAL PRIMARY KEY,
+        owner_user_id UUID REFERENCES auth.users(id) UNIQUE,
+        nome TEXT,
+        cnpj TEXT UNIQUE,
+        telefone TEXT,
+        subscription_status TEXT,
+        trial_ends_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS perfis (
+        id BIGSERIAL PRIMARY KEY,
+        user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        nome_usuario TEXT,
+        role TEXT,
+        UNIQUE(user_id, loja_id)
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS clientes (
+        id BIGSERIAL PRIMARY KEY,
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        nome TEXT,
+        telefone TEXT,
+        email TEXT,
+        endereco TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_by_name TEXT,
+        venda_realizada BOOLEAN DEFAULT false
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS tecidos (
+        id BIGSERIAL PRIMARY KEY,
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        produto TEXT NOT NULL,
+        largura REAL,
+        atacado REAL,
+        favorito BOOLEAN DEFAULT false,
+        UNIQUE(loja_id, produto)
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS confeccao (
+        id BIGSERIAL PRIMARY KEY,
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        opcao TEXT NOT NULL,
+        valor REAL,
+        favorito BOOLEAN DEFAULT false,
+        UNIQUE(loja_id, opcao)
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS trilho (
+        id BIGSERIAL PRIMARY KEY,
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        opcao TEXT NOT NULL,
+        valor REAL,
+        favorito BOOLEAN DEFAULT false,
+        UNIQUE(loja_id, opcao)
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS frete (
+        id BIGSERIAL PRIMARY KEY,
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        opcao TEXT, -- Opção pode ser nula, o que importa é o valor
+        valor REAL,
+        UNIQUE(loja_id, valor)
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS instalacao (
+        id BIGSERIAL PRIMARY KEY,
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        opcao TEXT, -- Opção pode ser nula, o que importa é o valor
+        valor REAL,
+        UNIQUE(loja_id, valor)
+    )`);
+
+    await client.query(`CREATE TABLE IF NOT EXISTS orcamentos (
+        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+        client_id BIGINT REFERENCES clientes(id) ON DELETE CASCADE,
+        data JSONB,
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY(loja_id, client_id) -- Chave primária composta
+    )`);
+
+    console.log('Tabelas REAIS criadas (ou já existiam).');
+    
     await client.query('COMMIT'); 
     console.log('\n--- SCRIPT FINALIZADO COM SUCESSO ---');
-    console.log('Banco de dados Supabase pronto para uso.');
+    console.log('Base de dados pronta para o registo de novos utilizadores.');
 
   } catch (e) {
     await client.query('ROLLBACK'); 

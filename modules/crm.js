@@ -238,36 +238,48 @@ function setupModaisCliente() {
     const btnCancelEdit = document.getElementById('btn-cancelar-editar');
     if(btnCancelEdit) btnCancelEdit.addEventListener('click', () => closeModal(modalEditarClienteEl));
 
-    if(formEditarClienteEl) formEditarClienteEl.addEventListener('submit', async (e) => { e.preventDefault(); const dadosForm = new FormData(formEditarClienteEl); 
-let nomeUsuario = null; 
-try {
-    const { data: perfil, error } = await _supabase.from('perfis').select('nome_usuario').single();
-    if (error) throw error;
-    if (perfil && perfil.nome_usuario) nomeUsuario = perfil.nome_usuario;
-} catch (e) {
-    console.warn("Nao foi possivel obter nome do usuario para 'updated_by_name'");
-}   
-const dadosCliente = { 
-            nome: dadosForm.get('nome'), 
-            telefone: dadosForm.get('telefone'), 
-            email: dadosForm.get('email'), 
-            endereco: dadosForm.get('endereco')
-    };
+    if(formEditarClienteEl) formEditarClienteEl.addEventListener('submit', async (e) => { 
+    e.preventDefault(); 
+    const dadosForm = new FormData(formEditarClienteEl); 
 
-    const { error } = await _supabase.from('clientes').update(dadosCliente).match({ id: dadosForm.get('id'), loja_id: lojaId }); 
+    let nomeUsuario = null; 
+    try {
+        const { data: perfil, error } = await _supabase.from('perfis').select('nome_usuario').single();
+        if (error) throw error;
+        if (perfil && perfil.nome_usuario) nomeUsuario = perfil.nome_usuario;
+    } catch (e) {
+        console.warn("Nao foi possivel obter nome do usuario para 'updated_by_name'");
+    }   
+
+    const dadosCliente = { 
+        nome: dadosForm.get('nome'), 
+        telefone: dadosForm.get('telefone'), 
+        email: dadosForm.get('email'), 
+        endereco: dadosForm.get('endereco'),
+        updated_by_name: nomeUsuario 
+    };
+    const lojaId = await getMyLojaIdCrm();
+    if (!lojaId) {
+         showToast("Erro: Não foi possível identificar sua loja. Tente fazer login novamente.", "error");
+         return;
+    }
+
+    const { error } = await _supabase.from('clientes')
+        .update(dadosCliente)
+        .match({ id: dadosForm.get('id'), loja_id: lojaId }); 
 
     if (error) {
-            console.error('Erro ao atualizar cliente:', error);
-            let userMessage = 'Erro ao salvar dados.';
-            if (error.message.includes('violates row-level security policy')) userMessage += " Verifique permissões ou status da assinatura.";
-            else userMessage += ` Detalhe: ${error.message}`;
-            showToast(userMessage, "error");
-        } else {
-            closeModal(modalEditarClienteEl);
-            await aplicarFiltroEOrdenacao();
-            showToast('✅ Dados salvos!');
-        }
-    });
+        console.error('Erro ao atualizar cliente:', error);
+        let userMessage = 'Erro ao salvar dados.';
+        if (error.message.includes('violates row-level security policy')) userMessage += " Verifique permissões ou status da assinatura.";
+        else userMessage += ` Detalhe: ${error.message}`;
+        showToast(userMessage, "error");
+    } else {
+        closeModal(modalEditarClienteEl);
+        await aplicarFiltroEOrdenacao();
+        showToast('✅ Dados salvos!');
+    }
+});
 
     const btnCancelExcluir = document.getElementById('btn-cancelar-excluir-cliente');
     if(btnCancelExcluir) btnCancelExcluir.addEventListener('click', () => {
