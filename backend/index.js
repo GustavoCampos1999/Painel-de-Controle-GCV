@@ -4,14 +4,26 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const { calcularOrcamento } = require('./calculo.js');
 
-const app = express();
+const allowedOrigins = [
+  'https://gustavocampos1999.github.io', 
+  'http://127.0.0.1:5500'               
+];
+
 const corsOptions = {
-  origin: 'https://gustavocampos1999.github.io', 
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Não permitido pela política de CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],    
   allowedHeaders: ['Content-Type', 'Authorization'] 
 };
+
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); 
+
 const PORTA = process.env.PORT || 3000;
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
