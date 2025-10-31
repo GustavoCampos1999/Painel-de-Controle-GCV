@@ -11,7 +11,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'] 
 };
 app.use(express.json());
-
+app.use(cors(corsOptions));
 const PORTA = process.env.PORT || 3000;
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
@@ -82,16 +82,6 @@ app.post('/register', async (req, res) => {
                 nome_usuario: nome_usuario             
             });
         if (perfilError) throw perfilError;
-
-        console.log(`[Registro] Copiando dados padrão para loja ${newLojaId}...`);
-        const { error: rpcErrorTecidos } = await supabaseService.rpc('copy_template_tecidos', { p_loja_id: newLojaId });
-        if (rpcErrorTecidos) throw new Error(`Erro ao copiar tecidos: ${rpcErrorTecidos.message}`);
-        
-        const { error: rpcErrorConf } = await supabaseService.rpc('copy_template_confeccao', { p_loja_id: newLojaId });
-        if (rpcErrorConf) throw new Error(`Erro ao copiar confeccao: ${rpcErrorConf.message}`);
-
-        const { error: rpcErrorTrilho } = await supabaseService.rpc('copy_template_trilho', { p_loja_id: newLojaId });
-        if (rpcErrorTrilho) throw new Error(`Erro ao copiar trilho: ${rpcErrorTrilho.message}`);
 
         console.log(`[Registro] Loja ${newLojaId} criada com sucesso para ${email}.`);
         res.status(201).json({ mensagem: "Conta criada com sucesso! Você já pode fazer login." });
