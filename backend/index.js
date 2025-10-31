@@ -23,12 +23,11 @@ const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 app.get('/health', (req, res) => res.status(200).send('Servidor backend está operacional.'));
 
 app.post('/register', async (req, res) => {
-    const { email, password, cnpj, nome_empresa, telefone } = req.body;
+    const { email, password, cnpj, nome_empresa, telefone, nome_usuario } = req.body;
 
-    if (!email || !password || !cnpj || !nome_empresa) {
-        return res.status(400).json({ erro: "Email, senha, nome da empresa e CNPJ são obrigatórios." });
+    if (!email || !password || !cnpj || !nome_empresa || !nome_usuario) {
+        return res.status(400).json({ erro: "Email, senha, nome da empresa, nome de usuário e CNPJ são obrigatórios." });
     }
-
     const cnpjLimpo = String(cnpj).replace(/\D/g, '');
     if (cnpjLimpo.length !== 14) {
         return res.status(400).json({ erro: "CNPJ inválido. Deve conter 14 números." });
