@@ -5,7 +5,11 @@ const { createClient } = require('@supabase/supabase-js');
 const { calcularOrcamento } = require('./calculo.js');
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: 'https://gustavocampos1999.github.io', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],    
+  allowedHeaders: ['Content-Type', 'Authorization'] 
+};
 app.use(express.json());
 
 const PORTA = process.env.PORT || 3000;
