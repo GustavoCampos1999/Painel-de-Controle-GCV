@@ -41,16 +41,15 @@
                     </div>
                     <input type="text" id="input-pesquisa" placeholder="Pesquisar por nome...">
                    <div class="filter-container">
-                        <select id="select-client-filter" class="client-filter-select">
-                            <option value="nome_asc">Ordenar por Nome (A-Z)</option>
-                            <option value="venda_realizada_true">Vendas Concluídas</option>
-                            <option value="venda_realizada_false">Vendas não Concluídas</option>
-                            <option value="updated_at_desc">Editados Recentemente</option>
-                            <option value="created_at_desc">Criados Recentemente</option>
-                            <option value="updated_at_asc">Últimos Editados</option>
-                            <option value="created_at_asc">Últimos Criados</option>
-                        </select>
-                    </div>
+    <select id="select-client-filter" class="client-filter-select">
+        <option value="nome">Ordenar por Nome</option>
+        <option value="updated_at">Data de Edição</option>
+        <option value="created_at">Data de Criação</option>
+        <option value="venda_realizada_true">Vendas Concluídas</option>
+        <option value="venda_realizada_false">Vendas não Concluídas</option>
+    </select>
+    <button id="btn-toggle-sort-order" class="btn-toggle-order" title="Mudar ordem">A-Z</button>
+</div>
                     <div id="lista-clientes">
                         </div>
                 </div>

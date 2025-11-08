@@ -326,16 +326,14 @@ if (elements.btnPrintOrcamento) {
             abaParaExcluir = { index: null, element: null };
         });
     }
-
-    if (elements.chkSummaryVendaRealizada) {
+if (elements.chkSummaryVendaRealizada) {
         elements.chkSummaryVendaRealizada.addEventListener('change', () => {
             if (abaAtivaIndex < 0 || abaAtivaIndex >= estadoAbas.length) return;
             
             const newState = elements.chkSummaryVendaRealizada.checked;
             estadoAbas[abaAtivaIndex].venda_realizada = newState;
-    
             renderizarTabs();
-            atualizarStatusVendaCliente(true);
+            atualizarStatusVendaCliente(true, currentClientIdRef.value); 
             setDirty();
         });        
     }
@@ -596,8 +594,12 @@ function updateMoveButtonsVisibility() {
         }
     });
 }
-async function atualizarStatusVendaCliente(triggerSave = false) { 
-    if (!currentClientIdRef.value) return;
+
+async function atualizarStatusVendaCliente(triggerSave = false, clientId) { 
+    if (!clientId || clientId === 'null' || clientId === 'undefined') {
+        console.error("atualizarStatusVendaCliente chamado com ID inválido:", clientId);
+        return; 
+    }
 
     let nomeUsuario = null; 
     try {
@@ -623,21 +625,21 @@ async function atualizarStatusVendaCliente(triggerSave = false) {
         updated_at: new Date().toISOString(),
         updated_by_name: nomeUsuario
     };
-
+    
     const { error } = await _supabase
         .from('clientes')
         .update(dadosUpdate)
-        .match({ id: currentClientIdRef.value })
+        .match({ id: clientId }) 
         .select(); 
-
+    
     if (error) {
-        console.error("Erro ao atualizar status de venda do cliente (RLS pode ter bloqueado):", error);
+        console.error("Erro ao atualizar status de venda do cliente:", error); 
         if (triggerSave) {
             showToast(`Erro ao atualizar status: ${error.message}`, "error");
         }
     } else {
         console.log("Status de venda e 'Última Edição' do cliente atualizados para:", algumaVendaRealizada, nomeUsuario);
-        document.dispatchEvent(new CustomEvent('clienteAtualizado'));
+        document.dispatchEvent(new CustomEvent('clienteAtualizado')); 
     }
 }
 
@@ -1303,7 +1305,7 @@ async function salvarEstadoCalculadora(clientId) {
             elements.saveStatusMessage.className = 'save-status-message saved';
         }
         console.log("Estado da calculadora salvo:", result);
-        atualizarStatusVendaCliente(false);
+        atualizarStatusVendaCliente(false, clientId);
     } catch (error) {
         console.error("Erro ao salvar estado da calculadora:", error.message);
         if (elements.saveStatusMessage) {

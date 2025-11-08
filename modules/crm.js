@@ -5,9 +5,9 @@ let listaClientesEl, inputPesquisaClientesEl, formAddClienteEl, formEditarClient
 let modalAddClienteEl, modalEditarClienteEl, modalExcluirClienteEl;
 let btnConfirmarExcluirClienteEl;
 let clienteParaExcluirInfo = null;
-let btnToggleFilterEl, selectClientFilterEl;
+let btnToggleFilterEl, selectClientFilterEl, btnToggleSortOrderEl;
 let cachedLojaIdCrm = null; 
-
+let isSortAscending = true;
 async function getMyLojaIdCrm() {
     _supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
@@ -45,8 +45,14 @@ export function initCRM(elements) {
     modalEditarClienteEl = elements.modalEditarCliente;
     modalExcluirClienteEl = elements.modalExcluirCliente;
     btnConfirmarExcluirClienteEl = elements.btnConfirmarExcluirCliente;
-    btnToggleFilterEl = elements.btnToggleFilter;
+    btnToggleFilterEl = elements.btnToggleFilter; 
     selectClientFilterEl = elements.selectClientFilter;
+    
+    if (elements.btnToggleSortOrder) { 
+        btnToggleSortOrderEl = elements.btnToggleSortOrder;
+    } else {
+        btnToggleSortOrderEl = document.getElementById('btn-toggle-sort-order');
+    }
 
     setupAddClienteButton();
     setupAddClienteForm(); 
@@ -189,33 +195,73 @@ function setupPesquisaClientes() {
 }
 
 function setupFiltroClientes() {
-    if (btnToggleFilterEl) {
-    }
     if (selectClientFilterEl) {
         selectClientFilterEl.addEventListener('change', () => {
             if (inputPesquisaClientesEl) inputPesquisaClientesEl.value = '';
+            isSortAscending = true; 
+            aplicarFiltroEOrdenacao();
+        });
+    }
+
+    if (btnToggleSortOrderEl) {
+        btnToggleSortOrderEl.addEventListener('click', () => {
+            isSortAscending = !isSortAscending; 
             aplicarFiltroEOrdenacao();
         });
     }
 }
 
 function aplicarFiltroEOrdenacao(additionalOptions = {}) {
-    if (!selectClientFilterEl) {
+    if (!selectClientFilterEl || !btnToggleSortOrderEl) {
         carregarClientes(additionalOptions); 
         return;
     }
+
     const valorSelecionado = selectClientFilterEl.value;
-    let options = { ...additionalOptions }; 
+    let options = { ...additionalOptions };
+    let orderByKey = 'nome'; 
+    let isDateSort = false;
+
     switch (valorSelecionado) {
-        case 'nome_asc': options = { ...options, orderBy: 'nome', ascending: true }; break;
-        case 'venda_realizada_true': options = { ...options, venda_realizada: true, orderBy: 'nome', ascending: true }; break;
-        case 'venda_realizada_false': options = { ...options, venda_realizada: false, orderBy: 'nome', ascending: true }; break;
-        case 'updated_at_desc': options = { ...options, orderBy: 'updated_at', ascending: false }; break;
-        case 'created_at_desc': options = { ...options, orderBy: 'created_at', ascending: false }; break;
-        case 'updated_at_asc': options = { ...options, orderBy: 'updated_at', ascending: true }; break;
-        case 'created_at_asc': options = { ...options, orderBy: 'created_at', ascending: true }; break;
-        default: options = { ...options, orderBy: 'nome', ascending: true };
+        case 'nome':
+            orderByKey = 'nome';
+            isDateSort = false;
+            break;
+        case 'venda_realizada_true':
+            options.venda_realizada = true;
+            orderByKey = 'updated_at'; 
+            isDateSort = true;
+            break;
+        case 'venda_realizada_false':
+            options.venda_realizada = false;
+            orderByKey = 'updated_at'; 
+            isDateSort = true;
+            break;
+        case 'updated_at':
+            orderByKey = 'updated_at';
+            isDateSort = true;
+            break;
+        case 'created_at':
+            orderByKey = 'created_at';
+            isDateSort = true;
+            break;
+        default:
+            orderByKey = 'nome';
+            isDateSort = false;
     }
+
+    let ascending;
+    if (isDateSort) {
+        ascending = !isSortAscending; 
+        btnToggleSortOrderEl.textContent = isSortAscending ? 'Mais Recentes' : 'Mais Antigos';
+    } else {
+        ascending = isSortAscending;
+        btnToggleSortOrderEl.textContent = isSortAscending ? 'A-Z' : 'Z-A';
+    }
+
+    options.orderBy = orderByKey;
+    options.ascending = ascending;
+    
     carregarClientes(options);
 }
 

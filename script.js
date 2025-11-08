@@ -162,6 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputPesquisaClientes: document.getElementById('input-pesquisa'),
         btnToggleFilter: document.getElementById('btn-toggle-filter'),
         selectClientFilter: document.getElementById('select-client-filter'),
+        btnToggleSortOrder: document.getElementById('btn-toggle-sort-order'),
         modalAddCliente: document.getElementById('modal-add-cliente'),
         formAddCliente: document.getElementById('form-add-cliente'),
         modalEditarCliente: document.getElementById('modal-editar-cliente'),

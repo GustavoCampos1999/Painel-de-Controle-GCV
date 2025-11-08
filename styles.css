@@ -233,9 +233,14 @@ body.dark-mode .cliente-card.venda-realizada .cliente-nome strong {
 }
 
 .cliente-timestamps {
-    text-align: right;
+    flex-basis: auto;
+    text-align: right; 
+    font-size: 0.8em;
+    color: #888;
+    margin-top: 0; 
+    box-sizing: border-box; 
     flex-shrink: 0; 
-    margin-left: 10px; 
+    white-space: nowrap; 
 }
 
 .timestamp {
@@ -917,6 +922,51 @@ body.dark-mode .tabela-calculo tbody select {
 body.dark-mode .tabela-calculo .input-valor-manual {
     background-color: #3b3a30; 
 }
+.filter-container {
+    display: flex;
+    margin-bottom: 15px; 
+    gap: 10px; 
+}
+
+.client-filter-select {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    flex-grow: 1; 
+}
+
+.btn-toggle-order {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-weight: bold;
+    min-width: 120px;
+    text-align: center;
+}
+.btn-toggle-order:hover {
+    background-color: #e0e0e0;
+}
+
+body.dark-mode .client-filter-select {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+body.dark-mode .btn-toggle-order {
+    background-color: #444;
+    color: #f0f0f0;
+    border-color: #555;
+}
+body.dark-mode .btn-toggle-order:hover {
+    background-color: #555;
+}
 
 @media (max-width: 768px) {
     header {
@@ -1018,27 +1068,26 @@ body.dark-mode .tabela-calculo .input-valor-manual {
         margin-bottom: 15px; 
         min-width: 0;
     }
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start; ; 
-        gap: 5px; 
-        margin-bottom: 8px;
-    }
+   .card-header {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-between;
+    align-items: flex-start; 
+    margin-bottom: 10px;
+}
     .cliente-nome {
-        flex-basis: 60%; 
-        flex-grow: 1;
-    }
+    font-weight: bold;
+    font-size: 1.1em;
+    flex-shrink: 0; 
+}
     .cliente-nome strong {
         text-decoration: none !important; 
         border-bottom: none !important;
     }
     .cliente-timestamps {
-        text-align: right;
-        flex-shrink: 0; 
-        margin-left: 10px; 
-        margin-top: 0; 
-        flex-basis: auto;
+        flex-basis: auto; 
+        margin-top: 0;
+        text-align: right; 
     }
     .cliente-details {
         margin-top: 5px; 
