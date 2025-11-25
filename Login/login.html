@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Painel Admin</title>
-    <link rel="stylesheet" href="login.css"> <link rel="icon" type="image/png" href="../images/favicon.ico">
+    <link rel="stylesheet" href="login.css">
+    <link rel="icon" type="image/png" href="../images/favicon.ico">
 </head>
 <body>
     <div class="login-container">
@@ -19,18 +20,24 @@
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" placeholder="Senha" required>
             </div>
+            
+            <div class="forgot-password-container">
+                <a href="forgot-password.html" class="login-link">Esqueci minha senha</a>
+            </div>
+
             <button type="submit">Entrar</button>
-            <p id="mensagem-erro"></p>
+            <p id="mensagem-erro" class="message-error"></p>
         </form>
-     <div style="text-align: center; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-        <p>Não tem uma conta?</p> 
-            <a href="register.html" style="text-decoration: none; color: #555;">
-             <strong>Registre sua loja aqui</strong></a>
+
+        <div class="login-link-container">
+            <p class="login-description" style="margin-bottom: 5px;">Não tem uma conta?</p> 
+            <a href="register.html" class="login-link">
+             <strong>Registre sua loja aqui</strong>
+            </a>
         </div>
-        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script type="module" src="login.js"></script>
 </body>
 </html>

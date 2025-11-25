@@ -577,7 +577,24 @@
             <h2>Adicionar Opção de Confecção</h2>
             <form id="form-add-confeccao">
                 <div><label for="add-confeccao-opcao">Opção:</label><input type="text" id="add-confeccao-opcao" name="opcao" required></div>
-                <div><label for="add-confeccao-valor">Valor:</label><input type="text" inputmode="decimal" id="add-confeccao-valor" name="valor"></div>
+                <div>
+    <label for="add-confeccao-valor">Valor:</label>
+    <input type="text" inputmode="decimal" id="add-confeccao-valor" name="valor">
+</div>
+
+<div class="regra-confeccao-wrapper">
+    <div class="regra-header">
+        <input type="checkbox" id="check-add-confeccao-limite" class="regra-checkbox">
+        <label for="check-add-confeccao-limite" class="regra-label-checkbox">Definir regra de largura mínima</label>
+    </div>
+    <div id="container-add-confeccao-limite" class="regra-input-container hidden">
+        <label for="add-confeccao-limite" class="label-hint">Mostrar apenas se largura for MAIOR que:</label>
+        <div class="regra-input-group">
+            <input type="text" inputmode="decimal" id="add-confeccao-limite" name="limite_largura" class="input-pequeno" placeholder="0,00">
+            <span class="texto-unidade">metros</span>
+        </div>
+    </div>
+</div>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancelar-add-confeccao" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar</button>
@@ -591,7 +608,24 @@
             <form id="form-edit-confeccao">
                 <input type="hidden" name="id">
                 <div><label for="edit-confeccao-opcao">Opção:</label><input type="text" id="edit-confeccao-opcao" name="opcao" required></div>
-                <div><label for="edit-confeccao-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-confeccao-valor" name="valor"></div>
+                <div>
+    <label for="edit-confeccao-valor">Valor:</label>
+    <input type="text" inputmode="decimal" id="edit-confeccao-valor" name="valor">
+</div>
+
+<div class="regra-confeccao-wrapper">
+    <div class="regra-header">
+        <input type="checkbox" id="check-edit-confeccao-limite" class="regra-checkbox">
+        <label for="check-edit-confeccao-limite" class="regra-label-checkbox">Definir regra de largura mínima</label>
+    </div>
+    <div id="container-edit-confeccao-limite" class="regra-input-container hidden">
+        <label for="edit-confeccao-limite" class="label-hint">Mostrar se largura for MAIOR que:</label>
+        <div class="regra-input-group">
+            <input type="text" inputmode="decimal" id="edit-confeccao-limite" name="limite_largura" class="input-pequeno" placeholder="0,00">
+            <span class="texto-unidade">metros</span>
+        </div>
+    </div>
+</div>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancelar-edit-confeccao" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar Alterações</button>

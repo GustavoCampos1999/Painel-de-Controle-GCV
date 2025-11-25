@@ -769,6 +769,7 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
     if (!template) return;
 
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
+    
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
 
@@ -777,9 +778,24 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro')); 
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout')); 
-    preencherSelectCalculadora(novaLinha.querySelector('.select-confecao'), dataRefs.confeccao, true, "NENHUM", false);
+    
+    const selectConfecaoInit = novaLinha.querySelector('.select-confecao');
+    if (selectConfecaoInit) {
+        selectConfecaoInit.innerHTML = '';
+        const optionDefault = new Option("NENHUM", "-");
+        optionDefault.dataset.valorReal = 0;
+        selectConfecaoInit.appendChild(optionDefault);
+    }
+    
     preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM", false);
     preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "NENHUM", true);
+
+    const inputLargura = novaLinha.querySelector('.input-largura');
+    inputLargura.addEventListener('blur', () => {
+        atualizarOpcoesConfeccao(novaLinha); 
+        calcularOrcamentoLinha(novaLinha);   
+        setDirty();                          
+    });
 
     if (!estadoLinha || !estadoLinha.franzBlackout) {
         const selectFranzBk = novaLinha.querySelector('.select-franzBlackout');
@@ -788,11 +804,20 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
 
     if (estadoLinha) {
         novaLinha.querySelector('.input-ambiente').value = estadoLinha.ambiente || '';
+        
         const larguraVal = parseFloat(String(estadoLinha.largura || '0').replace(',', '.')) || 0;
         novaLinha.querySelector('.input-largura').value = larguraVal.toFixed(3).replace('.', ',');
 
         const alturaVal = parseFloat(String(estadoLinha.altura || '0').replace(',', '.')) || 0;
         novaLinha.querySelector('.input-altura').value = alturaVal.toFixed(3).replace('.', ',');
+
+        atualizarOpcoesConfeccao(novaLinha);
+
+        const selectConfecao = novaLinha.querySelector('.select-confecao');
+        if (selectConfecao) {
+            selectConfecao.value = estadoLinha.confecaoTexto || '-';
+            if (selectConfecao.selectedIndex === -1) selectConfecao.value = '-';
+        }
 
         novaLinha.querySelector('.select-franzCortina').value = estadoLinha.franzCortina || (DADOS_FRANZ_CORTINA.length > 0 ? DADOS_FRANZ_CORTINA[0] : '');
         novaLinha.querySelector('.select-codTecidoCortina').value = estadoLinha.codTecidoCortina || 'SEM TECIDO';
@@ -800,16 +825,13 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
         novaLinha.querySelector('.select-franzBlackout').value = estadoLinha.franzBlackout || '1.2';
         novaLinha.querySelector('.select-codTecidoBlackout').value = estadoLinha.codTecidoBlackout || 'SEM TECIDO';
 
-        const selectConfecao = novaLinha.querySelector('.select-confecao');
-        if (selectConfecao) {
-            selectConfecao.value = estadoLinha.confecaoTexto || '-';
-        }
         const selectTrilho = novaLinha.querySelector('.select-trilho');
         if (selectTrilho) {
             selectTrilho.value = estadoLinha.trilhoTexto || '-';
         }
 
         novaLinha.querySelector('.select-instalacao').value = estadoLinha.instalacao || '0';
+        
         const inputOutros = novaLinha.querySelector('.input-outros');
         if (inputOutros) {
             const v = parseFloat(String(estadoLinha.outros || '0').replace(/[R$\.\s]/g, "").replace(",", ".")) || 0;
@@ -845,6 +867,7 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
             });
         }
     });
+
     const inputsTexto = novaLinha.querySelectorAll('.input-largura, .input-altura');
     inputsTexto.forEach(input => {
         input.addEventListener('blur', () => {
@@ -852,7 +875,6 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
             setDirty();
         });
     });
-
 
     const inputOutros = novaLinha.querySelector('.input-outros');
     if(inputOutros){
@@ -874,14 +896,16 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
             removerLinhaCalculadora(novaLinha);
         });
     }
+    
     tableBody.appendChild(novaLinha);
-
+    
     if (!estadoLinha) {
-    calcularOrcamentoLinha(novaLinha);
-    if (!isInitialLoad) { 
-        setDirty();
+        atualizarOpcoesConfeccao(novaLinha); 
+        calcularOrcamentoLinha(novaLinha);
+        if (!isInitialLoad) { 
+            setDirty();
+        }
     }
-}
 }
 
 function adicionarLinhaAmorim(tableBody, estadoLinha = null, isInitialLoad = false) { 
@@ -1527,6 +1551,52 @@ atualizarHeaderParcelado();
 recalcularParceladoAmorimToldos(); 
 recalcularTotaisSelecionados();
 updateMoveButtonsVisibility();}
+
+function atualizarOpcoesConfeccao(linha) {
+    const inputLargura = linha.querySelector('.input-largura');
+    const selectConfecao = linha.querySelector('.select-confecao');
+    if (!inputLargura || !selectConfecao) return;
+
+    let larguraTecido = parseFloat(inputLargura.value.replace(',', '.')) || 0;
+    const valorSelecionadoAnterior = selectConfecao.value;
+
+    selectConfecao.innerHTML = '';
+
+    const optionDefault = new Option("NENHUM", "-");
+    optionDefault.dataset.valorReal = 0;
+    selectConfecao.appendChild(optionDefault);
+
+    const confeccoes = dataRefs.confeccao || [];
+    
+    confeccoes.forEach(conf => {
+        const limite = parseFloat(conf.limite_largura) || 0;
+        
+        let deveMostrar = true;
+        
+        if (limite > 0) {
+            if (larguraTecido > limite) {
+                deveMostrar = true;
+            } else {
+                deveMostrar = false;
+            }
+        }
+
+        if (deveMostrar) {
+            const option = new Option(conf.opcao, conf.opcao);
+            option.dataset.valorReal = conf.valor;
+            selectConfecao.appendChild(option);
+        }
+    });
+
+    let opcaoAindaExiste = false;
+    for (let i = 0; i < selectConfecao.options.length; i++) {
+        if (selectConfecao.options[i].value === valorSelecionadoAnterior) {
+            selectConfecao.value = valorSelecionadoAnterior;
+            opcaoAindaExiste = true;
+            break;
+        }
+    }
+}
 
 function adicionarAba() {
     if (abaAtivaIndex >= 0 && abaAtivaIndex < estadoAbas.length) {

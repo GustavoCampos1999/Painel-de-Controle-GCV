@@ -105,8 +105,26 @@ function initDataManager(domElements, dataRefs) {
     setupInputFormatting('edit-frete-valor', 'currency');
     setupInputFormatting('add-instalacao-valor', 'currency');
     setupInputFormatting('edit-instalacao-valor', 'currency');
+setupInputFormatting('add-confeccao-limite', 'measure'); 
+setupInputFormatting('edit-confeccao-limite', 'measure');
 }
 
+function setupToggleCheckbox(checkboxId, containerId, inputId) {
+    const chk = document.getElementById(checkboxId);
+    const container = document.getElementById(containerId);
+    const input = document.getElementById(inputId);
+    
+    if(!chk || !container) return;
+
+    chk.addEventListener('change', () => {
+        if(chk.checked) {
+            container.classList.remove('hidden'); 
+        } else {
+            container.classList.add('hidden'); 
+            if(input) input.value = ''; 
+        }
+    });
+}
 
 function getRenderFunction(tabela) { 
      switch (tabela) {
@@ -137,7 +155,7 @@ function renderizarTabelaFrete(opcoes) {
             <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
-function renderizarTabelaInstalacao(opcoes) { /* ... (igual antes) ... */
+function renderizarTabelaInstalacao(opcoes) { 
      const tbody = elements.tabelaInstalacaoBody;
      if (!tbody) return;
     tbody.innerHTML = '';
@@ -156,7 +174,7 @@ function renderizarTabelaInstalacao(opcoes) { /* ... (igual antes) ... */
             <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
-function renderizarTabelaTecidos(tecidos) { /* ... (igual antes) ... */
+function renderizarTabelaTecidos(tecidos) { 
     const tbody = elements.tabelaTecidosBody;
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -170,21 +188,39 @@ function renderizarTabelaTecidos(tecidos) { /* ... (igual antes) ... */
         row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.produto}</td><td>${formatDecimal(d.largura, 3)}</td><td>R$ ${formatDecimal(d.atacado, 2)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
-function renderizarTabelaConfeccao(opcoes) { /* ... (igual antes) ... */
+
+function renderizarTabelaConfeccao(opcoes) {
     const tbody = elements.tabelaConfeccaoBody;
-     if (!tbody) return;
+    if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
     if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Nenhuma opção encontrada.</td></tr>'; return; }
 
     filtradas.forEach(d => {
         const row = tbody.insertRow();
-        row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0; row.dataset.favorito = d.favorito || false;
-        const favoritoClass = d.favorito ? 'favorito' : ''; const favoritoIcon = d.favorito ? '★' : '☆';
-        row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.opcao}</td><td>R$ ${formatDecimal(d.valor, 2)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+        row.dataset.id = d.id; 
+        row.dataset.opcao = d.opcao; 
+        row.dataset.valor = d.valor || 0; 
+        row.dataset.favorito = d.favorito || false;
+        row.dataset.limite_largura = d.limite_largura || 0; 
+
+        const favoritoClass = d.favorito ? 'favorito' : ''; 
+        const favoritoIcon = d.favorito ? '★' : '☆';
+        
+        let regraTexto = '';
+        if (d.limite_largura > 0) {
+            regraTexto = `<br><span style="font-size:11px; color:#e06c6e;">(Maior que ${formatDecimal(d.limite_largura, 2)}m)</span>`;
+        }
+
+        row.innerHTML = `
+            <td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td>
+            <td>${d.opcao} ${regraTexto}</td>
+            <td>R$ ${formatDecimal(d.valor, 2)}</td>
+            <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }
-function renderizarTabelaTrilho(opcoes) { /* ... (igual antes) ... */
+
+function renderizarTabelaTrilho(opcoes) { 
      const tbody = elements.tabelaTrilhoBody;
      if (!tbody) return;
     tbody.innerHTML = '';
@@ -203,6 +239,7 @@ function setupCRUD(tabela) {
     const nomeCapitalizado = tabela.charAt(0).toUpperCase() + tabela.slice(1);
     const nomeSingular = nomeCapitalizado.replace(/s$/, '');
     let chaveNome = 'opcao';
+
     if (tabela === 'tecidos') {
         chaveNome = 'produto';
     } else if (tabela === 'frete' || tabela === 'instalacao') {
@@ -212,6 +249,11 @@ function setupCRUD(tabela) {
         } else {
              chaveNome = 'valor'; 
         }
+    }
+
+    if (tabela === 'confeccao') {
+        setupToggleCheckbox('check-add-confeccao-limite', 'container-add-confeccao-limite', 'add-confeccao-limite');
+        setupToggleCheckbox('check-edit-confeccao-limite', 'container-edit-confeccao-limite', 'edit-confeccao-limite');
     }
 
     const btnAbrirModalAdd = elements[`btnAbrirModalAdd${nomeCapitalizado}`];
@@ -228,9 +270,17 @@ function setupCRUD(tabela) {
     if (btnAbrirModalAdd) btnAbrirModalAdd.addEventListener('click', () => {
         if(formAdd) {
             formAdd.reset();
-            const inputs = formAdd.querySelectorAll('input[name="largura"], input[name="atacado"], input[name="valor"]');
+            const inputs = formAdd.querySelectorAll('input[name="largura"], input[name="atacado"], input[name="valor"], input[name="limite_largura"]');
             inputs.forEach(input => input.value = ''); 
         }
+        
+        if (tabela === 'confeccao') {
+            const chk = document.getElementById('check-add-confeccao-limite');
+            const cont = document.getElementById('container-add-confeccao-limite');
+            if(chk) chk.checked = false;
+            if(cont) cont.classList.add('hidden'); 
+        }
+
         openModal(modalAdd);
     });
 
@@ -238,19 +288,10 @@ function setupCRUD(tabela) {
         formAdd.addEventListener('submit', async (e) => {
             e.preventDefault();
             const dadosFormulario = getFormData(formAdd, tabela);
-
             const lojaId = await getMyLojaId(); 
-            if (!lojaId) {
-                return;
-            }
-
-            const dadosParaInserir = {
-                ...dadosFormulario,
-                loja_id: lojaId 
-            };
-
+            if (!lojaId) return;
+            const dadosParaInserir = { ...dadosFormulario, loja_id: lojaId };
             const { error } = await _supabase.from(tabela).insert(dadosParaInserir);
-
             handleSaveResponse(error, modalAdd, tabela, `✅ ${nomeSingular} adicionado(a)!`);
         });
     }
@@ -261,23 +302,12 @@ function setupCRUD(tabela) {
             e.preventDefault();
             const dadosFormulario = getFormData(formEdit, tabela);
             const id = formEdit.querySelector(`input[name="id"]`)?.value; 
-            if (!id) {
-                console.error("ID não encontrado no formulário de edição para", tabela);
-                showToast("Erro: ID do item não encontrado para edição.", "error");
-                return;
-            }
-
+            if (!id) return;
             const lojaId = await getMyLojaId(); 
             if (!lojaId) return;
-
             const updateData = {...dadosFormulario};
             delete updateData.id;
-
-            const { error } = await _supabase
-                .from(tabela)
-                .update(updateData)
-                .match({ id: id, loja_id: lojaId }); 
-
+            const { error } = await _supabase.from(tabela).update(updateData).match({ id: id, loja_id: lojaId }); 
             handleSaveResponse(error, modalEdit, tabela, `✅ ${nomeSingular} atualizado(a)!`);
         });
     }
@@ -292,59 +322,38 @@ function setupCRUD(tabela) {
             const id = row.dataset.id; 
             const nome = row.dataset[chaveNome] || row.dataset.valor || `item ${id}`; 
 
-            if (target.classList.contains('btn-favorito')) {
-                const lojaId = await getMyLojaId(); 
-                if (!lojaId) return;
-
-                const starElement = target;
-                const isFavorito = row.dataset.favorito === 'true';
-                const newStatus = !isFavorito;
-
-                starElement.textContent = newStatus ? '★' : '☆';
-                starElement.classList.toggle('favorito', newStatus);
-                row.dataset.favorito = newStatus;
-
-                const { error } = await _supabase
-                    .from(tabela)
-                    .update({ favorito: newStatus })
-                    .match({ id: id, loja_id: lojaId }); 
-
-                if (error) {
-                    console.error('Erro ao favoritar/desfavoritar:', error);
-                    showToast('Erro ao atualizar favorito.', true);
-                    starElement.textContent = isFavorito ? '★' : '☆';
-                    starElement.classList.toggle('favorito', isFavorito);
-                    row.dataset.favorito = isFavorito;
-                } else {
-                    showToast(newStatus ? 'Item favoritado!' : 'Item desfavoritado.');
+            if (target.classList.contains('btn-favorito')) { 
+                 const lojaId = await getMyLojaId(); 
+                 if (!lojaId) return;
+                 const starElement = target;
+                 const isFavorito = row.dataset.favorito === 'true';
+                 const newStatus = !isFavorito;
+                 starElement.textContent = newStatus ? '★' : '☆';
+                 starElement.classList.toggle('favorito', newStatus);
+                 row.dataset.favorito = newStatus;
+                 const { error } = await _supabase.from(tabela).update({ favorito: newStatus }).match({ id: id, loja_id: lojaId }); 
+                 if (error) { showToast('Erro ao atualizar favorito.', true); } 
+                 else { 
                     const itemInData = dataArrays[tabela].find(item => item.id == id);
                     if (itemInData) itemInData.favorito = newStatus;
                     document.dispatchEvent(new CustomEvent(`tabela${nomeCapitalizado}SortRequest`));
-                }
-                return; 
+                 }
+                 return;
             }
-
             if (target.classList.contains('btn-excluir')) {
                 const lojaId = await getMyLojaId(); 
-                if (!lojaId) return;
-
-                if (window.prepararExclusaoGenerica) {
-                    window.prepararExclusaoGenerica({ id, nome, tabela, loja_id: lojaId, elemento: row });
-                } else {
-                    console.error("Função prepararExclusaoGenerica não encontrada.");
-                    showToast("Erro ao preparar exclusão.", "error");
-                }
+                if (window.prepararExclusaoGenerica) window.prepararExclusaoGenerica({ id, nome, tabela, loja_id: lojaId, elemento: row });
                 return; 
             }
 
             if (target.classList.contains('btn-editar')) {
                 if(formEdit){
                     formEdit.querySelector(`input[name="id"]`).value = id;
+                    
                     for (const key in row.dataset) {
                        const input = formEdit.querySelector(`[name="${key}"]`);
                        if(input && key !== 'id') {
                             const num = parseFloat(row.dataset[key].replace('R$', '').replace(',', '.')) || 0; 
-
                             if (num === 0 && (key === 'largura' || key === 'atacado' || key === 'valor')) {
                                 input.value = ''; 
                             } else if (key === 'largura') {
@@ -354,9 +363,26 @@ function setupCRUD(tabela) {
                             } else {
                                 input.value = row.dataset[key]; 
                             }
-                       } else if (key === 'id' && !formEdit.querySelector(`input[name="id"]`)){
-                           console.warn("Input hidden 'id' não encontrado no form de edição para", tabela);
                        }
+                    }
+
+                    if (tabela === 'confeccao') {
+                        const limiteVal = parseFloat(row.dataset.limite_largura) || 0;
+                        const chk = document.getElementById('check-edit-confeccao-limite');
+                        const container = document.getElementById('container-edit-confeccao-limite');
+                        const inputLimite = document.getElementById('edit-confeccao-limite');
+
+                        if (chk && container && inputLimite) {
+                            if (limiteVal > 0) {
+                                chk.checked = true;
+                                container.classList.remove('hidden'); 
+                                inputLimite.value = formatDecimal(limiteVal, 3);
+                            } else {
+                                chk.checked = false;
+                                container.classList.add('hidden'); 
+                                inputLimite.value = '';
+                            }
+                        }
                     }
                 }
                 openModal(modalEdit);
@@ -370,7 +396,7 @@ function getFormData(form, tabela) {
     const formData = new FormData(form);
     const data = {};
     formData.forEach((value, key) => {
-        if (key === 'largura' || key === 'atacado' || key === 'valor') {
+        if (key === 'largura' || key === 'atacado' || key === 'valor' || key === 'limite_largura') {
             const valorLimpo = String(value).replace('R$', '').trim();
             const valorNumerico = valorLimpo.replace(',', '.');
             data[key] = value === '' ? null : (parseFloat(valorNumerico) || 0);

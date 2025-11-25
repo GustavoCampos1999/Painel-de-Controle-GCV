@@ -102,7 +102,7 @@ async function buscarDadosBaseDoBackend() {
     const dados = await response.json();
     console.log("Dados base recebidos do backend:", dados);
 
-    tecidosDataGlobal.length = 0;
+   tecidosDataGlobal.length = 0;
     confeccaoDataGlobal.length = 0;
     trilhoDataGlobal.length = 0;
     freteDataGlobal.length = 0;
@@ -113,9 +113,10 @@ async function buscarDadosBaseDoBackend() {
     trilhoDataGlobal.push(...(dados.trilho || []));
     freteDataGlobal.push(...(dados.frete || []));
     instalacaoDataGlobal.push(...(dados.instalacao || []));
+    calculatorDataRefs.confeccao = dados.confeccao || []; 
 
-    calculatorDataRefs.confeccao = (dados.confeccao || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
     calculatorDataRefs.trilho = (dados.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
+    
     calculatorDataRefs.frete = (dados.frete || []).reduce((acc, item) => {
         const valor = item.valor || 0;
         const key = `R$ ${valor.toFixed(2).replace('.', ',')}`; 

@@ -8,7 +8,7 @@ const allowedOrigins = [
   'https://gustavocampos1999.github.io', 
   'http://127.0.0.1:5500'               
 ];
-
+const db = require('./database.js');
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -23,6 +23,24 @@ const corsOptions = {
 
 app.use(express.json());
 app.use(cors(corsOptions)); 
+app.post('/api/check-email', async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ erro: "Email obrigatório" });
+
+    try {
+        const result = await db.query("SELECT id FROM auth.users WHERE email = $1", [email]);
+        
+        if (result.rows.length > 0) {
+            return res.json({ exists: true });
+        } else {
+            return res.json({ exists: false });
+        }
+    } catch (error) {
+        console.error("Erro ao verificar email:", error);
+        return res.status(500).json({ erro: "Erro interno ao verificar e-mail." });
+    }
+});
 
 const PORTA = process.env.PORT || 3000;
 const supabaseUrl = process.env.SUPABASE_URL;

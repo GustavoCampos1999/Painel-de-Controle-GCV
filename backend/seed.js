@@ -53,13 +53,14 @@ async function criarTabelas() {
     )`);
 
     await client.query(`CREATE TABLE IF NOT EXISTS confeccao (
-        id BIGSERIAL PRIMARY KEY,
-        loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
-        opcao TEXT NOT NULL,
-        valor REAL,
-        favorito BOOLEAN DEFAULT false,
-        UNIQUE(loja_id, opcao)
-    )`);
+    id BIGSERIAL PRIMARY KEY,
+    loja_id BIGINT REFERENCES lojas(id) ON DELETE CASCADE,
+    opcao TEXT NOT NULL,
+    valor REAL,
+    limite_largura NUMERIC DEFAULT NULL,
+    favorito BOOLEAN DEFAULT false,
+    UNIQUE(loja_id, opcao)
+)`);
 
     await client.query(`CREATE TABLE IF NOT EXISTS trilho (
         id BIGSERIAL PRIMARY KEY,
