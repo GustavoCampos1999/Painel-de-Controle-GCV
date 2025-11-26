@@ -3,12 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const { calcularOrcamento } = require('./calculo.js');
+const db = require('./database.js'); 
+
 const app = express();
+
 const allowedOrigins = [
   'https://gustavocampos1999.github.io', 
-  'http://127.0.0.1:5500'               
+  'http://127.0.0.1:5500',
+  'http://localhost:5500'
 ];
-const db = require('./database.js');
+
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -23,24 +27,6 @@ const corsOptions = {
 
 app.use(express.json());
 app.use(cors(corsOptions)); 
-app.post('/api/check-email', async (req, res) => {
-    const { email } = req.body;
-
-    if (!email) return res.status(400).json({ erro: "Email obrigatório" });
-
-    try {
-        const result = await db.query("SELECT id FROM auth.users WHERE email = $1", [email]);
-        
-        if (result.rows.length > 0) {
-            return res.json({ exists: true });
-        } else {
-            return res.json({ exists: false });
-        }
-    } catch (error) {
-        console.error("Erro ao verificar email:", error);
-        return res.status(500).json({ erro: "Erro interno ao verificar e-mail." });
-    }
-});
 
 const PORTA = process.env.PORT || 3000;
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -56,6 +42,23 @@ const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
 app.get('/health', (req, res) => res.status(200).send('Servidor backend está operacional.'));
 
+app.post('/api/check-email', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ erro: "Email obrigatório" });
+
+    try {
+        const result = await db.query("SELECT id FROM auth.users WHERE email = $1", [email]);
+        if (result.rows.length > 0) {
+            return res.json({ exists: true });
+        } else {
+            return res.json({ exists: false });
+        }
+    } catch (error) {
+        console.error("Erro ao verificar email:", error);
+        return res.status(500).json({ erro: "Erro interno ao verificar e-mail." });
+    }
+});
+
 app.post('/register', async (req, res) => {
     const { email, password, cnpj, nome_empresa, telefone, nome_usuario } = req.body;
 
@@ -68,9 +71,6 @@ app.post('/register', async (req, res) => {
     }
 
     try {
-
-        console.log(`[Registro] Validando CNPJ: ${cnpjLimpo} (simulação bem-sucedida)`);
-        
         const { data: existingLoja, error: lojaCheckError } = await supabaseService
             .from('lojas').select('id').eq('cnpj', cnpjLimpo).maybeSingle();
         
@@ -85,8 +85,8 @@ app.post('/register', async (req, res) => {
         if (userError) throw userError;
 
         const newUserId = userData.user.id;
-
         const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
         const { data: lojaData, error: lojaError } = await supabaseService
             .from('lojas')
             .insert({
@@ -101,19 +101,17 @@ app.post('/register', async (req, res) => {
             .single();
         if (lojaError) throw lojaError;
 
-        const newLojaId = lojaData.id;
-
         const { error: perfilError } = await supabaseService
             .from('perfis')
             .insert({
                 user_id: newUserId,
-                loja_id: newLojaId,
+                loja_id: lojaData.id,
                 role: 'admin',
                 nome_usuario: nome_usuario             
             });
         if (perfilError) throw perfilError;
 
-        console.log(`[Registro] Loja ${newLojaId} criada com sucesso para ${email}.`);
+        console.log(`[Registro] Loja ${lojaData.id} criada com sucesso para ${email}.`);
         res.status(201).json({ mensagem: "Conta criada com sucesso! Você já pode fazer login." });
 
     } catch (error) {
@@ -133,8 +131,8 @@ const authMiddleware = (req, res, next) => {
   });
   next();
 };
-app.use('/api', authMiddleware);
 
+app.use('/api', authMiddleware); 
 
 app.post('/api/calcular', (req, res) => {
    try {
@@ -155,12 +153,15 @@ app.get('/api/dados-base', async (req, res) => {
       req.supabase.from('frete').select('*').order('valor'),
       req.supabase.from('instalacao').select('*').order('valor')
     ]);
+
     const checkError = (response, tableName) => { if (response.error) throw new Error(`Erro ao buscar ${tableName}: ${response.error.message}`); };
+    
     checkError(tecidosRes, 'tecidos');
     checkError(confeccaoRes, 'confeccao');
     checkError(trilhoRes, 'trilho');
     checkError(freteRes, 'frete');
     checkError(instalacaoRes, 'instalacao');
+
     res.json({
       tecidos: tecidosRes.data || [],
       confeccao: confeccaoRes.data || [],
@@ -170,8 +171,7 @@ app.get('/api/dados-base', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro em /api/dados-base:', error);
-    const statusCode = error.status || 500;
-    res.status(statusCode).json({ erro: error.message || "Erro ao buscar dados base." });
+    res.status(500).json({ erro: error.message || "Erro ao buscar dados base." });
   }
 });
 
@@ -183,41 +183,42 @@ app.get('/api/orcamentos/:clientId', async (req, res) => {
           .from('orcamentos').select('data').eq('client_id', clientId).maybeSingle();
         if (error) throw error;
         if (data) res.json(data.data || {});
-        else res.status(404).json({ message: 'Orçamento não encontrado ou acesso negado.' });
+        else res.status(404).json({ message: 'Orçamento não encontrado.' });
     } catch (error) {
         console.error(`Erro GET /api/orcamentos/${clientId}:`, error);
-        res.status(error.status || 500).json({ erro: error.message || "Erro interno." });
+        res.status(500).json({ erro: error.message });
     }
 });
 
 app.put('/api/orcamentos/:clientId', async (req, res) => {
     const { clientId } = req.params;
-    if (isNaN(parseInt(clientId))) return res.status(400).json({ erro: "ID do cliente inválido." });
+    if (isNaN(parseInt(clientId))) return res.status(400).json({ erro: "ID inválido." });
     const orcamentoData = req.body;
-    if (!orcamentoData || typeof orcamentoData !== 'object') return res.status(400).json({ erro: "Dados do orçamento inválidos." });
+    
     try {
         const { data: perfilData, error: perfilError } = await req.supabase.from('perfis').select('loja_id').single();
-        if (perfilError || !perfilData) throw new Error("Não foi possível identificar a loja do usuário.");
+        if (perfilError || !perfilData) throw new Error("Não foi possível identificar a loja.");
+        
         const lojaId = perfilData.loja_id;
+        
         const { data, error } = await req.supabase
           .from('orcamentos')
           .upsert({ client_id: clientId, loja_id: lojaId, data: orcamentoData }, { onConflict: 'client_id, loja_id' })
           .select('data, updated_at').single();
+          
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
         console.error(`Erro PUT /api/orcamentos/${clientId}:`, error);
-        res.status(error.status || 500).json({ erro: error.message || "Erro interno." });
+        res.status(500).json({ erro: error.message });
     }
 });
-
 app.get('/api/roles', async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        const { data: { user }, error: errUser } = await supabaseService.auth.getUser(token);
-        if (errUser || !user) return res.status(401).json({ erro: "Token inválido" });
-
-        // Pega loja do usuário
+        const authHeader = req.headers.authorization;
+        const token = authHeader.split(' ')[1];
+        const { data: { user } } = await supabaseService.auth.getUser(token);
+        
         const { data: perfil } = await supabaseService
             .from('perfis').select('loja_id').eq('user_id', user.id).single();
 
@@ -237,17 +238,17 @@ app.get('/api/roles', async (req, res) => {
     }
 });
 
-// Criar ou Editar Cargo
 app.post('/api/roles', async (req, res) => {
     const { id, nome, permissions } = req.body;
-    const token = req.headers.authorization?.split(' ')[1];
+    const authHeader = req.headers.authorization;
 
     try {
+        const token = authHeader.split(' ')[1];
         const { data: { user } } = await supabaseService.auth.getUser(token);
+        
         const { data: perfil } = await supabaseService
             .from('perfis').select('loja_id, role').eq('user_id', user.id).single();
 
-        // Apenas Admin pode criar cargos (ou quem tiver permissão especifica 'manage_team')
         if (perfil.role !== 'admin') return res.status(403).json({ erro: "Apenas admin cria cargos." });
 
         const dadosRole = {
@@ -258,10 +259,8 @@ app.post('/api/roles', async (req, res) => {
 
         let result;
         if (id) {
-            // Atualizar
             result = await supabaseService.from('loja_roles').update(dadosRole).eq('id', id).select();
         } else {
-            // Criar
             result = await supabaseService.from('loja_roles').insert(dadosRole).select();
         }
 
@@ -274,18 +273,17 @@ app.post('/api/roles', async (req, res) => {
     }
 });
 
-// Excluir Cargo
 app.delete('/api/roles/:id', async (req, res) => {
     const { id } = req.params;
-    const token = req.headers.authorization?.split(' ')[1];
+    const authHeader = req.headers.authorization;
 
     try {
+        const token = authHeader.split(' ')[1];
         const { data: { user } } = await supabaseService.auth.getUser(token);
         const { data: perfil } = await supabaseService.from('perfis').select('loja_id, role').eq('user_id', user.id).single();
 
         if (perfil.role !== 'admin') return res.status(403).json({ erro: "Apenas admin exclui cargos." });
 
-        // Verificar se pertence à loja
         const { error } = await supabaseService.from('loja_roles').delete().match({ id, loja_id: perfil.loja_id });
         
         if (error) throw error;
@@ -296,12 +294,42 @@ app.delete('/api/roles/:id', async (req, res) => {
     }
 });
 
+app.get('/api/team', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader.split(' ')[1];
+        
+        const { data: { user }, error: errUser } = await supabaseService.auth.getUser(token);
+        if (errUser || !user) return res.status(401).json({ erro: "Usuário inválido" });
+
+        const { data: perfilSolicitante, error: errPerfil } = await supabaseService
+            .from('perfis')
+            .select('loja_id, role')
+            .eq('user_id', user.id)
+            .single();
+
+        if (errPerfil || !perfilSolicitante) return res.status(403).json({ erro: "Perfil não encontrado." });
+
+        const { data: equipe, error: errEquipe } = await supabaseService
+            .from('perfis')
+            .select('user_id, nome_usuario, role, role_id')
+            .eq('loja_id', perfilSolicitante.loja_id);
+
+        if (errEquipe) throw errEquipe;
+
+        res.json(equipe);
+    } catch (error) {
+        console.error("Erro ao listar equipe:", error);
+        res.status(500).json({ erro: "Erro interno ao buscar equipe." });
+    }
+});
+
 app.post('/api/team/add', async (req, res) => {
     const { nome, email, senha, role_id } = req.body; 
     const authHeader = req.headers.authorization;
 
-    if (!nome || !email || !senha || !role_id) {
-        return res.status(400).json({ erro: "Preencha todos os campos." });
+    if (!nome || !email || !senha) {
+        return res.status(400).json({ erro: "Preencha todos os campos obrigatórios." });
     }
 
     try {
@@ -312,7 +340,7 @@ app.post('/api/team/add', async (req, res) => {
             .from('perfis').select('loja_id, role').eq('user_id', userSolicitante.id).single();
 
         if (perfilSolicitante.role !== 'admin') { 
-            return res.status(403).json({ erro: "Sem permissão." });
+            return res.status(403).json({ erro: "Sem permissão. Apenas admins adicionam membros." });
         }
 
         const { data: authUser, error: authError } = await supabaseService.auth.admin.createUser({
@@ -320,8 +348,11 @@ app.post('/api/team/add', async (req, res) => {
         });
         if (authError) throw authError;
 
-        const { data: roleData } = await supabaseService.from('loja_roles').select('nome').eq('id', role_id).single();
-        const roleName = roleData ? roleData.nome : 'custom';
+        let roleName = 'vendedor';
+        if (role_id) {
+            const { data: roleData } = await supabaseService.from('loja_roles').select('nome').eq('id', role_id).single();
+            if (roleData) roleName = roleData.nome;
+        }
 
         const { error: perfilError } = await supabaseService
             .from('perfis')
@@ -330,7 +361,7 @@ app.post('/api/team/add', async (req, res) => {
                 loja_id: perfilSolicitante.loja_id,
                 nome_usuario: nome,
                 role: roleName, 
-                role_id: role_id 
+                role_id: role_id
             });
 
         if (perfilError) {
@@ -338,7 +369,7 @@ app.post('/api/team/add', async (req, res) => {
             throw perfilError;
         }
 
-        res.status(201).json({ mensagem: "Usuário criado!" });
+        res.status(201).json({ mensagem: "Usuário criado com sucesso!" });
 
     } catch (error) {
         console.error(error);
@@ -346,7 +377,44 @@ app.post('/api/team/add', async (req, res) => {
     }
 });
 
+app.delete('/api/team/:id', async (req, res) => {
+    const userIdParaDeletar = req.params.id;
+    const authHeader = req.headers.authorization;
+
+    try {
+        const token = authHeader.split(' ')[1];
+        const { data: { user: userSolicitante } } = await supabaseService.auth.getUser(token);
+
+        const { data: perfilSolicitante } = await supabaseService
+            .from('perfis').select('loja_id, role').eq('user_id', userSolicitante.id).single();
+
+        if (perfilSolicitante.role !== 'admin') {
+            return res.status(403).json({ erro: "Apenas administradores podem remover usuários." });
+        }
+
+        if (userIdParaDeletar === userSolicitante.id) {
+            return res.status(400).json({ erro: "Você não pode se excluir." });
+        }
+
+        const { data: alvo } = await supabaseService
+            .from('perfis').select('loja_id').eq('user_id', userIdParaDeletar).single();
+        
+        if (!alvo || alvo.loja_id !== perfilSolicitante.loja_id) {
+            return res.status(403).json({ erro: "Usuário não pertence à sua loja." });
+        }
+
+        const { error: deleteError } = await supabaseService.auth.admin.deleteUser(userIdParaDeletar);
+        if (deleteError) throw deleteError;
+
+        res.json({ mensagem: "Usuário removido com sucesso." });
+
+    } catch (error) {
+        console.error("Erro ao deletar membro:", error);
+        res.status(500).json({ erro: error.message });
+    }
+});
+
 app.listen(PORTA, '0.0.0.0', () => {
     console.log(`--- Backend rodando na porta ${PORTA} ---`);
-    console.log(`Conectado à API Supabase em: ${supabaseUrl.substring(0, 30)}...`);
+    console.log(`Conectado à API Supabase.`);
 });

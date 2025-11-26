@@ -5,7 +5,6 @@ const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 let elements = {};
 let membroParaExcluir = null;
-let roleParaExcluir = null;
 
 export function initTeamManager(domElements) {
     elements = domElements;
@@ -40,6 +39,7 @@ export function initTeamManager(domElements) {
             elements.formRoleEditor.reset();
             document.getElementById('role-id').value = '';
             document.getElementById('modal-role-title').textContent = 'Criar Novo Cargo';
+            elements.formRoleEditor.querySelectorAll('input[type="checkbox"]').forEach(chk => chk.checked = false);
             openModal(elements.modalRoleEditor);
         });
     }
@@ -71,10 +71,7 @@ async function checkAdminRole() {
         if (!user) return;
 
         const { data: perfil } = await _supabase
-            .from('perfis')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
+            .from('perfis').select('role').eq('user_id', user.id).single();
 
         if (perfil && perfil.role === 'admin') {
             const btnTab = document.getElementById('btn-tab-equipe');
@@ -83,42 +80,46 @@ async function checkAdminRole() {
                 btnTab.addEventListener('click', () => switchSubTab('membros'));
             }
         }
-    } catch (e) {
-        console.error("Erro permissão:", e);
-    }
+    } catch (e) { console.error(e); }
 }
+
 
 async function carregarEquipe() {
     const tbody = document.getElementById('lista-equipe-body');
-    if(!tbody) return;
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando...</td></tr>';
-
     try {
         const { data: { session } } = await _supabase.auth.getSession();
         const response = await fetch(`${BACKEND_API_URL}/api/team`, {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
+        if(!response.ok) throw new Error("Falha na API");
         const equipe = await response.json();
         renderizarTabelaEquipe(equipe);
     } catch (error) {
         console.error(error);
-        tbody.innerHTML = '<tr><td colspan="3" style="color:red;">Erro ao carregar.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Erro ao carregar equipe.</td></tr>';
     }
 }
 
 function renderizarTabelaEquipe(lista) {
     const tbody = document.getElementById('lista-equipe-body');
     tbody.innerHTML = '';
-    if (lista.length === 0) return;
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum membro.</td></tr>';
+        return;
+    }
 
     lista.forEach(membro => {
         const tr = document.createElement('tr');
+        const isMe = false; 
+        const btnRemover = membro.role !== 'admin' 
+            ? `<button class="btn-excluir btn-remove-membro" data-id="${membro.user_id}" data-nome="${membro.nome_usuario}">Remover</button>` 
+            : '';
+
         tr.innerHTML = `
             <td style="padding: 10px;">${membro.nome_usuario || 'Sem nome'}</td>
-            <td style="padding: 10px;">${membro.role || 'Padrão'}</td>
-            <td style="padding: 10px; text-align: center;">
-                ${membro.role !== 'admin' ? `<button class="btn-excluir btn-remove-membro" data-id="${membro.user_id}" data-nome="${membro.nome_usuario}">Remover</button>` : ''}
-            </td>
+            <td style="padding: 10px;">${membro.role || 'Vendedor'}</td>
+            <td style="padding: 10px; text-align: center;">${btnRemover}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -134,7 +135,6 @@ function renderizarTabelaEquipe(lista) {
 
 async function preencherSelectCargos() {
     const select = elements.formAddMembro.querySelector('select[name="role"]');
-    if(!select) return;
     select.innerHTML = '<option>Carregando...</option>';
 
     try {
@@ -145,10 +145,9 @@ async function preencherSelectCargos() {
         const roles = await response.json();
         
         select.innerHTML = '';
-        const optAdmin = new Option('Administrador (Acesso Total)', 'admin'); 
 
         if(roles.length === 0) {
-             select.innerHTML = '<option value="" disabled>Nenhum cargo criado. Crie na aba Permissões.</option>';
+             select.innerHTML += '<option value="" disabled selected>Crie cargos na aba "Cargos" primeiro</option>';
         } else {
             roles.forEach(role => {
                 const option = new Option(role.nome, role.id); 
@@ -156,8 +155,7 @@ async function preencherSelectCargos() {
             });
         }
     } catch (e) {
-        console.error("Erro loading roles:", e);
-        select.innerHTML = '<option value="vendedor">Vendedor (Padrão)</option>';
+        select.innerHTML = '<option value="">Erro ao carregar</option>';
     }
 }
 
@@ -165,6 +163,7 @@ async function handleAddMembro(e) {
     e.preventDefault();
     const btn = elements.formAddMembro.querySelector('button[type="submit"]');
     btn.disabled = true;
+    btn.textContent = "Salvando...";
     
     const formData = new FormData(elements.formAddMembro);
     const dados = {
@@ -193,6 +192,7 @@ async function handleAddMembro(e) {
         showToast(error.message || "Erro", "error");
     } finally {
         btn.disabled = false;
+        btn.textContent = "Criar Usuário";
     }
 }
 
@@ -214,7 +214,7 @@ async function handleExcluirMembro() {
 
 async function carregarCargos() {
     const tbody = document.getElementById('lista-cargos-body');
-    tbody.innerHTML = '<tr><td>Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando...</td></tr>';
     
     try {
         const { data: { session } } = await _supabase.auth.getSession();
@@ -225,6 +225,7 @@ async function carregarCargos() {
         renderizarTabelaCargos(roles);
     } catch (e) {
         console.error(e);
+        tbody.innerHTML = '<tr><td colspan="3" style="color:red;">Erro ao carregar cargos.</td></tr>';
     }
 }
 
@@ -232,37 +233,31 @@ function renderizarTabelaCargos(roles) {
     const tbody = document.getElementById('lista-cargos-body');
     tbody.innerHTML = '';
     if(roles.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3">Nenhum cargo personalizado. Crie um!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum cargo criado.</td></tr>';
         return;
     }
 
     roles.forEach(role => {
-        const permsCount = Object.values(role.permissions || {}).filter(v => v).length;
+        const permsCount = Object.values(role.permissions || {}).filter(v => v === true).length;
         
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding: 10px;"><strong>${role.nome}</strong></td>
             <td style="padding: 10px;">${permsCount} permissões ativas</td>
             <td style="padding: 10px; text-align: center;">
-                <button class="btn-editar btn-edit-role" data-id="${role.id}">Editar</button>
+                <button class="btn-editar btn-edit-role">Editar</button>
                 <button class="btn-excluir btn-delete-role" data-id="${role.id}">Excluir</button>
             </td>
         `;
         tbody.appendChild(tr);
         
-        tr.querySelector('.btn-edit-role').roleData = role;
-    });
-
-    document.querySelectorAll('.btn-edit-role').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const role = e.target.roleData;
-            abrirModalEdicaoRole(role);
-        });
+        const btnEdit = tr.querySelector('.btn-edit-role');
+        btnEdit.addEventListener('click', () => abrirModalEdicaoRole(role));
     });
 
     document.querySelectorAll('.btn-delete-role').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            if(confirm("Excluir este cargo? Usuários com ele perderão acesso.")) {
+            if(confirm("Excluir este cargo?")) {
                 await deleteRole(e.target.dataset.id);
             }
         });
@@ -313,9 +308,9 @@ async function handleSaveRole(e) {
 
         if(!response.ok) throw new Error("Erro ao salvar cargo");
         
-        showToast("Cargo salvo!");
+        showToast("Cargo salvo com sucesso!");
         closeModal(elements.modalRoleEditor);
-        carregarCargos();
+        carregarCargos(); 
 
     } catch (error) {
         showToast("Erro ao salvar.", "error");
