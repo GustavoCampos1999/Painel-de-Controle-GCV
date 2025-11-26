@@ -5,10 +5,10 @@ const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 let elements = {};
 let membroParaExcluir = null;
+let membroEmEdicao = null; 
 
 export function initTeamManager(domElements) {
     elements = domElements;
-    
     elements.btnSubtabMembros = document.getElementById('btn-subtab-membros');
     elements.btnSubtabCargos = document.getElementById('btn-subtab-cargos');
     elements.viewMembros = document.getElementById('view-equipe-membros');
@@ -18,22 +18,25 @@ export function initTeamManager(domElements) {
     elements.formRoleEditor = document.getElementById('form-role-editor');
     elements.btnAbrirModalAddCargo = document.getElementById('btn-abrir-modal-add-cargo');
     elements.btnCancelarRole = document.getElementById('btn-cancelar-role');
-
     if(elements.btnSubtabMembros) elements.btnSubtabMembros.addEventListener('click', () => switchSubTab('membros'));
     if(elements.btnSubtabCargos) elements.btnSubtabCargos.addEventListener('click', () => switchSubTab('cargos'));
-
     if (elements.btnAbrirModalAddMembro) {
         elements.btnAbrirModalAddMembro.addEventListener('click', async () => {
+            membroEmEdicao = null; 
             elements.formAddMembro.reset();
-            await preencherSelectCargos(); 
+            document.querySelector('#modal-add-membro h2').textContent = "Novo Usuário";
+            elements.formAddMembro.querySelector('input[name="email"]').disabled = false;
+            elements.formAddMembro.querySelector('input[name="senha"]').required = true;
+            elements.formAddMembro.querySelector('input[name="senha"]').placeholder = "Mínimo 6 caracteres";
+            
+            await preencherSelectCargos();
             openModal(elements.modalAddMembro);
         });
     }
     if (elements.btnCancelarAddMembro) elements.btnCancelarAddMembro.addEventListener('click', () => closeModal(elements.modalAddMembro));
-    if (elements.formAddMembro) elements.formAddMembro.addEventListener('submit', handleAddMembro);
+    if (elements.formAddMembro) elements.formAddMembro.addEventListener('submit', handleSaveMembro);
     if (elements.btnConfirmarExcluirMembro) elements.btnConfirmarExcluirMembro.addEventListener('click', handleExcluirMembro);
     if (elements.btnCancelarExcluirMembro) elements.btnCancelarExcluirMembro.addEventListener('click', () => closeModal(elements.modalExcluirMembro));
-
     if (elements.btnAbrirModalAddCargo) {
         elements.btnAbrirModalAddCargo.addEventListener('click', () => {
             elements.formRoleEditor.reset();
@@ -45,7 +48,6 @@ export function initTeamManager(domElements) {
     }
     if (elements.btnCancelarRole) elements.btnCancelarRole.addEventListener('click', () => closeModal(elements.modalRoleEditor));
     if (elements.formRoleEditor) elements.formRoleEditor.addEventListener('submit', handleSaveRole);
-
     checkAdminRole();
 }
 
@@ -66,38 +68,33 @@ function switchSubTab(tab) {
 }
 
 async function checkAdminRole() {
+    const btnTab = document.getElementById('btn-tab-equipe');
     try {
         const { data: { user } } = await _supabase.auth.getUser();
         if (!user) return;
-
-        const { data: perfil } = await _supabase
-            .from('perfis').select('role').eq('user_id', user.id).single();
-
+        const { data: perfil } = await _supabase.from('perfis').select('role').eq('user_id', user.id).single();
         if (perfil && perfil.role === 'admin') {
-            const btnTab = document.getElementById('btn-tab-equipe');
             if (btnTab) {
-                btnTab.style.display = 'block'; 
+                btnTab.style.display = 'block';
                 btnTab.addEventListener('click', () => switchSubTab('membros'));
             }
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {}
 }
-
 
 async function carregarEquipe() {
     const tbody = document.getElementById('lista-equipe-body');
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando...</td></tr>';
     try {
         const { data: { session } } = await _supabase.auth.getSession();
         const response = await fetch(`${BACKEND_API_URL}/api/team`, {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
-        if(!response.ok) throw new Error("Falha na API");
         const equipe = await response.json();
         renderizarTabelaEquipe(equipe);
     } catch (error) {
         console.error(error);
-        tbody.innerHTML = '<tr><td colspan="3" style="color:red; text-align:center;">Erro ao carregar equipe.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="color:red;">Erro ao carregar.</td></tr>';
     }
 }
 
@@ -105,28 +102,35 @@ function renderizarTabelaEquipe(lista) {
     const tbody = document.getElementById('lista-equipe-body');
     tbody.innerHTML = '';
     if (lista.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum membro.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4">Nenhum membro.</td></tr>';
         return;
     }
 
     lista.forEach(membro => {
         const tr = document.createElement('tr');
-        const isMe = false; 
-        const btnRemover = membro.role !== 'admin' 
-            ? `<button class="btn-excluir btn-remove-membro" data-id="${membro.user_id}" data-nome="${membro.nome_usuario}">Remover</button>` 
-            : '';
+        const roleDisplay = membro.role_custom_name || membro.role || 'Vendedor';
+        
+        let botoes = '';
+        if (membro.role !== 'admin') {
+            botoes += `<button class="btn-editar btn-edit-membro" style="margin-right:5px;">Editar</button>`;
+            botoes += `<button class="btn-excluir btn-remove-membro">Remover</button>`;
+        } else {
+            botoes = `<span style="color:#888; font-size:12px;">Dono</span>`;
+        }
 
         tr.innerHTML = `
             <td style="padding: 10px;">${membro.nome_usuario || 'Sem nome'}</td>
-            <td style="padding: 10px;">${membro.role || 'Vendedor'}</td>
-            <td style="padding: 10px; text-align: center;">${btnRemover}</td>
+            <td style="padding: 10px;">${roleDisplay}</td>
+            <td style="padding: 10px; text-align: center;">${botoes}</td>
         `;
         tbody.appendChild(tr);
-    });
 
-    document.querySelectorAll('.btn-remove-membro').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            membroParaExcluir = { id: e.target.dataset.id, nome: e.target.dataset.nome };
+        const btnEdit = tr.querySelector('.btn-edit-membro');
+        if(btnEdit) btnEdit.addEventListener('click', () => abrirModalEditarMembro(membro));
+
+        const btnDel = tr.querySelector('.btn-remove-membro');
+        if(btnDel) btnDel.addEventListener('click', () => {
+            membroParaExcluir = { id: membro.user_id, nome: membro.nome_usuario };
             document.getElementById('nome-membro-excluir').textContent = membroParaExcluir.nome;
             openModal(elements.modalExcluirMembro);
         });
@@ -136,30 +140,47 @@ function renderizarTabelaEquipe(lista) {
 async function preencherSelectCargos() {
     const select = elements.formAddMembro.querySelector('select[name="role"]');
     select.innerHTML = '<option>Carregando...</option>';
-
     try {
         const { data: { session } } = await _supabase.auth.getSession();
         const response = await fetch(`${BACKEND_API_URL}/api/roles`, {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         const roles = await response.json();
-        
         select.innerHTML = '';
-
-        if(roles.length === 0) {
-             select.innerHTML += '<option value="" disabled selected>Crie cargos na aba "Cargos" primeiro</option>';
-        } else {
-            roles.forEach(role => {
-                const option = new Option(role.nome, role.id); 
-                select.appendChild(option);
-            });
-        }
+        if(roles.length === 0) select.innerHTML += '<option value="" disabled>Sem cargos criados</option>';
+        roles.forEach(role => {
+            select.appendChild(new Option(role.nome, role.id));
+        });
     } catch (e) {
-        select.innerHTML = '<option value="">Erro ao carregar</option>';
+        select.innerHTML = '<option value="">Erro</option>';
     }
 }
 
-async function handleAddMembro(e) {
+async function abrirModalEditarMembro(membro) {
+    membroEmEdicao = membro.user_id;
+    document.querySelector('#modal-add-membro h2').textContent = "Editar Usuário";
+    
+    const form = elements.formAddMembro;
+    form.reset();
+    
+    form.querySelector('input[name="nome"]').value = membro.nome_usuario;
+    const inputEmail = form.querySelector('input[name="email"]');
+    inputEmail.value = "Email protegido"; 
+    inputEmail.disabled = true; 
+
+    const inputSenha = form.querySelector('input[name="senha"]');
+    inputSenha.required = false;
+    inputSenha.placeholder = "Deixe em branco para manter a atual";
+
+    await preencherSelectCargos();
+    if (membro.role_id) {
+        form.querySelector('select[name="role"]').value = membro.role_id;
+    }
+
+    openModal(elements.modalAddMembro);
+}
+
+async function handleSaveMembro(e) {
     e.preventDefault();
     const btn = elements.formAddMembro.querySelector('button[type="submit"]');
     btn.disabled = true;
@@ -170,13 +191,21 @@ async function handleAddMembro(e) {
         nome: formData.get('nome'),
         email: formData.get('email'),
         senha: formData.get('senha'),
-        role_id: formData.get('role') 
+        role_id: formData.get('role')
     };
 
     try {
         const { data: { session } } = await _supabase.auth.getSession();
-        const response = await fetch(`${BACKEND_API_URL}/api/team/add`, {
-            method: 'POST',
+        let url = `${BACKEND_API_URL}/api/team/add`;
+        let method = 'POST';
+
+        if (membroEmEdicao) {
+            url = `${BACKEND_API_URL}/api/team/${membroEmEdicao}`;
+            method = 'PUT';
+        }
+
+        const response = await fetch(url, {
+            method: method,
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.access_token}`
@@ -184,15 +213,15 @@ async function handleAddMembro(e) {
             body: JSON.stringify(dados)
         });
 
-        if (!response.ok) throw new Error("Erro ao criar");
-        showToast("Membro adicionado!");
+        if (!response.ok) throw new Error("Erro na operação");
+        showToast(membroEmEdicao ? "Atualizado!" : "Criado!");
         closeModal(elements.modalAddMembro);
         carregarEquipe();
     } catch (error) {
-        showToast(error.message || "Erro", "error");
+        showToast("Erro ao salvar.", "error");
     } finally {
         btn.disabled = false;
-        btn.textContent = "Criar Usuário";
+        btn.textContent = "Salvar";
     }
 }
 
@@ -207,15 +236,12 @@ async function handleExcluirMembro() {
         showToast("Removido.");
         closeModal(elements.modalExcluirMembro);
         carregarEquipe();
-    } catch (error) {
-        showToast("Erro ao remover.", "error");
-    }
+    } catch (error) { showToast("Erro ao remover.", "error"); }
 }
 
 async function carregarCargos() {
     const tbody = document.getElementById('lista-cargos-body');
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando...</td></tr>';
-    
+    tbody.innerHTML = '<tr><td>Carregando...</td></tr>';
     try {
         const { data: { session } } = await _supabase.auth.getSession();
         const response = await fetch(`${BACKEND_API_URL}/api/roles`, {
@@ -223,43 +249,33 @@ async function carregarCargos() {
         });
         const roles = await response.json();
         renderizarTabelaCargos(roles);
-    } catch (e) {
-        console.error(e);
-        tbody.innerHTML = '<tr><td colspan="3" style="color:red;">Erro ao carregar cargos.</td></tr>';
-    }
+    } catch (e) { console.error(e); }
 }
 
 function renderizarTabelaCargos(roles) {
     const tbody = document.getElementById('lista-cargos-body');
     tbody.innerHTML = '';
     if(roles.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum cargo criado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3">Sem cargos.</td></tr>';
         return;
     }
-
     roles.forEach(role => {
         const permsCount = Object.values(role.permissions || {}).filter(v => v === true).length;
-        
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding: 10px;"><strong>${role.nome}</strong></td>
-            <td style="padding: 10px;">${permsCount} permissões ativas</td>
+            <td style="padding: 10px;">${permsCount} permissões</td>
             <td style="padding: 10px; text-align: center;">
                 <button class="btn-editar btn-edit-role">Editar</button>
                 <button class="btn-excluir btn-delete-role" data-id="${role.id}">Excluir</button>
             </td>
         `;
         tbody.appendChild(tr);
-        
-        const btnEdit = tr.querySelector('.btn-edit-role');
-        btnEdit.addEventListener('click', () => abrirModalEdicaoRole(role));
+        tr.querySelector('.btn-edit-role').addEventListener('click', () => abrirModalEdicaoRole(role));
     });
-
     document.querySelectorAll('.btn-delete-role').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            if(confirm("Excluir este cargo?")) {
-                await deleteRole(e.target.dataset.id);
-            }
+            if(confirm("Excluir cargo?")) await deleteRole(e.target.dataset.id);
         });
     });
 }
@@ -269,52 +285,34 @@ function abrirModalEdicaoRole(role) {
     form.reset();
     document.getElementById('role-id').value = role.id;
     document.getElementById('role-nome').value = role.nome;
-    document.getElementById('modal-role-title').textContent = `Editar Cargo: ${role.nome}`;
-
+    document.getElementById('modal-role-title').textContent = `Editar: ${role.nome}`;
     const perms = role.permissions || {};
     for (const [key, value] of Object.entries(perms)) {
         const chk = document.getElementById(key);
         if(chk) chk.checked = value;
     }
-    
     openModal(elements.modalRoleEditor);
 }
 
 async function handleSaveRole(e) {
     e.preventDefault();
     const formData = new FormData(elements.formRoleEditor);
-    
     const permissions = {};
     elements.formRoleEditor.querySelectorAll('input[type="checkbox"]').forEach(chk => {
         permissions[chk.id] = chk.checked;
     });
-
-    const dados = {
-        id: formData.get('id') || null,
-        nome: formData.get('nome'),
-        permissions: permissions
-    };
-
+    const dados = { id: formData.get('id') || null, nome: formData.get('nome'), permissions };
     try {
         const { data: { session } } = await _supabase.auth.getSession();
-        const response = await fetch(`${BACKEND_API_URL}/api/roles`, {
+        await fetch(`${BACKEND_API_URL}/api/roles`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
             body: JSON.stringify(dados)
         });
-
-        if(!response.ok) throw new Error("Erro ao salvar cargo");
-        
-        showToast("Cargo salvo com sucesso!");
+        showToast("Salvo!");
         closeModal(elements.modalRoleEditor);
-        carregarCargos(); 
-
-    } catch (error) {
-        showToast("Erro ao salvar.", "error");
-    }
+        carregarCargos();
+    } catch (error) { showToast("Erro.", "error"); }
 }
 
 async function deleteRole(id) {
@@ -325,7 +323,5 @@ async function deleteRole(id) {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         carregarCargos();
-    } catch (e) {
-        showToast("Erro ao excluir.", "error");
-    }
+    } catch (e) { showToast("Erro.", "error"); }
 }
