@@ -790,11 +790,17 @@ function adicionarLinhaTecido(tableBody, estadoLinha = null, isInitialLoad = fal
     preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM", false);
     preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "NENHUM", true);
 
-    const inputLargura = novaLinha.querySelector('.input-largura');
-    inputLargura.addEventListener('blur', () => {
+    const inputAltura = novaLinha.querySelector('.input-altura');
+    inputAltura.addEventListener('blur', () => {
         atualizarOpcoesConfeccao(novaLinha); 
         calcularOrcamentoLinha(novaLinha);   
         setDirty();                          
+    });
+
+    const inputLargura = novaLinha.querySelector('.input-largura');
+    inputLargura.addEventListener('blur', () => {
+        calcularOrcamentoLinha(novaLinha);
+        setDirty();
     });
 
     if (!estadoLinha || !estadoLinha.franzBlackout) {
@@ -1553,11 +1559,14 @@ recalcularTotaisSelecionados();
 updateMoveButtonsVisibility();}
 
 function atualizarOpcoesConfeccao(linha) {
-    const inputLargura = linha.querySelector('.input-largura');
+    const inputAltura = linha.querySelector('.input-altura');
     const selectConfecao = linha.querySelector('.select-confecao');
-    if (!inputLargura || !selectConfecao) return;
+    if (!inputAltura || !selectConfecao) return;
 
-    let larguraTecido = parseFloat(inputLargura.value.replace(',', '.')) || 0;
+    let alturaTecido = parseFloat(inputAltura.value.replace(',', '.')) || 0;
+    
+    const isAlturaEspecial = alturaTecido >= 3.50;
+
     const valorSelecionadoAnterior = selectConfecao.value;
 
     selectConfecao.innerHTML = '';
@@ -1569,16 +1578,14 @@ function atualizarOpcoesConfeccao(linha) {
     const confeccoes = dataRefs.confeccao || [];
     
     confeccoes.forEach(conf => {
-        const limite = parseFloat(conf.limite_largura) || 0;
-        
-        let deveMostrar = true;
-        
-        if (limite > 0) {
-            if (larguraTecido > limite) {
-                deveMostrar = true;
-            } else {
-                deveMostrar = false;
-            }
+        const itemEhEspecial = conf.altura_especial === true;
+
+        let deveMostrar = false;
+
+        if (isAlturaEspecial) {
+            if (itemEhEspecial) deveMostrar = true;
+        } else {
+            if (!itemEhEspecial) deveMostrar = true;
         }
 
         if (deveMostrar) {
@@ -1596,6 +1603,8 @@ function atualizarOpcoesConfeccao(linha) {
             break;
         }
     }
+    
+    if (!opcaoAindaExiste) selectConfecao.value = "-";
 }
 
 function adicionarAba() {

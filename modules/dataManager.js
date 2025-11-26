@@ -202,14 +202,14 @@ function renderizarTabelaConfeccao(opcoes) {
         row.dataset.opcao = d.opcao; 
         row.dataset.valor = d.valor || 0; 
         row.dataset.favorito = d.favorito || false;
-        row.dataset.limite_largura = d.limite_largura || 0; 
+        row.dataset.altura_especial = d.altura_especial; 
 
         const favoritoClass = d.favorito ? 'favorito' : ''; 
         const favoritoIcon = d.favorito ? '★' : '☆';
         
         let regraTexto = '';
-        if (d.limite_largura > 0) {
-            regraTexto = `<br><span style="font-size:11px; color:#e06c6e;">(Maior que ${formatDecimal(d.limite_largura, 2)}m)</span>`;
+        if (d.altura_especial === true) {
+            regraTexto = `<span style="font-size:11px; color:#fff; background:#e06c6e; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">Altura ≥ 3,50m</span>`;
         }
 
         row.innerHTML = `
@@ -251,11 +251,6 @@ function setupCRUD(tabela) {
         }
     }
 
-    if (tabela === 'confeccao') {
-        setupToggleCheckbox('check-add-confeccao-limite', 'container-add-confeccao-limite', 'add-confeccao-limite');
-        setupToggleCheckbox('check-edit-confeccao-limite', 'container-edit-confeccao-limite', 'edit-confeccao-limite');
-    }
-
     const btnAbrirModalAdd = elements[`btnAbrirModalAdd${nomeCapitalizado}`];
     const modalAdd = elements[`modalAdd${nomeCapitalizado}`];
     const formAdd = elements[`formAdd${nomeCapitalizado}`];
@@ -270,17 +265,14 @@ function setupCRUD(tabela) {
     if (btnAbrirModalAdd) btnAbrirModalAdd.addEventListener('click', () => {
         if(formAdd) {
             formAdd.reset();
-            const inputs = formAdd.querySelectorAll('input[name="largura"], input[name="atacado"], input[name="valor"], input[name="limite_largura"]');
-            inputs.forEach(input => input.value = ''); 
+            const inputs = formAdd.querySelectorAll('input[name="largura"], input[name="atacado"], input[name="valor"]');
+            inputs.forEach(input => input.value = '');
+            
+            if (tabela === 'confeccao') {
+                const chk = document.getElementById('add-confeccao-altura-especial');
+                if (chk) chk.checked = false;
+            }
         }
-        
-        if (tabela === 'confeccao') {
-            const chk = document.getElementById('check-add-confeccao-limite');
-            const cont = document.getElementById('container-add-confeccao-limite');
-            if(chk) chk.checked = false;
-            if(cont) cont.classList.add('hidden'); 
-        }
-
         openModal(modalAdd);
     });
 
@@ -290,8 +282,10 @@ function setupCRUD(tabela) {
             const dadosFormulario = getFormData(formAdd, tabela);
             const lojaId = await getMyLojaId(); 
             if (!lojaId) return;
+
             const dadosParaInserir = { ...dadosFormulario, loja_id: lojaId };
             const { error } = await _supabase.from(tabela).insert(dadosParaInserir);
+
             handleSaveResponse(error, modalAdd, tabela, `✅ ${nomeSingular} adicionado(a)!`);
         });
     }
@@ -303,10 +297,13 @@ function setupCRUD(tabela) {
             const dadosFormulario = getFormData(formEdit, tabela);
             const id = formEdit.querySelector(`input[name="id"]`)?.value; 
             if (!id) return;
+
             const lojaId = await getMyLojaId(); 
             if (!lojaId) return;
+
             const updateData = {...dadosFormulario};
             delete updateData.id;
+
             const { error } = await _supabase.from(tabela).update(updateData).match({ id: id, loja_id: lojaId }); 
             handleSaveResponse(error, modalEdit, tabela, `✅ ${nomeSingular} atualizado(a)!`);
         });
@@ -367,22 +364,9 @@ function setupCRUD(tabela) {
                     }
 
                     if (tabela === 'confeccao') {
-                        const limiteVal = parseFloat(row.dataset.limite_largura) || 0;
-                        const chk = document.getElementById('check-edit-confeccao-limite');
-                        const container = document.getElementById('container-edit-confeccao-limite');
-                        const inputLimite = document.getElementById('edit-confeccao-limite');
-
-                        if (chk && container && inputLimite) {
-                            if (limiteVal > 0) {
-                                chk.checked = true;
-                                container.classList.remove('hidden'); 
-                                inputLimite.value = formatDecimal(limiteVal, 3);
-                            } else {
-                                chk.checked = false;
-                                container.classList.add('hidden'); 
-                                inputLimite.value = '';
-                            }
-                        }
+                        const isEspecial = row.dataset.altura_especial === 'true';
+                        const chk = document.getElementById('edit-confeccao-altura-especial');
+                        if (chk) chk.checked = isEspecial;
                     }
                 }
                 openModal(modalEdit);
@@ -396,7 +380,7 @@ function getFormData(form, tabela) {
     const formData = new FormData(form);
     const data = {};
     formData.forEach((value, key) => {
-        if (key === 'largura' || key === 'atacado' || key === 'valor' || key === 'limite_largura') {
+        if (key === 'largura' || key === 'atacado' || key === 'valor') {
             const valorLimpo = String(value).replace('R$', '').trim();
             const valorNumerico = valorLimpo.replace(',', '.');
             data[key] = value === '' ? null : (parseFloat(valorNumerico) || 0);
@@ -404,6 +388,14 @@ function getFormData(form, tabela) {
             data[key] = value;
         }
     });
+
+    if (tabela === 'confeccao') {
+        const chk = form.querySelector('input[name="altura_especial"]');
+        if (chk) {
+            data['altura_especial'] = chk.checked;
+        }
+    }
+
     return data;
 }
 

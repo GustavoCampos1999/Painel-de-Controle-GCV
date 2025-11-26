@@ -582,20 +582,13 @@
     <input type="text" inputmode="decimal" id="add-confeccao-valor" name="valor">
 </div>
 
-<div class="regra-confeccao-wrapper">
-    <div class="regra-header">
-        <input type="checkbox" id="check-add-confeccao-limite" class="regra-checkbox">
-        <label for="check-add-confeccao-limite" class="regra-label-checkbox">Definir regra de largura mínima</label>
-    </div>
-    <div id="container-add-confeccao-limite" class="regra-input-container hidden">
-        <label for="add-confeccao-limite" class="label-hint">Mostrar apenas se largura for MAIOR que:</label>
-        <div class="regra-input-group">
-            <input type="text" inputmode="decimal" id="add-confeccao-limite" name="limite_largura" class="input-pequeno" placeholder="0,00">
-            <span class="texto-unidade">metros</span>
-        </div>
-    </div>
+<div class="checkbox-wrapper-simple">
+    <input type="checkbox" id="add-confeccao-altura-especial" name="altura_especial">
+    <label for="add-confeccao-altura-especial">
+        Exclusivo para Altura ≥ 3,50m
+    </label>
 </div>
-                <div class="modal-actions">
+<div class="modal-actions">
                     <button type="button" id="btn-cancelar-add-confeccao" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar</button>
                 </div>
@@ -613,20 +606,13 @@
     <input type="text" inputmode="decimal" id="edit-confeccao-valor" name="valor">
 </div>
 
-<div class="regra-confeccao-wrapper">
-    <div class="regra-header">
-        <input type="checkbox" id="check-edit-confeccao-limite" class="regra-checkbox">
-        <label for="check-edit-confeccao-limite" class="regra-label-checkbox">Definir regra de largura mínima</label>
-    </div>
-    <div id="container-edit-confeccao-limite" class="regra-input-container hidden">
-        <label for="edit-confeccao-limite" class="label-hint">Mostrar se largura for MAIOR que:</label>
-        <div class="regra-input-group">
-            <input type="text" inputmode="decimal" id="edit-confeccao-limite" name="limite_largura" class="input-pequeno" placeholder="0,00">
-            <span class="texto-unidade">metros</span>
-        </div>
-    </div>
+<div class="checkbox-wrapper-simple">
+    <input type="checkbox" id="edit-confeccao-altura-especial" name="altura_especial">
+    <label for="edit-confeccao-altura-especial">
+        Exclusivo para Altura ≥ 3,50m
+    </label>
 </div>
-                <div class="modal-actions">
+<div class="modal-actions">
                     <button type="button" id="btn-cancelar-edit-confeccao" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar Alterações</button>
                 </div>
