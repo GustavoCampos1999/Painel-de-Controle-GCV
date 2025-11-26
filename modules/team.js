@@ -169,8 +169,10 @@ async function preencherSelectCargos() {
 async function abrirModalEditarMembro(membro) {
     membroEmEdicao = membro.user_id;
     document.querySelector('#modal-add-membro h2').textContent = "Editar Usuário";
+    
     const btnSubmit = elements.formAddMembro.querySelector('button[type="submit"]');
     if(btnSubmit) btnSubmit.textContent = "Salvar Alterações";
+    
     const form = elements.formAddMembro;
     form.reset();
     
@@ -178,7 +180,7 @@ async function abrirModalEditarMembro(membro) {
     
     const inputEmail = form.querySelector('input[name="email"]');
     inputEmail.value = membro.email || ''; 
-    inputEmail.disabled = false;
+    inputEmail.disabled = false; 
 
     const inputSenha = form.querySelector('input[name="senha"]');
     inputSenha.required = false;
@@ -187,18 +189,27 @@ async function abrirModalEditarMembro(membro) {
     await preencherSelectCargos();
     
     const selectRole = form.querySelector('select[name="role"]');
+    
     if (membro.role === 'admin') {
+        if (!selectRole.querySelector('option[value="admin"]')) {
+            const optionAdmin = document.createElement('option');
+            optionAdmin.value = 'admin';
+            optionAdmin.textContent = 'Administrador (Dono)';
+            selectRole.appendChild(optionAdmin);
+        }
         selectRole.value = 'admin';
         selectRole.disabled = true; 
     } else {
         selectRole.disabled = false;
+        const optAdmin = selectRole.querySelector('option[value="admin"]');
+        if(optAdmin) optAdmin.remove();
+
         if (membro.role_id) {
             selectRole.value = membro.role_id;
         } else {
-            selectRole.value = 'vendedor';
+            selectRole.value = ''; 
         }
     }
-
     openModal(elements.modalAddMembro);
 }
 
