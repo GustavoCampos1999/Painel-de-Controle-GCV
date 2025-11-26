@@ -6,6 +6,7 @@ import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, re
 import { initCalculator, showCalculatorView } from './modules/calculator.js'; 
 import { initTeamManager } from './modules/team.js';
 import { loadPermissions } from './modules/permissions.js';
+import { initRealtime } from './modules/realtime.js';
 const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 let tecidosDataGlobal = [];
@@ -276,6 +277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTeamManager(elements);
     await checkUserSession();
     await loadPermissions();
+    initRealtime();
     setupLogoutButton();
     initUI(elements);
     if (elements.btnThemeToggle) {
