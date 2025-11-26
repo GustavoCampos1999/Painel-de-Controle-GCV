@@ -1003,6 +1003,26 @@ body.dark-mode .checkbox-wrapper-simple label {
     color: #e0e0e0;
 }
 
+.tabela-equipe th {
+    background-color: #f1f1f1;
+    font-weight: bold;
+    color: #333;
+}
+.tabela-equipe td {
+    border-bottom: 1px solid #eee;
+}
+.tabela-equipe tr:last-child td {
+    border-bottom: none;
+}
+
+body.dark-mode .tabela-equipe th {
+    background-color: #2a2a2a;
+    color: #fff;
+}
+body.dark-mode .tabela-equipe td {
+    border-bottom-color: #444;
+    color: #e0e0e0;
+}
 @media (max-width: 768px) {
     header {
         flex-direction: column;

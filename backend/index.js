@@ -211,6 +211,141 @@ app.put('/api/orcamentos/:clientId', async (req, res) => {
     }
 });
 
+app.get('/api/roles', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        const { data: { user }, error: errUser } = await supabaseService.auth.getUser(token);
+        if (errUser || !user) return res.status(401).json({ erro: "Token inválido" });
+
+        // Pega loja do usuário
+        const { data: perfil } = await supabaseService
+            .from('perfis').select('loja_id').eq('user_id', user.id).single();
+
+        if (!perfil) return res.status(403).json({ erro: "Perfil não encontrado" });
+
+        const { data: roles, error } = await supabaseService
+            .from('loja_roles')
+            .select('*')
+            .eq('loja_id', perfil.loja_id)
+            .order('nome');
+
+        if (error) throw error;
+        res.json(roles);
+    } catch (error) {
+        console.error("Erro ao buscar cargos:", error);
+        res.status(500).json({ erro: "Erro interno." });
+    }
+});
+
+// Criar ou Editar Cargo
+app.post('/api/roles', async (req, res) => {
+    const { id, nome, permissions } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+
+    try {
+        const { data: { user } } = await supabaseService.auth.getUser(token);
+        const { data: perfil } = await supabaseService
+            .from('perfis').select('loja_id, role').eq('user_id', user.id).single();
+
+        // Apenas Admin pode criar cargos (ou quem tiver permissão especifica 'manage_team')
+        if (perfil.role !== 'admin') return res.status(403).json({ erro: "Apenas admin cria cargos." });
+
+        const dadosRole = {
+            loja_id: perfil.loja_id,
+            nome,
+            permissions
+        };
+
+        let result;
+        if (id) {
+            // Atualizar
+            result = await supabaseService.from('loja_roles').update(dadosRole).eq('id', id).select();
+        } else {
+            // Criar
+            result = await supabaseService.from('loja_roles').insert(dadosRole).select();
+        }
+
+        if (result.error) throw result.error;
+        res.json(result.data[0]);
+
+    } catch (error) {
+        console.error("Erro ao salvar cargo:", error);
+        res.status(500).json({ erro: error.message });
+    }
+});
+
+// Excluir Cargo
+app.delete('/api/roles/:id', async (req, res) => {
+    const { id } = req.params;
+    const token = req.headers.authorization?.split(' ')[1];
+
+    try {
+        const { data: { user } } = await supabaseService.auth.getUser(token);
+        const { data: perfil } = await supabaseService.from('perfis').select('loja_id, role').eq('user_id', user.id).single();
+
+        if (perfil.role !== 'admin') return res.status(403).json({ erro: "Apenas admin exclui cargos." });
+
+        // Verificar se pertence à loja
+        const { error } = await supabaseService.from('loja_roles').delete().match({ id, loja_id: perfil.loja_id });
+        
+        if (error) throw error;
+        res.json({ success: true });
+
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+});
+
+app.post('/api/team/add', async (req, res) => {
+    const { nome, email, senha, role_id } = req.body; 
+    const authHeader = req.headers.authorization;
+
+    if (!nome || !email || !senha || !role_id) {
+        return res.status(400).json({ erro: "Preencha todos os campos." });
+    }
+
+    try {
+        const token = authHeader.split(' ')[1];
+        const { data: { user: userSolicitante } } = await supabaseService.auth.getUser(token);
+        
+        const { data: perfilSolicitante } = await supabaseService
+            .from('perfis').select('loja_id, role').eq('user_id', userSolicitante.id).single();
+
+        if (perfilSolicitante.role !== 'admin') { 
+            return res.status(403).json({ erro: "Sem permissão." });
+        }
+
+        const { data: authUser, error: authError } = await supabaseService.auth.admin.createUser({
+            email, password: senha, email_confirm: true
+        });
+        if (authError) throw authError;
+
+        const { data: roleData } = await supabaseService.from('loja_roles').select('nome').eq('id', role_id).single();
+        const roleName = roleData ? roleData.nome : 'custom';
+
+        const { error: perfilError } = await supabaseService
+            .from('perfis')
+            .insert({
+                user_id: authUser.user.id,
+                loja_id: perfilSolicitante.loja_id,
+                nome_usuario: nome,
+                role: roleName, 
+                role_id: role_id 
+            });
+
+        if (perfilError) {
+            await supabaseService.auth.admin.deleteUser(authUser.user.id);
+            throw perfilError;
+        }
+
+        res.status(201).json({ mensagem: "Usuário criado!" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ erro: error.message });
+    }
+});
+
 app.listen(PORTA, '0.0.0.0', () => {
     console.log(`--- Backend rodando na porta ${PORTA} ---`);
     console.log(`Conectado à API Supabase em: ${supabaseUrl.substring(0, 30)}...`);

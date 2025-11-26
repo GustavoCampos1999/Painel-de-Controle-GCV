@@ -28,6 +28,7 @@
     <nav class="tabs">
         <button class="tab-button active" data-tab="tab-clientes">Clientes & Orçamentos</button>
         <button class="tab-button" data-tab="tab-gerenciar-dados">Gerenciar Dados</button>
+        <button class="tab-button" data-tab="tab-equipe" id="btn-tab-equipe" style="display: none;">Minha Equipe</button>
     </nav>
 
     <main>
@@ -233,7 +234,56 @@
                         </table>
                     </section>
                 </div>
-            </div> </div> </main>
+            </div> </div> 
+       <div id="tab-equipe" class="tab-content">
+    <div class="list-container">
+        <div class="list-header">
+            <h2>Minha Equipe</h2>
+        </div>
+
+        <div class="sub-tabs" style="margin-bottom: 20px; background: transparent; padding-left: 0;">
+            <button class="subtab-button active" id="btn-subtab-membros">Membros</button>
+            <button class="subtab-button" id="btn-subtab-cargos">Cargos & Permissões</button>
+        </div>
+
+        <div id="view-equipe-membros">
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button id="btn-abrir-modal-add-membro" class="btn-adicionar">Adicionar Funcionário</button>
+            </div>
+            <div class="tabela-container">
+                <table class="tabela-equipe" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #eee; text-align: left;">
+                            <th style="padding: 10px;">Nome</th>
+                            <th style="padding: 10px;">Cargo</th>
+                            <th style="padding: 10px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-equipe-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-equipe-cargos" style="display: none;">
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button id="btn-abrir-modal-add-cargo" class="btn-adicionar" style="background-color: #6f42c1;">Criar Novo Cargo</button>
+            </div>
+            <div class="tabela-container">
+                <table class="tabela-equipe" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #eee; text-align: left;">
+                            <th style="padding: 10px;">Nome do Cargo</th>
+                            <th style="padding: 10px;">Resumo Permissões</th>
+                            <th style="padding: 10px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-cargos-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+        </main>
 
     <template id="template-calc-tab">
         <div class="calc-tab" data-index="0">
@@ -773,7 +823,107 @@
                 </div>
             </div>
         </div>
+<div id="modal-add-membro" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Novo Usuário</h2>
+        <form id="form-add-membro">
+            <div><label>Nome:</label><input type="text" name="nome" required></div>
+            <div><label>Email (Login):</label><input type="email" name="email" required></div>
+            <div><label>Senha:</label><input type="password" name="senha" required placeholder="Mínimo 6 caracteres"></div>
+            <div>
+                <label>Permissão:</label>
+                <select name="role" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="vendedor">Vendedor (Apenas Vende)</option>
+                    <option value="admin">Administrador (Acesso Total)</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="btn-cancelar-add-membro" class="btn-cancelar">Cancelar</button>
+                <button type="submit" class="btn-salvar">Criar Usuário</button>
+            </div>
+        </form>
+    </div>
+</div>
 
+<div id="modal-excluir-membro" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Remover Usuário</h2>
+        <p>Tem certeza que deseja remover o acesso de <strong id="nome-membro-excluir"></strong>?</p>
+        <div class="modal-actions">
+            <button type="button" id="btn-cancelar-excluir-membro" class="btn-cancelar">Cancelar</button>
+            <button type="button" id="btn-confirmar-excluir-membro" class="btn-excluir">Remover</button>
+        </div>
+    </div>
+</div>
+<div id="modal-role-editor" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <h2 id="modal-role-title">Configurar Cargo</h2>
+        <form id="form-role-editor">
+            <input type="hidden" name="id" id="role-id">
+            <div style="margin-bottom: 20px;">
+                <label>Nome do Cargo (ex: Gerente, Vendedor Jr)</label>
+                <input type="text" name="nome" id="role-nome" required placeholder="Digite o nome do cargo...">
+            </div>
+
+            <label style="display:block; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px;">Permissões de Acesso:</label>
+            
+            <div class="permissions-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-height: 300px; overflow-y: auto;">
+                
+                <div class="perm-group">
+                    <strong style="color: #931011; font-size: 14px;">Clientes</strong>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_clientes_view" id="perm_clientes_view"> <label for="perm_clientes_view">Ver Clientes</label>
+                    </div>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_clientes_add" id="perm_clientes_add"> <label for="perm_clientes_add">Adicionar</label>
+                    </div>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_clientes_edit" id="perm_clientes_edit"> <label for="perm_clientes_edit">Editar</label>
+                    </div>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_clientes_delete" id="perm_clientes_delete"> <label for="perm_clientes_delete">Excluir</label>
+                    </div>
+                </div>
+
+                <div class="perm-group">
+                    <strong style="color: #931011; font-size: 14px;">Calculadora</strong>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_calc_use" id="perm_calc_use"> <label for="perm_calc_use">Fazer Orçamentos</label>
+                    </div>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_calc_save" id="perm_calc_save"> <label for="perm_calc_save">Salvar Orçamentos</label>
+                    </div>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_calc_config" id="perm_calc_config"> <label for="perm_calc_config">Configurar Markup</label>
+                    </div>
+                </div>
+
+                <div class="perm-group">
+                    <strong style="color: #931011; font-size: 14px;">Gerenciar Dados</strong>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_data_view" id="perm_data_view"> <label for="perm_data_view">Visualizar Tabelas</label>
+                    </div>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_data_edit" id="perm_data_edit"> <label for="perm_data_edit">Adicionar/Editar Itens</label>
+                    </div>
+                </div>
+
+                <div class="perm-group">
+                    <strong style="color: #931011; font-size: 14px;">Administrativo</strong>
+                    <div class="checkbox-wrapper-simple">
+                        <input type="checkbox" name="perm_team_manage" id="perm_team_manage"> <label for="perm_team_manage">Gerenciar Equipe</label>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" id="btn-cancelar-role" class="btn-cancelar">Cancelar</button>
+                <button type="submit" class="btn-salvar">Salvar Permissões</button>
+            </div>
+        </form>
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="script.js"></script>
 </body>

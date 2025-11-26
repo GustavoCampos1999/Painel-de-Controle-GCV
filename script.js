@@ -4,7 +4,7 @@ import { initUI, showToast, openModal, closeModal } from './modules/ui.js';
 import { initCRM, carregarClientes } from './modules/crm.js'; 
 import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js'; 
 import { initCalculator, showCalculatorView } from './modules/calculator.js'; 
-
+import { initTeamManager } from './modules/team.js';
 const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 let tecidosDataGlobal = [];
@@ -262,12 +262,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnCancelarExcluirSecao: document.getElementById('btn-cancelar-excluir-secao'),
         quoteSectionsContainer: document.getElementById('quote-sections-container'),
         sectionControlsContainer: document.getElementById('section-controls'),
-        spanSecaoNomeExcluir: document.getElementById('secao-nome-excluir')
+        spanSecaoNomeExcluir: document.getElementById('secao-nome-excluir'),
+        btnAbrirModalAddMembro: document.getElementById('btn-abrir-modal-add-membro'),
+        modalAddMembro: document.getElementById('modal-add-membro'),
+        formAddMembro: document.getElementById('form-add-membro'),
+        btnCancelarAddMembro: document.getElementById('btn-cancelar-add-membro'),
+        modalExcluirMembro: document.getElementById('modal-excluir-membro'),
+        btnConfirmarExcluirMembro: document.getElementById('btn-confirmar-excluir-membro'),
+        btnCancelarExcluirMembro: document.getElementById('btn-cancelar-excluir-membro')
     };
 
     initCRM(elements);
     initDataManager(elements, dataRefs); 
     initCalculator(elements, calculatorDataRefs, currentClientIdGlobal, isDataLoadedFlag); 
+    initTeamManager(elements);
     await checkUserSession();
     setupLogoutButton();
     initUI(elements);
