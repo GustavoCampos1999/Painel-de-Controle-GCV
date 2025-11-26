@@ -164,9 +164,10 @@ async function abrirModalEditarMembro(membro) {
     form.reset();
     
     form.querySelector('input[name="nome"]').value = membro.nome_usuario;
+    
     const inputEmail = form.querySelector('input[name="email"]');
-    inputEmail.value = "Email protegido"; 
-    inputEmail.disabled = true; 
+    inputEmail.value = membro.email || ''; 
+    inputEmail.disabled = false;
 
     const inputSenha = form.querySelector('input[name="senha"]');
     inputSenha.required = false;
@@ -189,7 +190,7 @@ async function handleSaveMembro(e) {
     const formData = new FormData(elements.formAddMembro);
     const dados = {
         nome: formData.get('nome'),
-        email: formData.get('email'),
+        email: formData.get('email'), 
         senha: formData.get('senha'),
         role_id: formData.get('role')
     };

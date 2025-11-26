@@ -219,19 +219,32 @@ app.get('/api/team', async (req, res) => {
     try {
         const { data: { user } } = await supabaseService.auth.getUser(req.authToken);
         const { data: perfil } = await supabaseService.from('perfis').select('loja_id').eq('user_id', user.id).single();
+        
         if (!perfil) return res.status(403).json({ erro: "Perfil não encontrado" });
 
-        const { data: equipe } = await supabaseService.from('perfis').select('user_id, nome_usuario, role, role_id').eq('loja_id', perfil.loja_id);
+        const { data: equipe } = await supabaseService
+            .from('perfis')
+            .select('user_id, nome_usuario, role, role_id')
+            .eq('loja_id', perfil.loja_id);
         
         const { data: roles } = await supabaseService.from('loja_roles').select('id, nome').eq('loja_id', perfil.loja_id);
         
+        const { data: { users: authUsers } } = await supabaseService.auth.admin.listUsers();
+
         const equipeFinal = equipe.map(membro => {
             const roleCustom = roles.find(r => r.id === membro.role_id);
-            return { ...membro, role_custom_name: roleCustom ? roleCustom.nome : null };
+            const authUser = authUsers.find(u => u.id === membro.user_id);
+            
+            return { 
+                ...membro, 
+                role_custom_name: roleCustom ? roleCustom.nome : null,
+                email: authUser ? authUser.email : 'Email não encontrado' 
+            };
         });
 
         res.json(equipeFinal);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ erro: error.message });
     }
 });
@@ -266,18 +279,24 @@ app.post('/api/team/add', async (req, res) => {
 
 app.put('/api/team/:id', async (req, res) => {
     const userIdAlvo = req.params.id;
-    const { nome, senha, role_id } = req.body;
+    const { nome, email, senha, role_id } = req.body; 
 
     try {
         const { data: { user } } = await supabaseService.auth.getUser(req.authToken);
         const { data: perfilAdmin } = await supabaseService.from('perfis').select('loja_id, role').eq('user_id', user.id).single();
         
         if (perfilAdmin.role !== 'admin') return res.status(403).json({ erro: "Sem permissão." });
+
         const { data: perfilAlvo } = await supabaseService.from('perfis').select('loja_id').eq('user_id', userIdAlvo).single();
         if (!perfilAlvo || perfilAlvo.loja_id !== perfilAdmin.loja_id) return res.status(403).json({ erro: "Usuário inválido." });
 
-        if (senha && senha.length >= 6) {
-            await supabaseService.auth.admin.updateUserById(userIdAlvo, { password: senha });
+        const authUpdates = {};
+        if (senha && senha.length >= 6) authUpdates.password = senha;
+        if (email) authUpdates.email = email; 
+
+        if (Object.keys(authUpdates).length > 0) {
+            const { error: authErr } = await supabaseService.auth.admin.updateUserById(userIdAlvo, authUpdates);
+            if (authErr) throw authErr;
         }
 
         let updates = { nome_usuario: nome };

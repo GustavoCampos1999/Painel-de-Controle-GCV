@@ -1,5 +1,6 @@
 import { _supabase } from '../supabaseClient.js';
 import { showToast, openModal, closeModal } from './ui.js'; 
+import { can } from './permissions.js';
 
 let elements = {};
 let dataArrays = {}; 
@@ -180,11 +181,15 @@ function renderizarTabelaTecidos(tecidos) {
     tbody.innerHTML = '';
     const tecidosFiltrados = (tecidos || []).filter(t => t.produto !== 'SEM TECIDO' && t.produto !== '-');
     if (tecidosFiltrados.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Nenhum tecido encontrado.</td></tr>'; return; }
-
+const podeEditar = can('perm_data_edit');
     tecidosFiltrados.forEach(d => {
         const row = tbody.insertRow();
         row.dataset.id = d.id; row.dataset.produto = d.produto; row.dataset.largura = d.largura || 0; row.dataset.atacado = d.atacado || 0; row.dataset.favorito = d.favorito || false;
         const favoritoClass = d.favorito ? 'favorito' : ''; const favoritoIcon = d.favorito ? '★' : '☆';
+        let botoes = '';
+        if (podeEditar) {
+            botoes = `<button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button>`;
+        }
         row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.produto}</td><td>${formatDecimal(d.largura, 3)}</td><td>R$ ${formatDecimal(d.atacado, 2)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
     });
 }

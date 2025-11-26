@@ -1,5 +1,6 @@
 import { _supabase } from '../supabaseClient.js';
 import { showToast, openModal, closeModal } from './ui.js';
+import { can } from './permissions.js';
 
 let listaClientesEl, inputPesquisaClientesEl, formAddClienteEl, formEditarClienteEl;
 let modalAddClienteEl, modalEditarClienteEl, modalExcluirClienteEl;
@@ -115,38 +116,52 @@ function formatarDataHora(isoString) {
 }
 
 function renderizarListaClientes(clientes) {
-    if (!listaClientesEl) { console.warn("Elemento listaClientes não encontrado."); return; }
+    if (!listaClientesEl) return;
     listaClientesEl.innerHTML = '';
     if (!clientes || clientes.length === 0) {
         listaClientesEl.innerHTML = '<p style="text-align: center; color: #777;">Nenhum cliente encontrado.</p>';
         return;
     }
+
+    const podeEditar = can('perm_clientes_edit');
+    const podeExcluir = can('perm_clientes_delete');
+
     clientes.forEach(cliente => {
         const card = document.createElement('div');
         card.className = `cliente-card ${cliente.venda_realizada ? 'venda-realizada' : ''}`;
-card.dataset.id = cliente.id; card.dataset.nome = cliente.nome; card.dataset.telefone = cliente.telefone || ''; card.dataset.email = cliente.email || ''; card.dataset.endereco = cliente.endereco || ''; card.dataset.created = cliente.created_at || ''; card.dataset.updated = cliente.updated_at || '';
-card.dataset.updated_by_name = cliente.updated_by_name || ''; 
+        card.dataset.id = cliente.id; 
+        card.dataset.nome = cliente.nome; 
 
-const criadoEm = formatarDataHora(cliente.created_at); 
-const atualizadoEm = formatarDataHora(cliente.updated_at);
-const atualizadoPor = cliente.updated_by_name ? ` por ${cliente.updated_by_name}` : ''; 
+        const criadoEm = formatarDataHora(cliente.created_at); 
+        const atualizadoEm = formatarDataHora(cliente.updated_at);
+        const atualizadoPor = cliente.updated_by_name ? ` por ${cliente.updated_by_name}` : ''; 
 
-card.innerHTML = `
-    <div class="card-content">
-        <div class="card-header"><p class="cliente-nome"><strong>${cliente.nome || 'Sem nome'}</strong></p><div class="cliente-timestamps"><span class="timestamp updated">Última Edição: ${atualizadoEm}${atualizadoPor}</span><span class="timestamp created">Criado: ${criadoEm}</span></div></div>
+        let botoesHtml = '';
+        if (podeEditar) botoesHtml += `<button class="btn-editar">Editar</button>`;
+        if (podeExcluir) botoesHtml += `<button class="btn-excluir">Excluir</button>`;
+
+        card.innerHTML = `
+            <div class="card-content">
+                <div class="card-header"><p class="cliente-nome"><strong>${cliente.nome || 'Sem nome'}</strong></p><div class="cliente-timestamps"><span class="timestamp updated">Última Edição: ${atualizadoEm}${atualizadoPor}</span><span class="timestamp created">Criado: ${criadoEm}</span></div></div>
                 <div class="cliente-details"><span>${cliente.telefone || 'Sem telefone'} | ${cliente.email || 'Sem email'}</span><p>${cliente.endereco || 'Sem endereço'}</p></div>
             </div>
-            <div class="cliente-acoes"><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></div>`;
+            <div class="cliente-acoes">${botoesHtml}</div>`; // <--- Injeta botões filtrados
         listaClientesEl.appendChild(card);
     });
 }
 
 function setupAddClienteButton() {
     const button = document.getElementById('btn-abrir-modal-add');
-    if (button) button.addEventListener('click', () => {
-        if(formAddClienteEl) formAddClienteEl.reset();
-        openModal(modalAddClienteEl);
-    });
+    if (button) {
+        if (!can('perm_clientes_add')) {
+            button.style.display = 'none';
+        } else {
+            button.addEventListener('click', () => {
+                if(formAddClienteEl) formAddClienteEl.reset();
+                openModal(modalAddClienteEl);
+            });
+        }
+    }
 }
 
 function setupAddClienteForm() {
