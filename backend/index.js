@@ -361,4 +361,48 @@ app.get('/api/me/permissions', async (req, res) => {
     }
 });
 
+app.get('/api/config/taxas', async (req, res) => {
+    try {
+        const { data: { user } } = await supabaseService.auth.getUser(req.authToken);
+        const { data: perfil } = await supabaseService.from('perfis').select('loja_id').eq('user_id', user.id).single();
+        
+        if (!perfil) return res.status(403).json({ erro: "Perfil não encontrado" });
+
+        const { data } = await supabaseService
+            .from('loja_taxas')
+            .select('taxas')
+            .eq('loja_id', perfil.loja_id)
+            .single();
+
+        res.json(data ? data.taxas : null);
+    } catch (error) {
+        console.error("Erro GET taxas:", error);
+        res.status(500).json({ erro: "Erro ao buscar taxas." });
+    }
+});
+
+app.post('/api/config/taxas', async (req, res) => {
+    const { taxas } = req.body;
+    try {
+        const { data: { user } } = await supabaseService.auth.getUser(req.authToken);
+        const { data: perfil } = await supabaseService.from('perfis').select('loja_id, role').eq('user_id', user.id).single();
+
+        if (!perfil) return res.status(403).json({ erro: "Sem permissão." });
+
+        const { error } = await supabaseService
+            .from('loja_taxas')
+            .upsert({ 
+                loja_id: perfil.loja_id, 
+                taxas: taxas,
+                updated_at: new Date()
+            }, { onConflict: 'loja_id' });
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Erro POST taxas:", error);
+        res.status(500).json({ erro: error.message });
+    }
+});
+
 app.listen(PORTA, '0.0.0.0', () => console.log(`Backend on ${PORTA}`));

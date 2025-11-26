@@ -25,10 +25,15 @@ export function initTeamManager(domElements) {
             membroEmEdicao = null; 
             elements.formAddMembro.reset();
             document.querySelector('#modal-add-membro h2').textContent = "Novo Usuário";
+            const btnSubmit = elements.formAddMembro.querySelector('button[type="submit"]');
+            if(btnSubmit) btnSubmit.textContent = "Criar Usuário";
             elements.formAddMembro.querySelector('input[name="email"]').disabled = false;
             elements.formAddMembro.querySelector('input[name="senha"]').required = true;
             elements.formAddMembro.querySelector('input[name="senha"]').placeholder = "Mínimo 6 caracteres";
-            
+        
+            const selectRole = elements.formAddMembro.querySelector('select[name="role"]');
+            if(selectRole) selectRole.disabled = false;
+
             await preencherSelectCargos();
             openModal(elements.modalAddMembro);
         });
@@ -115,7 +120,7 @@ function renderizarTabelaEquipe(lista) {
             botoes += `<button class="btn-editar btn-edit-membro" style="margin-right:5px;">Editar</button>`;
             botoes += `<button class="btn-excluir btn-remove-membro">Remover</button>`;
         } else {
-            botoes = `<span style="color:#888; font-size:12px;">Dono</span>`;
+            botoes += `<button class="btn-editar btn-edit-membro" style="margin-right:5px;">Editar</button>`;
         }
 
         tr.innerHTML = `
@@ -146,20 +151,26 @@ async function preencherSelectCargos() {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         const roles = await response.json();
+        
         select.innerHTML = '';
-        if(roles.length === 0) select.innerHTML += '<option value="" disabled>Sem cargos criados</option>';
+        
+        if (roles.length === 0) {
+             select.innerHTML = '<option value="">Nenhum cargo criado</option>';
+        }
+
         roles.forEach(role => {
             select.appendChild(new Option(role.nome, role.id));
         });
     } catch (e) {
-        select.innerHTML = '<option value="">Erro</option>';
+        select.innerHTML = '<option value="">Erro ao carregar cargos</option>';
     }
 }
 
 async function abrirModalEditarMembro(membro) {
     membroEmEdicao = membro.user_id;
     document.querySelector('#modal-add-membro h2').textContent = "Editar Usuário";
-    
+    const btnSubmit = elements.formAddMembro.querySelector('button[type="submit"]');
+    if(btnSubmit) btnSubmit.textContent = "Salvar Alterações";
     const form = elements.formAddMembro;
     form.reset();
     
@@ -174,8 +185,18 @@ async function abrirModalEditarMembro(membro) {
     inputSenha.placeholder = "Deixe em branco para manter a atual";
 
     await preencherSelectCargos();
-    if (membro.role_id) {
-        form.querySelector('select[name="role"]').value = membro.role_id;
+    
+    const selectRole = form.querySelector('select[name="role"]');
+    if (membro.role === 'admin') {
+        selectRole.value = 'admin';
+        selectRole.disabled = true; 
+    } else {
+        selectRole.disabled = false;
+        if (membro.role_id) {
+            selectRole.value = membro.role_id;
+        } else {
+            selectRole.value = 'vendedor';
+        }
     }
 
     openModal(elements.modalAddMembro);
@@ -194,6 +215,12 @@ async function handleSaveMembro(e) {
         senha: formData.get('senha'),
         role_id: formData.get('role')
     };
+    
+    const selectRole = elements.formAddMembro.querySelector('select[name="role"]');
+    if (selectRole.disabled && selectRole.value === 'admin') {
+         dados.role_id = null; 
+         delete dados.role_id;
+    }
 
     try {
         const { data: { session } } = await _supabase.auth.getSession();

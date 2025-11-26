@@ -145,7 +145,7 @@ function renderizarListaClientes(clientes) {
                 <div class="card-header"><p class="cliente-nome"><strong>${cliente.nome || 'Sem nome'}</strong></p><div class="cliente-timestamps"><span class="timestamp updated">Última Edição: ${atualizadoEm}${atualizadoPor}</span><span class="timestamp created">Criado: ${criadoEm}</span></div></div>
                 <div class="cliente-details"><span>${cliente.telefone || 'Sem telefone'} | ${cliente.email || 'Sem email'}</span><p>${cliente.endereco || 'Sem endereço'}</p></div>
             </div>
-            <div class="cliente-acoes">${botoesHtml}</div>`; // <--- Injeta botões filtrados
+            <div class="cliente-acoes">${botoesHtml}</div>`; 
         listaClientesEl.appendChild(card);
     });
 }
@@ -153,16 +153,12 @@ function renderizarListaClientes(clientes) {
 function setupAddClienteButton() {
     const button = document.getElementById('btn-abrir-modal-add');
     if (button) {
-        if (!can('perm_clientes_add')) {
-            button.style.display = 'none';
-        } else {
             button.addEventListener('click', () => {
                 if(formAddClienteEl) formAddClienteEl.reset();
                 openModal(modalAddClienteEl);
             });
         }
     }
-}
 
 function setupAddClienteForm() {
     if (!formAddClienteEl) return;

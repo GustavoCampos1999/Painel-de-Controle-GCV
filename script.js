@@ -5,6 +5,7 @@ import { initCRM, carregarClientes } from './modules/crm.js';
 import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js'; 
 import { initCalculator, showCalculatorView } from './modules/calculator.js'; 
 import { initTeamManager } from './modules/team.js';
+import { loadPermissions } from './modules/permissions.js';
 const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 let tecidosDataGlobal = [];
@@ -123,9 +124,6 @@ async function buscarDadosBaseDoBackend() {
         acc[key] = valor;
         return acc;
      }, {});
-     if (!calculatorDataRefs.frete.hasOwnProperty('R$ 0,00')) {
-       calculatorDataRefs.frete['SEM FRETE'] = 0; 
-     }
 
     calculatorDataRefs.instalacao = (dados.instalacao || []).reduce((acc, item) => {
         const valor = item.valor || 0;
@@ -277,6 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initCalculator(elements, calculatorDataRefs, currentClientIdGlobal, isDataLoadedFlag); 
     initTeamManager(elements);
     await checkUserSession();
+    await loadPermissions();
     setupLogoutButton();
     initUI(elements);
     if (elements.btnThemeToggle) {

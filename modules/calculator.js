@@ -1,16 +1,18 @@
 import { showToast, openModal, closeModal } from './ui.js';
 import { _supabase } from '../supabaseClient.js'; 
+import { can } from './permissions.js';
 
 const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 const DADOS_FRANZ_CORTINA = ["3.0", "2.8", "2.5", "2.0", "1.5", "1.2", "1.0"];
 const DADOS_FRANZ_BLACKOUT = ["2.5", "2.0", "1.5", "1.2", "1.0"];
-const TAXAS_PARCELAMENTO = {
+const TAXAS_PADRAO = {
     'DÉBITO': 0.0099, '1x': 0.0299, '2x': 0.0409, '3x': 0.0478, '4x': 0.0547, '5x': 0.0614, 
     '6x': 0.0681, '7x': 0.0767, '8x': 0.0833, '9x': 0.0898, '10x': 0.0963, '11x': 0.1026,
     '12x': 0.1090, '13x': 0.1152, '14x': 0.1214, '15x': 0.1276, '16x': 0.1337, '17x': 0.1397,
     '18x': 0.1457
 };
+let TAXAS_PARCELAMENTO = { ...TAXAS_PADRAO };
 const DADOS_MODELO_CORTINA = [
     "CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", 
     "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", 
@@ -157,10 +159,203 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     dataRefs = dataArrays;
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
+    carregarTaxasDoBanco();
+    const btnConfigTaxas = document.getElementById('btn-config-taxas');
+    const modalConfigTaxas = document.getElementById('modal-config-taxas');
+    const formConfigTaxas = document.getElementById('form-config-taxas');
+    const btnCancelarTaxas = document.getElementById('btn-cancelar-taxas');
+    const btnRestaurarTaxas = document.getElementById('btn-restaurar-taxas');
+
+    if (btnConfigTaxas) {
+        btnConfigTaxas.addEventListener('click', () => {
+            if (!can('perm_calc_taxas')) {
+                showToast("Sem permissão para configurar taxas.", "error");
+                return;
+            }
+            abrirModalTaxas();
+        });
+    }
+
+    if (btnCancelarTaxas) btnCancelarTaxas.addEventListener('click', () => closeModal(modalConfigTaxas));
     
+    if (btnRestaurarTaxas) {
+        btnRestaurarTaxas.addEventListener('click', async () => {
+            if(confirm("Isso apagará as taxas personalizadas e voltará ao padrão do sistema. Continuar?")) {
+                TAXAS_PARCELAMENTO = { ...TAXAS_PADRAO };
+                await salvarNovasTaxasNoBanco(TAXAS_PADRAO); 
+                preencherSelectParcelamento();
+                recalcularParceladoAmorimToldos();
+                recalcularTotaisSelecionados();
+                closeModal(modalConfigTaxas);
+                showToast("Taxas padrão restauradas.");
+            }
+        });
+    }
+
+    if (formConfigTaxas) {
+        formConfigTaxas.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await aplicarEdicaoTaxas();
+        });
+    }
+}
+async function carregarTaxasDoBanco() {
+    try {
+        const token = await getAuthToken();
+        if (!token) return;
+
+        const response = await fetch(`${BACKEND_API_URL}/api/config/taxas`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const taxasSalvas = await response.json();
+            if (taxasSalvas) {
+                console.log("Taxas personalizadas carregadas do banco.");
+                TAXAS_PARCELAMENTO = taxasSalvas;
+                preencherSelectParcelamento(); 
+            }
+        }
+    } catch (e) {
+        console.error("Erro ao carregar taxas:", e);
+    }
+}
+
+function abrirModalTaxas() {
+    const container = document.getElementById('container-inputs-taxas');
+    const modal = document.getElementById('modal-config-taxas');
+    if (!container || !modal) return;
+
+    container.innerHTML = '';
+
+    const chaves = Object.keys(TAXAS_PARCELAMENTO);
+    chaves.sort((a, b) => {
+        if (a === 'DÉBITO') return -1;
+        if (b === 'DÉBITO') return 1;
+        const numA = parseInt(a.replace('x','')) || 0;
+        const numB = parseInt(b.replace('x','')) || 0;
+        return numA - numB;
+    });
+
+    chaves.forEach(chave => {
+        const valorDecimal = TAXAS_PARCELAMENTO[chave];
+        const valorPercentual = (valorDecimal * 100).toFixed(2).replace('.', ',');
+
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.flexDirection = 'column';
+        
+        const label = document.createElement('label');
+        label.textContent = chave;
+        label.style.fontWeight = 'bold';
+        label.style.fontSize = '12px';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.name = `taxa_${chave}`;
+        input.value = valorPercentual;
+        input.style.padding = '5px';
+        input.style.border = '1px solid #ccc';
+        input.style.borderRadius = '4px';
+        
+        input.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9,.]/g, '');
+        });
+
+        div.appendChild(label);
+        div.appendChild(input);
+        container.appendChild(div);
+    });
+
+    openModal(modal);
+}
+
+async function aplicarEdicaoTaxas() {
+    const container = document.getElementById('container-inputs-taxas');
+    const inputs = container.querySelectorAll('input');
+    const btnSalvar = document.querySelector('#form-config-taxas .btn-salvar');
+    
+    let novasTaxas = {};
+    let erro = false;
+
+    inputs.forEach(input => {
+        const chave = input.name.replace('taxa_', '');
+        let valorStr = input.value.replace(',', '.'); 
+        let valorNum = parseFloat(valorStr);
+
+        if (isNaN(valorNum)) {
+            erro = true;
+        } else {
+            novasTaxas[chave] = valorNum / 100;
+        }
+    });
+
+    if (erro) {
+        showToast("Verifique os valores inseridos.", "error");
+        return;
+    }
+
+    if (btnSalvar) {
+        btnSalvar.textContent = "Salvando...";
+        btnSalvar.disabled = true;
+    }
+
+    const sucesso = await salvarNovasTaxasNoBanco(novasTaxas);
+
+    if (btnSalvar) {
+        btnSalvar.textContent = "Salvar Taxas";
+        btnSalvar.disabled = false;
+    }
+
+    if (sucesso) {
+        TAXAS_PARCELAMENTO = novasTaxas;
+        preencherSelectParcelamento();
+        recalcularParceladoAmorimToldos(); 
+        recalcularTotaisSelecionados();
+        closeModal(document.getElementById('modal-config-taxas'));
+        showToast("Taxas atualizadas com sucesso!");
+    }
+}
+
+async function salvarNovasTaxasNoBanco(taxas) {
+    try {
+        const token = await getAuthToken();
+        if (!token) return false;
+
+        const response = await fetch(`${BACKEND_API_URL}/api/config/taxas`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ taxas })
+        });
+
+        if (!response.ok) throw new Error("Erro na API");
+        return true;
+    } catch (error) {
+        console.error("Erro ao salvar taxas:", error);
+        showToast("Erro ao salvar taxas no servidor.", "error");
+        return false;
+    }
+}
     if (elements.btnVoltarClientes) {
         elements.btnVoltarClientes.addEventListener('click', async () => {
             if (isDirty) {
+                const modalTitle = elements.modalConfirmSair.querySelector('h2');
+                const modalText = elements.modalConfirmSair.querySelector('p');
+                const btnSalvarSair = elements.btnSalvarESair;
+
+                if (!can('perm_calc_save')) {
+                    modalTitle.textContent = "Sem Permissão";
+                    modalText.textContent = "Você não tem permissão para salvar. Deseja sair sem salvar?";
+                    if(btnSalvarSair) btnSalvarSair.style.display = 'none'; 
+                } else {
+                    modalTitle.textContent = "Alterações não salvas";
+                    modalText.textContent = "Você possui alterações não salvas. Deseja realmente sair sem salvar?";
+                    if(btnSalvarSair) btnSalvarSair.style.display = 'inline-block'; 
+                }
+                
                 openModal(elements.modalConfirmSair);
             } else {
                 window.location.hash = '';
@@ -208,6 +403,11 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
 
     if (elements.btnManualSave) {
         elements.btnManualSave.addEventListener('click', async () => {
+            if (!can('perm_calc_save')) {
+                showToast("Sem permissão para salvar orçamento.", "error");
+                return;
+            }
+
             if (!currentClientIdRef.value) {
                 console.log("Save: Nenhum cliente selecionado.");
                 return;
@@ -224,11 +424,12 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             elements.btnManualSave.disabled = false;
         });
     }
-if (elements.btnPrintOrcamento) {
-    elements.btnPrintOrcamento.addEventListener('click', () => {
-        window.print();
-    });
-}
+
+    if (elements.btnPrintOrcamento) {
+        elements.btnPrintOrcamento.addEventListener('click', () => {
+            window.print();
+        });
+    }
     if (elements.btnConfirmarSair) {
         elements.btnConfirmarSair.addEventListener('click', () => {
             isDirty = false; 
@@ -244,6 +445,11 @@ if (elements.btnPrintOrcamento) {
     
     if (elements.btnSalvarESair) {
         elements.btnSalvarESair.addEventListener('click', async () => {
+            if (!can('perm_calc_save')) {
+                showToast("Sem permissão para salvar.", "error");
+                return;
+            }
+
             elements.btnSalvarESair.disabled = true;
             elements.btnConfirmarSair.disabled = true;
             elements.btnCancelarSair.disabled = true;
@@ -264,13 +470,13 @@ if (elements.btnPrintOrcamento) {
     }
 
     if (elements.selectParcelamentoGlobal) {
-    elements.selectParcelamentoGlobal.addEventListener('change', () => {
-         atualizarHeaderParcelado();
-         recalcularParceladoAmorimToldos(); 
-         recalcularTotaisSelecionados(); 
-         setDirty();
-    });
-}
+        elements.selectParcelamentoGlobal.addEventListener('change', () => {
+             atualizarHeaderParcelado();
+             recalcularParceladoAmorimToldos(); 
+             recalcularTotaisSelecionados(); 
+             setDirty();
+        });
+    }
 
     setupCurrencyFormatting(elements.inputValorEntradaGlobal);
 
@@ -326,7 +532,7 @@ if (elements.btnPrintOrcamento) {
             abaParaExcluir = { index: null, element: null };
         });
     }
-if (elements.chkSummaryVendaRealizada) {
+    if (elements.chkSummaryVendaRealizada) {
         elements.chkSummaryVendaRealizada.addEventListener('change', () => {
             if (abaAtivaIndex < 0 || abaAtivaIndex >= estadoAbas.length) return;
             
@@ -354,7 +560,6 @@ if (elements.chkSummaryVendaRealizada) {
             closeModal(elements.modalConfigCalculadora);
         });
     }
-}
 function executarExclusaoSecao() {
     if (secaoParaExcluir && secaoParaExcluir.element && secaoParaExcluir.button) {
         secaoParaExcluir.element.remove();
@@ -408,6 +613,10 @@ function addSection(sectionType, buttonElement, isInitialLoad = false) {
         const btnConfig = sectionElement.querySelector('.btn-abrir-config-calculadora');
         if (btnConfig) {
             btnConfig.addEventListener('click', () => {
+                if (!can('perm_calc_config')) { 
+                    showToast("Sem permissão para configurar markup.", "error");
+                    return;
+                }
                 if (elements.modalConfigCalculadora) {
                     openModal(elements.modalConfigCalculadora);
                 }
@@ -415,7 +624,7 @@ function addSection(sectionType, buttonElement, isInitialLoad = false) {
         }
     }
 
-if (btnMoveUp) {
+    if (btnMoveUp) {
     btnMoveUp.addEventListener('click', () => {
         const prev = sectionElement.previousElementSibling;
         if (prev) {
@@ -554,6 +763,7 @@ if (btnMoveDown) {
         setDirty();
     }
 }
+
 function calcularParceladoLinhaAmorim(linha, taxaParcelamento) {
     if (!linha) return;
 
@@ -1345,13 +1555,9 @@ async function salvarEstadoCalculadora(clientId) {
         showToast(`Erro ao salvar: ${error.message}`, "error"); 
     }
 }
-
 async function carregarEstadoCalculadora(clientId) {
     isDirty = false; 
-    if (elements.btnManualSave) { 
-        elements.btnManualSave.classList.add('hidden');
-    }
-    
+    if (elements.btnManualSave) elements.btnManualSave.classList.add('hidden');
     if (elements.saveStatusMessage) {
         elements.saveStatusMessage.textContent = '';
         elements.saveStatusMessage.className = 'save-status-message';
@@ -1369,14 +1575,11 @@ async function carregarEstadoCalculadora(clientId) {
 
         const response = await fetch(`${BACKEND_API_URL}/api/orcamentos/${clientId}`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}` 
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (!response.ok) {
              if (response.status === 404) {
-                console.log("Nenhum orçamento salvo. Criando novo.");
                 if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
                 if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = 'DÉBITO';
                 
@@ -1384,41 +1587,21 @@ async function carregarEstadoCalculadora(clientId) {
                 abaAtivaIndex = 0;
                 
              } else {
-                 const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido ao carregar orçamento.' }));
-                 console.error('Erro da API ao carregar:', response.status, errorData);
-                 throw new Error(errorData.erro || errorData.message || 'Erro API carregar.');
+                 throw new Error(`Erro na API: ${response.status}`);
              }
         } else {
             const estado = await response.json();
 
             if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = estado.markup || '100';
-            if(elements.selectParcelamentoGlobal) {
-                elements.selectParcelamentoGlobal.value = estado.parcelamento || 'DÉBITO'; 
-            }
+            if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = estado.parcelamento || 'DÉBITO'; 
             if(elements.selectFreteGlobal) elements.selectFreteGlobal.value = estado.frete || '0';
             if(elements.inputValorEntradaGlobal) elements.inputValorEntradaGlobal.value = estado.entrada || '';
+            
             if (estado && Array.isArray(estado.abas) && estado.abas.length > 0) {
                 estadoAbas = estado.abas;
-                estadoAbas.forEach(aba => {
-                    if (aba.venda_realizada === undefined) {
-                        aba.venda_realizada = false;
-                    }
-                });
+                estadoAbas.forEach(aba => { if (aba.venda_realizada === undefined) aba.venda_realizada = false; });
                 abaAtivaIndex = 0; 
-                
-            } else if (estado && Array.isArray(estado.ambientes)) {
-                console.log("Migrando orçamento de formato antigo...");
-                estadoAbas = [{ 
-                    nome: "Principal", 
-                    sections: { 
-                        'tecido': { active: true, ambientes: estado.ambientes } 
-                    }, 
-                    venda_realizada: false 
-                }];
-                abaAtivaIndex = 0;
-                
             } else {
-                console.log("Orçamento salvo vazio ou inválido. Criando novo.");
                 estadoAbas = [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
                 abaAtivaIndex = 0;
             }
@@ -1426,18 +1609,12 @@ async function carregarEstadoCalculadora(clientId) {
         
         renderizarTabs(); 
         ativarAba(abaAtivaIndex, true); 
-        
-        if (elements.saveStatusMessage) { elements.saveStatusMessage.textContent = ''; }
 
     } catch (error) {
-        console.error("Erro ao carregar estado da calculadora:", error.message);
-        if (elements.saveStatusMessage) {
-            elements.saveStatusMessage.textContent = 'Erro ao carregar.';
-            elements.saveStatusMessage.className = 'save-status-message error';
-        }
-        showToast(`Erro ao carregar orçamento: ${error.message}`, "error"); 
-        
-        estadoAbas = [{ nome: "Orçamento 1 (Erro)", sections: {}, venda_realizada: false }];
+        console.error("Erro ao carregar estado:", error.message);
+        showToast("Erro ao carregar dados. Verifique sua conexão.", "error");
+    
+        estadoAbas = [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
         abaAtivaIndex = 0;
         renderizarTabs();
         ativarAba(0, true); 

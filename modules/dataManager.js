@@ -83,15 +83,17 @@ function setupInputFormatting(inputId, formatType) {
 function initDataManager(domElements, dataRefs) {
     elements = domElements;
     dataArrays = dataRefs; 
+
     setupCRUD('tecidos');
-    setupPesquisa('tecidos', 'produto');
     setupCRUD('confeccao');
-    setupPesquisa('confeccao', 'opcao');
     setupCRUD('trilho');
-    setupPesquisa('trilho', 'opcao');
     setupCRUD('frete');
-    setupPesquisa('frete', 'opcao'); 
     setupCRUD('instalacao');
+
+    setupPesquisa('tecidos', 'produto');
+    setupPesquisa('confeccao', 'opcao');
+    setupPesquisa('trilho', 'opcao');
+    setupPesquisa('frete', 'opcao'); 
     setupPesquisa('instalacao', 'opcao'); 
 
     setupInputFormatting('add-tecido-largura', 'measure');
@@ -106,25 +108,8 @@ function initDataManager(domElements, dataRefs) {
     setupInputFormatting('edit-frete-valor', 'currency');
     setupInputFormatting('add-instalacao-valor', 'currency');
     setupInputFormatting('edit-instalacao-valor', 'currency');
-setupInputFormatting('add-confeccao-limite', 'measure'); 
-setupInputFormatting('edit-confeccao-limite', 'measure');
-}
-
-function setupToggleCheckbox(checkboxId, containerId, inputId) {
-    const chk = document.getElementById(checkboxId);
-    const container = document.getElementById(containerId);
-    const input = document.getElementById(inputId);
-    
-    if(!chk || !container) return;
-
-    chk.addEventListener('change', () => {
-        if(chk.checked) {
-            container.classList.remove('hidden'); 
-        } else {
-            container.classList.add('hidden'); 
-            if(input) input.value = ''; 
-        }
-    });
+    setupInputFormatting('add-confeccao-limite', 'measure'); 
+    setupInputFormatting('edit-confeccao-limite', 'measure');
 }
 
 function getRenderFunction(tabela) { 
@@ -137,12 +122,26 @@ function getRenderFunction(tabela) {
         default: return null;
     }
 }
+
+function gerarBotoesAcao() {
+    let html = '';
+    if (can('perm_data_edit')) {
+        html += `<button class="btn-editar">Editar</button>`;
+    }
+    if (can('perm_data_delete')) {
+        html += `<button class="btn-excluir">Excluir</button>`;
+    }
+    return html;
+}
+
 function renderizarTabelaFrete(opcoes) { 
-     const tbody = elements.tabelaFreteBody;
-     if (!tbody) return;
+    const tbody = elements.tabelaFreteBody;
+    if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
     if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="2">Nenhuma opção encontrada.</td></tr>'; return; }
+    
+    const botoes = gerarBotoesAcao();
 
     filtradas.forEach(d => {
         const row = tbody.insertRow();
@@ -153,15 +152,18 @@ function renderizarTabelaFrete(opcoes) {
         row.innerHTML = `
             ${opcaoTd}
             <td>R$ ${formatDecimal(d.valor, 2)}</td>
-            <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+            <td>${botoes}</td>`;
     });
 }
+
 function renderizarTabelaInstalacao(opcoes) { 
-     const tbody = elements.tabelaInstalacaoBody;
-     if (!tbody) return;
+    const tbody = elements.tabelaInstalacaoBody;
+    if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
-   if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="2">Nenhuma opção encontrada.</td></tr>'; return; }
+    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="2">Nenhuma opção encontrada.</td></tr>'; return; }
+   
+    const botoes = gerarBotoesAcao();
 
     filtradas.forEach(d => {
         const row = tbody.insertRow();
@@ -172,25 +174,25 @@ function renderizarTabelaInstalacao(opcoes) {
         row.innerHTML = `
              ${opcaoTd}
             <td>R$ ${formatDecimal(d.valor, 2)}</td>
-            <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+            <td>${botoes}</td>`;
     });
 }
+
 function renderizarTabelaTecidos(tecidos) { 
     const tbody = elements.tabelaTecidosBody;
     if (!tbody) return;
     tbody.innerHTML = '';
     const tecidosFiltrados = (tecidos || []).filter(t => t.produto !== 'SEM TECIDO' && t.produto !== '-');
     if (tecidosFiltrados.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Nenhum tecido encontrado.</td></tr>'; return; }
-const podeEditar = can('perm_data_edit');
+
+    const botoes = gerarBotoesAcao();
+
     tecidosFiltrados.forEach(d => {
         const row = tbody.insertRow();
         row.dataset.id = d.id; row.dataset.produto = d.produto; row.dataset.largura = d.largura || 0; row.dataset.atacado = d.atacado || 0; row.dataset.favorito = d.favorito || false;
         const favoritoClass = d.favorito ? 'favorito' : ''; const favoritoIcon = d.favorito ? '★' : '☆';
-        let botoes = '';
-        if (podeEditar) {
-            botoes = `<button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button>`;
-        }
-        row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.produto}</td><td>${formatDecimal(d.largura, 3)}</td><td>R$ ${formatDecimal(d.atacado, 2)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+        
+        row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.produto}</td><td>${formatDecimal(d.largura, 3)}</td><td>R$ ${formatDecimal(d.atacado, 2)}</td><td>${botoes}</td>`;
     });
 }
 
@@ -200,6 +202,8 @@ function renderizarTabelaConfeccao(opcoes) {
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
     if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Nenhuma opção encontrada.</td></tr>'; return; }
+
+    const botoes = gerarBotoesAcao();
 
     filtradas.forEach(d => {
         const row = tbody.insertRow();
@@ -221,22 +225,24 @@ function renderizarTabelaConfeccao(opcoes) {
             <td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td>
             <td>${d.opcao} ${regraTexto}</td>
             <td>R$ ${formatDecimal(d.valor, 2)}</td>
-            <td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+            <td>${botoes}</td>`;
     });
 }
 
 function renderizarTabelaTrilho(opcoes) { 
-     const tbody = elements.tabelaTrilhoBody;
-     if (!tbody) return;
+    const tbody = elements.tabelaTrilhoBody;
+    if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
     if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Nenhuma opção encontrada.</td></tr>'; return; }
+
+    const botoes = gerarBotoesAcao();
 
     filtradas.forEach(d => {
         const row = tbody.insertRow();
         row.dataset.id = d.id; row.dataset.opcao = d.opcao; row.dataset.valor = d.valor || 0; row.dataset.favorito = d.favorito || false;
         const favoritoClass = d.favorito ? 'favorito' : ''; const favoritoIcon = d.favorito ? '★' : '☆';
-        row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.opcao}</td><td>R$ ${formatDecimal(d.valor, 2)}</td><td><button class="btn-editar">Editar</button><button class="btn-excluir">Excluir</button></td>`;
+        row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.opcao}</td><td>R$ ${formatDecimal(d.valor, 2)}</td><td>${botoes}</td>`;
     });
 }
 
@@ -267,23 +273,34 @@ function setupCRUD(tabela) {
 
     const tbody = elements[`tabela${nomeCapitalizado}Body`];
 
-    if (btnAbrirModalAdd) btnAbrirModalAdd.addEventListener('click', () => {
-        if(formAdd) {
-            formAdd.reset();
-            const inputs = formAdd.querySelectorAll('input[name="largura"], input[name="atacado"], input[name="valor"]');
-            inputs.forEach(input => input.value = '');
-            
-            if (tabela === 'confeccao') {
-                const chk = document.getElementById('add-confeccao-altura-especial');
-                if (chk) chk.checked = false;
+    if (btnAbrirModalAdd) {
+        btnAbrirModalAdd.addEventListener('click', () => {
+            if (!can('perm_data_add')) {
+                showToast("Sem permissão para adicionar.", "error");
+                return;
             }
-        }
-        openModal(modalAdd);
-    });
+
+            if(formAdd) {
+                formAdd.reset();
+                const inputs = formAdd.querySelectorAll('input[name="largura"], input[name="atacado"], input[name="valor"]');
+                inputs.forEach(input => input.value = '');
+                
+                if (tabela === 'confeccao') {
+                    const chk = document.getElementById('add-confeccao-altura-especial');
+                    if (chk) chk.checked = false;
+                }
+            }
+            openModal(modalAdd);
+        });
+    }
 
     if (formAdd) {
         formAdd.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!can('perm_data_add')) {
+                showToast("Sem permissão para adicionar.", "error");
+                return;
+            }
             const dadosFormulario = getFormData(formAdd, tabela);
             const lojaId = await getMyLojaId(); 
             if (!lojaId) return;
@@ -299,6 +316,10 @@ function setupCRUD(tabela) {
     if (formEdit) {
         formEdit.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!can('perm_data_edit')) {
+                showToast("Sem permissão para editar.", "error");
+                return;
+            }
             const dadosFormulario = getFormData(formEdit, tabela);
             const id = formEdit.querySelector(`input[name="id"]`)?.value; 
             if (!id) return;
@@ -342,13 +363,22 @@ function setupCRUD(tabela) {
                  }
                  return;
             }
+            
             if (target.classList.contains('btn-excluir')) {
+                if (!can('perm_data_delete')) {
+                    showToast("Sem permissão para excluir.", "error");
+                    return;
+                }
                 const lojaId = await getMyLojaId(); 
                 if (window.prepararExclusaoGenerica) window.prepararExclusaoGenerica({ id, nome, tabela, loja_id: lojaId, elemento: row });
                 return; 
             }
 
             if (target.classList.contains('btn-editar')) {
+                if (!can('perm_data_edit')) {
+                    showToast("Sem permissão para editar.", "error");
+                    return;
+                }
                 if(formEdit){
                     formEdit.querySelector(`input[name="id"]`).value = id;
                     
