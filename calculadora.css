@@ -175,7 +175,64 @@
 .col-acoes-calc { width: 60px; text-align: center; vertical-align: middle; }
 .btn-remover-linha { padding: 4px 8px; font-size: 14px; line-height: 1; font-weight: bold; }
 .wrapper-markups.calculator-markups { display: flex; justify-content: center; padding: 15px 10px; background: #fff; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
-.calculator-markups .grupo-markups { display: flex; gap: 20px; }
+.calculator-markups .grupo-markups {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    flex-wrap: wrap !important;
+}
+.input-wrapper-relative {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+.label-with-icon {
+    display: flex !important;
+    flex-direction: row !important; 
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    margin-bottom: 4px !important;
+    width: 100%;
+}
+
+.label-with-icon label {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+#btn-config-taxas {
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #666 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+#btn-config-taxas:hover {
+    transform: rotate(90deg);
+    color: #000 !important;
+}
+#select-parcelamento-global {
+    width: 100% !important;
+    min-width: 170px;
+}
+
+body.dark-mode #btn-config-taxas {
+    color: #aaa;
+}
+body.dark-mode #btn-config-taxas:hover {
+    color: #fff;
+}
 .calculator-markups .grupo-markups div { display: flex; flex-direction: column; }
 .calculator-markups .grupo-markups label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; text-align: center; }
 .calculator-markups .grupo-markups input,

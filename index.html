@@ -88,6 +88,13 @@
                             <label for="input-valor-entrada-global">ENTRADA</label>
                             <input type="text" id="input-valor-entrada-global" class="global-calc-trigger format-money" inputmode="decimal">
                         </div>
+                        <div class="input-wrapper-relative">
+    <div class="label-with-icon">
+        <label for="select-parcelamento-global">PARCELAMENTO</label>
+        <button id="btn-config-taxas" title="Editar Taxas" type="button">⚙️</button>
+    </div>
+    <select id="select-parcelamento-global" class="global-calc-trigger"></select>
+</div>
                         <div>
                             <label for="select-frete-global">FRETE</label>
                             <select id="select-frete-global" class="global-calc-trigger"></select>
@@ -886,14 +893,6 @@
     <div class="checkbox-wrapper-simple">
         <input type="checkbox" name="perm_calc_taxas" id="perm_calc_taxas"> <label for="perm_calc_taxas">Editar Taxas Maquininha</label>
     </div>
-</div>
-
-<div class="input-wrapper-relative">
-    <div class="label-with-icon">
-        <label for="select-parcelamento-global">PARCELAMENTO</label>
-        <button id="btn-config-taxas" title="Editar Taxas" type="button">⚙️</button>
-    </div>
-    <select id="select-parcelamento-global" class="global-calc-trigger"></select>
 </div>
                 <div class="perm-group">
                     <strong style="color: #931011;">Gerenciar Dados</strong>
