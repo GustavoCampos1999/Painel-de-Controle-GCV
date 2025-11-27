@@ -107,12 +107,17 @@
                 <div id="calculator-summary" class="calculator-container" style="display: none;">
                     <h3>Resumo do Orçamento Selecionado</h3>
                     <div class="summary-totals-container">
-                        <div class="summary-total-box" id="summary-total-avista-box">
-                            <label>TOTAL</label>
-                            <span id="summary-total-avista">R$ 0,00</span>
-                        </div>
-                        
-                         <div class="summary-total-box" id="summary-total-entrada" style="display: none;">
+                <div class="summary-total-box" id="summary-total-geral-box">
+                    <label>TOTAL</label>
+                    <span id="summary-total-geral">R$ 0,00</span>
+                </div>
+
+                <div class="summary-total-box" id="summary-total-avista-box">
+                    <label>TOTAL SELECIONADO</label>
+                    <span id="summary-total-avista">R$ 0,00</span>
+                </div>
+                
+                <div class="summary-total-box" id="summary-total-entrada" style="display: none;">
                             <label>ENTRADA</label>
                             <span id="summary-total-entrada-value">R$ 0,00</span>
                         </div>
@@ -709,8 +714,17 @@
         <div class="modal-content">
             <h2>Adicionar Tecido</h2>
             <form id="form-add-tecido">
-                <div><label for="add-tecido-produto">Produto:</label><input type="text" id="add-tecido-produto" name="produto" required></div>
-                <div><label for="add-tecido-largura">Largura:</label><input type="text" inputmode="decimal" id="add-tecido-largura" name="largura"></div>
+    <div><label for="add-tecido-produto">Produto:</label><input type="text" id="add-tecido-produto" name="produto" required></div>
+    
+    <div style="margin-bottom: 15px;">
+        <label>Categorias:</label>
+        <div class="categoria-group">
+            <div><input type="checkbox" name="cat_cortina" id="add-cat-cortina" value="cortina"><label for="add-cat-cortina" style="margin:0; font-weight:normal;">Cortina</label></div>
+            <div><input type="checkbox" name="cat_forro" id="add-cat-forro" value="forro"><label for="add-cat-forro" style="margin:0; font-weight:normal;">Forro</label></div>
+            <div><input type="checkbox" name="cat_blackout" id="add-cat-blackout" value="blackout"><label for="add-cat-blackout" style="margin:0; font-weight:normal;">Blackout</label></div>
+        </div>
+    </div>
+    <div><label for="add-tecido-largura">Largura:</label><input type="text" inputmode="decimal" id="add-tecido-largura" name="largura"></div>
                 <div><label for="add-tecido-atacado">Preço Atacado:</label><input type="text" inputmode="decimal" id="add-tecido-atacado" name="atacado"></div>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancelar-add-tecido" class="btn-cancelar">Cancelar</button>
@@ -722,10 +736,19 @@
     <div id="modal-edit-tecido" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Editar Tecido</h2>
-            <form id="form-edit-tecido">
-                <input type="hidden" name="id">
-                <div><label for="edit-tecido-produto">Produto:</label><input type="text" id="edit-tecido-produto" name="produto" required></div>
-                <div><label for="edit-tecido-largura">Largura:</label><input type="text" inputmode="decimal" id="edit-tecido-largura" name="largura"></div>
+           <form id="form-edit-tecido">
+    <input type="hidden" name="id">
+    <div><label for="edit-tecido-produto">Produto:</label><input type="text" id="edit-tecido-produto" name="produto" required></div>
+
+    <div style="margin-bottom: 15px;">
+        <label>Categorias:</label>
+        <div class="categoria-group">
+            <div><input type="checkbox" name="cat_cortina" id="edit-cat-cortina" value="cortina"><label for="edit-cat-cortina" style="margin:0; font-weight:normal;">Cortina</label></div>
+            <div><input type="checkbox" name="cat_forro" id="edit-cat-forro" value="forro"><label for="edit-cat-forro" style="margin:0; font-weight:normal;">Forro</label></div>
+            <div><input type="checkbox" name="cat_blackout" id="edit-cat-blackout" value="blackout"><label for="edit-cat-blackout" style="margin:0; font-weight:normal;">Blackout</label></div>
+        </div>
+    </div>
+    <div><label for="edit-tecido-largura">Largura:</label><input type="text" inputmode="decimal" id="edit-tecido-largura" name="largura"></div>
                 <div><label for="edit-tecido-atacado">Preço Atacado:</label><input type="text" inputmode="decimal" id="edit-tecido-atacado" name="atacado"></div>
                 <div class="modal-actions">
                     <button type="button" id="btn-cancelar-edit-tecido" class="btn-cancelar">Cancelar</button>

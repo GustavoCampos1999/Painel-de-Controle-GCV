@@ -474,6 +474,102 @@ body.dark-mode .btn-print-orcamento:hover {
 .tabela-calculo .select-lado-comando {
     min-width: 90px;
 }
+
+#summary-total-geral-box {
+    background-color: #f8f9fa; 
+}
+#summary-total-geral-box label {
+    color: #6c757d;
+}
+#summary-total-geral-box span {
+    color: #333; 
+}
+
+body.dark-mode #summary-total-geral-box {
+    background-color: #252525;
+}
+body.dark-mode #summary-total-geral-box label {
+    color: #aaa;
+}
+body.dark-mode #summary-total-geral-box span {
+    color: #fff;
+}
+#container-inputs-taxas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 100px) !important; 
+    justify-content: center !important; 
+    gap: 10px !important; 
+    padding: 10px 5px;
+}
+#container-inputs-taxas div {
+    width: 100px !important; 
+    height: 65px !important; 
+    display: flex;
+    flex-direction: column;
+    align-items: center !important; 
+    justify-content: center;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 5px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#container-inputs-taxas div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+}
+
+#container-inputs-taxas label {
+    font-size: 11px !important;
+    font-weight: bold !important;
+    margin-bottom: 4px !important;
+    color: #555;
+    text-transform: uppercase;
+    white-space: nowrap; 
+}
+
+#container-inputs-taxas input {
+    width: 80% !important; 
+    text-align: center;         
+    padding: 2px !important;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 13px;
+    color: #333;
+    height: 24px !important;
+}
+
+#container-inputs-taxas input:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+    outline: none;
+}
+
+body.dark-mode #container-inputs-taxas div {
+    background-color: rgba(255, 255, 255, 0.05); 
+    border-color: #444;
+}
+
+body.dark-mode #container-inputs-taxas div:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode #container-inputs-taxas label {
+    color: #e0e0e0;
+}
+
+body.dark-mode #container-inputs-taxas input {
+    background-color: #252525;
+    border-color: #555;
+    color: #fff;
+}
+
+body.dark-mode #container-inputs-taxas input:focus {
+    border-color: #28a745; 
+}
+
 @media (max-width: 768px) {
     .calculator-header { display: flex; align-items: center; gap: 10px; padding: 10px; flex-wrap: wrap; }
     #btn-voltar-clientes { order: 1; width: auto; flex-shrink: 0; font-size: 14px; padding: 8px 12px; margin-right: 0; }
@@ -536,6 +632,18 @@ body.dark-mode .btn-print-orcamento:hover {
     }
     .summary-total-box:nth-child(3),
     .summary-total-box:nth-child(4) {
+        border-top: 1px solid #ddd;
+    }
+    .summary-total-box:nth-child(2),
+    .summary-total-box:nth-child(4) {
+         border-left: none; 
+    }
+    
+    .summary-total-box:nth-child(2) {
+         border-left: 1px solid #ddd;
+    }
+    
+    .summary-total-box:nth-child(n+3) {
         border-top: 1px solid #ddd;
     }
 

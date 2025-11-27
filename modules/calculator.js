@@ -526,12 +526,23 @@ function preencherSelectCalculadora(select, dados, usarChaves = false, defaultTe
     }
 }
 
-function preencherSelectTecidosCalculadora(select) {
+function preencherSelectTecidosCalculadora(select, filtroCategoria = null) {
     if (!select) return;
+    const valorAtual = select.value; 
     select.innerHTML = '<option value="SEM TECIDO">SEM TECIDO</option>';
-    (dataRefs.tecidos || []).filter(t => t.produto && t.produto !== '-' && t.produto !== 'SEM TECIDO')
-        .sort((a, b) => (a.favorito === b.favorito) ? a.produto.localeCompare(b.produto) : (b.favorito ? 1 : -1))
-        .forEach(t => select.appendChild(new Option(t.produto, t.produto)));
+    
+    let lista = (dataRefs.tecidos || []).filter(t => t.produto && t.produto !== '-' && t.produto !== 'SEM TECIDO');
+    if (filtroCategoria) {
+        lista = lista.filter(t => {
+            if (!t.categorias || t.categorias.length === 0) return true; 
+            return t.categorias.includes(filtroCategoria);
+        });
+    }
+
+    lista.sort((a, b) => (a.favorito === b.favorito) ? a.produto.localeCompare(b.produto) : (b.favorito ? 1 : -1))
+         .forEach(t => select.appendChild(new Option(t.produto, t.produto)));
+         
+    if(valorAtual) select.value = valorAtual;
 }
 
 function adicionarLinhaTecido(tableBody, estadoLinha, isInitialLoad) {
@@ -542,9 +553,9 @@ function adicionarLinhaTecido(tableBody, estadoLinha, isInitialLoad) {
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzCortina'), DADOS_FRANZ_CORTINA);
     preencherSelectCalculadora(novaLinha.querySelector('.select-franzBlackout'), DADOS_FRANZ_BLACKOUT);
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'));
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro')); 
-    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout'));
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'), 'cortina');
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro'), 'forro'); 
+    preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout'), 'blackout');
     
     const selConf = novaLinha.querySelector('.select-confecao');
     selConf.innerHTML = '<option value="-" data-valor-real="0">NENHUM</option>';
@@ -715,43 +726,62 @@ function parseCurrencyValue(val) {
 }
 
 function recalcularTotaisSelecionados() {
-    let totalAvista = 0, totalInstalacao = 0, algumSelect = false;
+    let totalGeral = 0;      
+    let totalSelecionado = 0;
+    let totalInstalacao = 0;
+    let algumSelect = false;
+    let temLinhas = false;
+
     const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
     
     document.querySelectorAll('#quote-sections-container .linha-calculo-cliente').forEach(linha => {
+        temLinhas = true;
+        const valorLinha = parseCurrencyValue(linha.querySelector('.resultado-preco-total')?.value);
+        
+        totalGeral += valorLinha;
+
         if (linha.querySelector('.select-linha-checkbox')?.checked) {
             algumSelect = true;
-            totalAvista += parseCurrencyValue(linha.querySelector('.resultado-preco-total')?.value);
-            if(linha.dataset.linhaType === 'tecido') totalInstalacao += parseFloat(linha.querySelector('.select-instalacao')?.value) || 0;
+            totalSelecionado += valorLinha;
+            if(linha.dataset.linhaType === 'tecido') {
+                totalInstalacao += parseFloat(linha.querySelector('.select-instalacao')?.value) || 0;
+            }
         }
     });
 
     const frete = parseFloat(elements.selectFreteGlobal?.value) || 0;
     const entrada = parseCurrencyValue(elements.inputValorEntradaGlobal?.value);
     
-    let totalFinal = 0, parceladoFinal = 0;
+    let totalFinalSelecionado = 0, parceladoFinal = 0;
+    
+    totalGeral += frete;
+
     if (algumSelect) {
-        totalFinal = totalAvista + frete;
-        let baseParcelar = Math.max(0, (totalAvista - totalInstalacao) - entrada);
+        totalFinalSelecionado = totalSelecionado + frete;
+        let baseParcelar = Math.max(0, (totalSelecionado - totalInstalacao) - entrada); 
         parceladoFinal = (baseParcelar * (1 + taxa)) + frete + totalInstalacao;
     }
 
     if (elements.summaryContainer) {
-        elements.summaryContainer.style.display = algumSelect ? 'block' : 'none';
-        if (algumSelect) {
-            elements.summaryTotalAvista.textContent = formatadorReaisCalc.format(totalFinal);
-            elements.summaryTotalParcelado.textContent = formatadorReaisCalc.format(parceladoFinal);
-            if(elements.summaryParceladoLabel) elements.summaryParceladoLabel.textContent = elements.selectParcelamentoGlobal?.value;
-            
-            if(entrada > 0) {
-                elements.summaryTotalEntrada.style.display = 'block';
-                elements.summaryTotalEntradaValue.textContent = formatadorReaisCalc.format(entrada);
-                elements.summaryTotalRestante.style.display = 'block';
-                elements.summaryTotalRestanteValue.textContent = formatadorReaisCalc.format(totalFinal - entrada);
-            } else {
-                elements.summaryTotalEntrada.style.display = 'none';
-                elements.summaryTotalRestante.style.display = 'none';
-            }
+        elements.summaryContainer.style.display = (temLinhas || algumSelect) ? 'block' : 'none';
+        
+        if (elements.summaryTotalGeral) {
+            elements.summaryTotalGeral.textContent = formatadorReaisCalc.format(totalGeral);
+        }
+
+        elements.summaryTotalAvista.textContent = formatadorReaisCalc.format(totalFinalSelecionado);
+        elements.summaryTotalParcelado.textContent = formatadorReaisCalc.format(parceladoFinal);
+        
+        if(elements.summaryParceladoLabel) elements.summaryParceladoLabel.textContent = elements.selectParcelamentoGlobal?.value;
+        
+        if(entrada > 0 && algumSelect) {
+            elements.summaryTotalEntrada.style.display = 'block';
+            elements.summaryTotalEntradaValue.textContent = formatadorReaisCalc.format(entrada);
+            elements.summaryTotalRestante.style.display = 'block';
+            elements.summaryTotalRestanteValue.textContent = formatadorReaisCalc.format(totalFinalSelecionado - entrada);
+        } else {
+            elements.summaryTotalEntrada.style.display = 'none';
+            elements.summaryTotalRestante.style.display = 'none';
         }
     }
 }

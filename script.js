@@ -275,6 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tabsContainer: document.getElementById('calc-tabs-container'),
         btnAddAba: document.getElementById('btn-add-aba-calc'),
         summaryContainer: document.getElementById('calculator-summary'),
+        summaryTotalGeral: document.getElementById('summary-total-geral'),
         summaryTotalAvista: document.getElementById('summary-total-avista'),
         summaryTotalParcelado: document.getElementById('summary-total-parcelado'),
         summaryParceladoLabel: document.getElementById('summary-parcelado-label'),

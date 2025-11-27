@@ -254,16 +254,34 @@ function renderizarTabelaTecidos(tecidos) {
     if (!tbody) return;
     tbody.innerHTML = '';
     const tecidosFiltrados = (tecidos || []).filter(t => t.produto !== 'SEM TECIDO' && t.produto !== '-');
-    if (tecidosFiltrados.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Nenhum tecido encontrado.</td></tr>'; return; }
-
+    
+    if (tecidosFiltrados.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum tecido encontrado.</td></tr>'; 
+        return; 
+    }
     const botoes = gerarBotoesAcao();
 
     tecidosFiltrados.forEach(d => {
         const row = tbody.insertRow();
-        row.dataset.id = d.id; row.dataset.produto = d.produto; row.dataset.largura = d.largura || 0; row.dataset.atacado = d.atacado || 0; row.dataset.favorito = d.favorito || false;
-        const favoritoClass = d.favorito ? 'favorito' : ''; const favoritoIcon = d.favorito ? '★' : '☆';
-        
-        row.innerHTML = `<td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td><td>${d.produto}</td><td>${formatDecimal(d.largura, 3)}</td><td>R$ ${formatDecimal(d.atacado, 2)}</td><td>${botoes}</td>`;
+        row.dataset.id = d.id; 
+        row.dataset.produto = d.produto; 
+        row.dataset.largura = d.largura || 0; 
+        row.dataset.atacado = d.atacado || 0; 
+        row.dataset.favorito = d.favorito || false;
+        let tagsHtml = '';
+        if (d.categorias && Array.isArray(d.categorias)) {
+            d.categorias.forEach(cat => {
+                tagsHtml += `<span class="badge-categoria badge-${cat}">${cat}</span>`;
+            });
+        }
+        const favoritoClass = d.favorito ? 'favorito' : ''; 
+        const favoritoIcon = d.favorito ? '★' : '☆';
+        row.innerHTML = `
+            <td class="col-favorito-acao"><span class="btn-favorito ${favoritoClass}" title="Favoritar">${favoritoIcon}</span></td>
+            <td>${d.produto} ${tagsHtml}</td>
+            <td>${formatDecimal(d.largura, 3)}</td>
+            <td>R$ ${formatDecimal(d.atacado, 2)}</td>
+            <td>${botoes}</td>`;
     });
 }
 
@@ -446,13 +464,11 @@ function setupCRUD(tabela) {
             }
 
             if (target.classList.contains('btn-editar')) {
-                if (!can('perm_data_edit')) {
-                    showToast("Sem permissão para editar.", "error");
-                    return;
-                }
+                if (!can('perm_data_edit')) { showToast("Sem permissão.", "error"); return; }
                 if(formEdit){
                     formEdit.querySelector(`input[name="id"]`).value = id;
                     
+                    // Loop padrão para preencher inputs de texto e numero
                     for (const key in row.dataset) {
                        const input = formEdit.querySelector(`[name="${key}"]`);
                        if(input && key !== 'id') {
@@ -468,7 +484,21 @@ function setupCRUD(tabela) {
                             }
                        }
                     }
-
+                    if (tabela === 'tecidos') {
+                        const chkCortina = formEdit.querySelector('#edit-cat-cortina');
+                        const chkForro = formEdit.querySelector('#edit-cat-forro');
+                        const chkBlackout = formEdit.querySelector('#edit-cat-blackout');
+                        if(chkCortina) chkCortina.checked = false;
+                        if(chkForro) chkForro.checked = false;
+                        if(chkBlackout) chkBlackout.checked = false;
+                        const itemOriginal = dataArrays['tecidos'].find(i => i.id == id);
+                        
+                        if (itemOriginal && itemOriginal.categorias) {
+                            if (itemOriginal.categorias.includes('cortina') && chkCortina) chkCortina.checked = true;
+                            if (itemOriginal.categorias.includes('forro') && chkForro) chkForro.checked = true;
+                            if (itemOriginal.categorias.includes('blackout') && chkBlackout) chkBlackout.checked = true;
+                        }
+                    }
                     if (tabela === 'confeccao') {
                         const isEspecial = row.dataset.altura_especial === 'true';
                         const chk = document.getElementById('edit-confeccao-altura-especial');
@@ -485,7 +515,18 @@ function setupCRUD(tabela) {
 function getFormData(form, tabela) {
     const formData = new FormData(form);
     const data = {};
+    if (tabela === 'tecidos') {
+        const categorias = [];
+        if (form.querySelector('#add-cat-cortina')?.checked || form.querySelector('#edit-cat-cortina')?.checked) categorias.push('cortina');
+        if (form.querySelector('#add-cat-forro')?.checked || form.querySelector('#edit-cat-forro')?.checked) categorias.push('forro');
+        if (form.querySelector('#add-cat-blackout')?.checked || form.querySelector('#edit-cat-blackout')?.checked) categorias.push('blackout');
+        
+        data['categorias'] = categorias; 
+    }
+
     formData.forEach((value, key) => {
+        if (key.startsWith('cat_')) return;
+
         if (key === 'largura' || key === 'atacado' || key === 'valor') {
             const valorLimpo = String(value).replace('R$', '').trim();
             const valorNumerico = valorLimpo.replace(',', '.');
@@ -497,11 +538,8 @@ function getFormData(form, tabela) {
 
     if (tabela === 'confeccao') {
         const chk = form.querySelector('input[name="altura_especial"]');
-        if (chk) {
-            data['altura_especial'] = chk.checked;
-        }
+        if (chk) data['altura_especial'] = chk.checked;
     }
-
     return data;
 }
 

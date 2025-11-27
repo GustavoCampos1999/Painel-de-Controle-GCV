@@ -1264,6 +1264,32 @@ body.dark-mode .tabela-moderna td {
 body.dark-mode .tabela-moderna tr:hover {
     background-color: #2c2c2c;
 }
+.badge-categoria {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #fff;
+    font-weight: bold;
+    margin-right: 3px;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-top: 2px;
+}
+
+.badge-cortina { background-color: #007bff; } 
+.badge-forro { background-color: #28a745; }   
+.badge-blackout { background-color: #6f42c1; } 
+.categoria-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+}
+.categoria-group div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
 
 @media (max-width: 768px) {
     header {
