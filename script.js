@@ -14,6 +14,10 @@ let confeccaoDataGlobal = [];
 let trilhoDataGlobal = [];    
 let freteDataGlobal = [];     
 let instalacaoDataGlobal = []; 
+let amorimModCortina = [];
+let amorimCorCortina = [];
+let amorimModToldo = [];
+let amorimCorToldo = [];
 let currentClientIdGlobal = { value: null };
 let isDataLoadedFlag = { value: false }; 
 let itemParaExcluirGenericoInfo = null; 
@@ -28,7 +32,11 @@ const dataRefs = {
     confeccao: confeccaoDataGlobal,
     trilho: trilhoDataGlobal,
     frete: freteDataGlobal,
-    instalacao: instalacaoDataGlobal
+    instalacao: instalacaoDataGlobal,
+    amorim_modelos_cortina: amorimModCortina,
+    amorim_cores_cortina: amorimCorCortina,
+    amorim_modelos_toldo: amorimModToldo,
+    amorim_cores_toldo: amorimCorToldo
 };
 const calculatorDataRefs = {
      tecidos: tecidosDataGlobal,
@@ -81,70 +89,95 @@ function handleRouting() {
 }
 
 async function buscarDadosBaseDoBackend() {
-  console.log("Iniciando busca de dados base do backend...");
+  console.log("Iniciando busca de dados base...");
   isDataLoadedFlag.value = false; 
   try {
     const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
-    if (sessionError || !session) {
-      throw new Error(sessionError?.message || "Sessão não encontrada. Faça login.");
-    }
+    if (sessionError || !session) throw new Error("Sessão não encontrada.");
+    
+    // 1. Descobrir o ID da Loja do usuário atual
+    const { data: perfil } = await _supabase
+        .from('perfis')
+        .select('loja_id')
+        .eq('user_id', session.user.id)
+        .single();
+        
+    if (!perfil || !perfil.loja_id) throw new Error("Loja não identificada para este usuário.");
+    const lojaId = perfil.loja_id;
+
+    // 2. Buscar dados padrão da API (Tecidos, etc)
     const token = session.access_token;
-
     const response = await fetch(`${BACKEND_API_URL}/api/dados-base`, {
-      headers: {
-        'Authorization': `Bearer ${token}` 
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ erro: `Erro HTTP ${response.status}` }));
-      throw new Error(errorData.erro || `Erro ${response.status} ao buscar dados do backend.`);
+    
+    let dadosApi = {};
+    if (response.ok) {
+        dadosApi = await response.json();
+    } else {
+        console.warn("API de dados-base falhou, tentando carregar o possível.");
     }
 
-    const dados = await response.json();
-    console.log("Dados base recebidos do backend:", dados);
+    // 3. Buscar dados AMORIM diretamente do Supabase (Garante que venha atualizado)
+    const [resModCortina, resCorCortina, resModToldo, resCorToldo] = await Promise.all([
+        _supabase.from('amorim_modelos_cortina').select('*').eq('loja_id', lojaId),
+        _supabase.from('amorim_cores_cortina').select('*').eq('loja_id', lojaId),
+        _supabase.from('amorim_modelos_toldo').select('*').eq('loja_id', lojaId),
+        _supabase.from('amorim_cores_toldo').select('*').eq('loja_id', lojaId)
+    ]);
 
-   tecidosDataGlobal.length = 0;
+    // Limpeza dos Arrays Globais
+    tecidosDataGlobal.length = 0;
     confeccaoDataGlobal.length = 0;
     trilhoDataGlobal.length = 0;
     freteDataGlobal.length = 0;
     instalacaoDataGlobal.length = 0;
+    amorimModCortina.length = 0;
+    amorimCorCortina.length = 0;
+    amorimModToldo.length = 0;
+    amorimCorToldo.length = 0;
 
-    tecidosDataGlobal.push(...(dados.tecidos || []));
-    confeccaoDataGlobal.push(...(dados.confeccao || []));
-    trilhoDataGlobal.push(...(dados.trilho || []));
-    freteDataGlobal.push(...(dados.frete || []));
-    instalacaoDataGlobal.push(...(dados.instalacao || []));
-    calculatorDataRefs.confeccao = dados.confeccao || []; 
+    // Popular Arrays com dados da API
+    tecidosDataGlobal.push(...(dadosApi.tecidos || []));
+    confeccaoDataGlobal.push(...(dadosApi.confeccao || []));
+    trilhoDataGlobal.push(...(dadosApi.trilho || []));
+    freteDataGlobal.push(...(dadosApi.frete || []));
+    instalacaoDataGlobal.push(...(dadosApi.instalacao || []));
 
-    calculatorDataRefs.trilho = (dados.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
+    // Popular Arrays Amorim com dados diretos do Supabase
+    if(resModCortina.data) amorimModCortina.push(...resModCortina.data);
+    if(resCorCortina.data) amorimCorCortina.push(...resCorCortina.data);
+    if(resModToldo.data) amorimModToldo.push(...resModToldo.data);
+    if(resCorToldo.data) amorimCorToldo.push(...resCorToldo.data);
+
+    // Configurar Calculadora
+    calculatorDataRefs.confeccao = dadosApi.confeccao || []; 
+    calculatorDataRefs.trilho = (dadosApi.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
     
-    calculatorDataRefs.frete = (dados.frete || []).reduce((acc, item) => {
+    calculatorDataRefs.frete = (dadosApi.frete || []).reduce((acc, item) => {
         const valor = item.valor || 0;
-        const key = `R$ ${valor.toFixed(2).replace('.', ',')}`; 
+        const valorFormatado = `R$ ${valor.toFixed(2).replace('.', ',')}`;
+        const key = (item.opcao && item.opcao.trim() !== '') ? `${item.opcao}` : valorFormatado;
         acc[key] = valor;
         return acc;
      }, {});
 
-    calculatorDataRefs.instalacao = (dados.instalacao || []).reduce((acc, item) => {
+    calculatorDataRefs.instalacao = (dadosApi.instalacao || []).reduce((acc, item) => {
         const valor = item.valor || 0;
-        const key = `R$ ${valor.toFixed(2).replace('.', ',')}`;
+        const valorFormatado = `R$ ${valor.toFixed(2).replace('.', ',')}`;
+        const key = (item.opcao && item.opcao.trim() !== '') ? `${item.opcao}` : valorFormatado;
         acc[key] = valor;
         return acc;
      }, {});
 
     isDataLoadedFlag.value = true; 
     document.dispatchEvent(new CustomEvent('dadosBaseCarregados')); 
-    console.log("Flag isDataLoaded definida como true. dataRefs e calculatorDataRefs populados.");
+    console.log("Dados carregados com sucesso (Híbrido API + Supabase).");
 
   } catch (error) {
-    console.error("Erro crítico ao buscar dados base do backend:", error);
-    showToast(`Erro ao carregar dados essenciais: ${error.message}. Recarregue a página.`, "error");
+    console.error("Erro ao buscar dados:", error);
+    showToast("Erro ao sincronizar dados. Verifique sua conexão.", "error");
     isDataLoadedFlag.value = false;
-    const loadingOverlayError = document.getElementById('loading-overlay');
-    if (loadingOverlayError && loadingOverlayError.style.display !== 'none') {
-        loadingOverlayError.innerHTML = `<p style="color: red; padding: 20px; text-align: center;">Erro ao carregar dados essenciais.<br>Verifique o console e a conexão com o backend (${BACKEND_API_URL}).</p>`;
-    }
   }
 }
 
@@ -207,6 +240,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnCancelEditFrete: document.getElementById('btn-cancelar-edit-frete'),
         tabelaInstalacaoBody: document.querySelector('#tabela-instalacao-body'),
         inputPesquisaInstalacao: document.getElementById('input-pesquisa-instalacao'),
+        inputPesquisaAmorim_modelos_cortina: document.getElementById('input-pesquisa-amorim-modelos-cortina'),
+        inputPesquisaAmorim_cores_cortina: document.getElementById('input-pesquisa-amorim-cores-cortina'),
+        inputPesquisaAmorim_modelos_toldo: document.getElementById('input-pesquisa-amorim-modelos-toldo'),
+        inputPesquisaAmorim_cores_toldo: document.getElementById('input-pesquisa-amorim-cores-toldo'),
         btnAbrirModalAddInstalacao: document.getElementById('btn-abrir-modal-add-instalacao'),
         modalAddInstalacao: document.getElementById('modal-add-instalacao'),
         formAddInstalacao: document.getElementById('form-add-instalacao'),

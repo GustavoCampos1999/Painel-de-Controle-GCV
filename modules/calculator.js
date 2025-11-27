@@ -14,18 +14,20 @@ const TAXAS_PADRAO = {
     '18x': 0.1457
 };
 let TAXAS_PARCELAMENTO = { ...TAXAS_PADRAO };
-
-const DADOS_MODELO_CORTINA = [
+const DEFAULT_CORTINA = [
     "CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", 
     "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", 
     "PH 25", "PH 50", "PH 75", "PLISSADA", "ROLO", "ROMANA", 
     "TRILHO MOTORIZADO", "VERTIGLISS"
 ];
-const DADOS_MODELO_TOLDO = [
+const DEFAULT_TOLDO = [
     "PERGOLA", "BALI", "BERGAMO", "BERLIM", "CAPRI", "MILAO", "MILAO COMPACT", 
     "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"
 ];
-const DADOS_COR_ACESSORIOS = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
+const DEFAULT_CORES = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
+let DADOS_MODELO_CORTINA = [];
+let DADOS_MODELO_TOLDO = [];
+let DADOS_COR_ACESSORIOS = [];
 const DADOS_COMANDO = ["MANUAL", "MOTORIZADO"];
 
 let elements = {};
@@ -57,11 +59,27 @@ function setDirty() {
 export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoadedFlag) {
     elements = domElements;
     dataRefs = dataArrays;
+    if (dataRefs.amorim_modelos_cortina && dataRefs.amorim_modelos_cortina.length > 0) {
+        DADOS_MODELO_CORTINA = dataRefs.amorim_modelos_cortina.map(i => i.opcao).sort();
+    } else { 
+        DADOS_MODELO_CORTINA = [...DEFAULT_CORTINA].sort(); 
+    }
+
+    if (dataRefs.amorim_modelos_toldo && dataRefs.amorim_modelos_toldo.length > 0) {
+        DADOS_MODELO_TOLDO = dataRefs.amorim_modelos_toldo.map(i => i.opcao).sort();
+    } else { 
+        DADOS_MODELO_TOLDO = [...DEFAULT_TOLDO].sort(); 
+    }
+
+    const coresBanco = [...(dataRefs.amorim_cores_cortina||[]), ...(dataRefs.amorim_cores_toldo||[])];
+    if (coresBanco.length > 0) {
+        DADOS_COR_ACESSORIOS = [...new Set(coresBanco.map(i => i.opcao))].sort();
+    } else {
+        DADOS_COR_ACESSORIOS = [...DEFAULT_CORES].sort();
+    }
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
-
     carregarTaxasDoBanco();
-
     const btnConfigTaxas = document.getElementById('btn-config-taxas');
     const modalConfigTaxas = document.getElementById('modal-config-taxas');
     const formConfigTaxas = document.getElementById('form-config-taxas');
@@ -788,9 +806,13 @@ export async function showCalculatorView(clientId, clientName) {
         preencherSelectCalculadora(elements.selectFreteGlobal, dataRefs.frete, true, "SEM FRETE", true);
         await carregarEstadoCalculadora(clientId);
         atualizarHeaderParcelado();
-    } catch (e) { showToast("Erro ao abrir calculadora.", "error"); }
-}
+        if(elements.saveStatusMessage) elements.saveStatusMessage.textContent = '';
 
+    } catch (e) { 
+        showToast("Erro ao abrir calculadora.", "error"); 
+        if(elements.saveStatusMessage) elements.saveStatusMessage.textContent = '';
+    }
+}
 async function carregarEstadoCalculadora(clientId) {
     isDirty = false;
     const container = document.getElementById('quote-sections-container');

@@ -1023,6 +1023,248 @@ body.dark-mode .tabela-equipe td {
     border-bottom-color: #444;
     color: #e0e0e0;
 }
+body.dark-mode #subtab-amorim > div {
+    background: #1e1e1e !important;
+    border-color: #333 !important;
+}
+body.dark-mode #subtab-amorim h3 {
+    color: #e06c6e !important;
+}
+body.dark-mode #subtab-amorim > div > div:first-child {
+    background-color: #252525 !important;
+    border-bottom-color: #333 !important;
+}
+body.dark-mode #subtab-amorim h4 {
+    color: #f0f0f0;
+}
+body.dark-mode #subtab-amorim div[style*="border-right"] {
+    border-right-color: #333 !important;
+}
+
+.amorim-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    overflow: hidden;
+    margin-bottom: 30px;
+    border: 1px solid #e0e0e0;
+}
+
+.amorim-card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 15px 25px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+}
+
+.amorim-card-header h3 {
+    margin: 0;
+    color: #931011;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.amorim-grid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.amorim-col {
+    flex: 1;
+    min-width: 320px; 
+    padding: 25px;
+    border-right: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+}
+
+.amorim-col:last-child {
+    border-right: none;
+}
+
+.amorim-actions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.amorim-actions-header h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #444;
+    font-weight: 600;
+}
+
+.btn-adicionar-mini {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(40, 167, 69, 0.2);
+    transition: all 0.2s;
+}
+
+.btn-adicionar-mini:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.search-wrapper {
+    margin-bottom: 15px;
+    display: flex;           
+    justify-content: center; 
+    width: 100%;         
+}
+
+.input-pesquisa-moderno {
+    width: 93%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fcfcfc;
+    font-size: 14px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-pesquisa-moderno:focus {
+    border-color: #931011;
+    box-shadow: 0 0 0 3px rgba(147, 16, 17, 0.1);
+    outline: none;
+    background-color: #fff;
+}
+
+.amorim-table-scroll {
+    max-height: 260px; 
+    overflow-y: auto; 
+    border: 1px solid #eee;
+    border-radius: 8px;
+    position: relative;
+    scrollbar-width: thin; 
+    scrollbar-color: #ccc #f9f9f9;
+}
+
+.amorim-table-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.amorim-table-scroll::-webkit-scrollbar-track {
+    background: #f9f9f9;
+}
+.amorim-table-scroll::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+.tabela-moderna {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.tabela-moderna th {
+    background-color: #f8f9fa;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    padding: 12px 15px;
+    text-align: left;
+    position: sticky; 
+    top: 0;
+    z-index: 2;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.tabela-moderna td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+}
+
+.tabela-moderna tr:last-child td {
+    border-bottom: none;
+}
+
+.tabela-moderna tr:hover {
+    background-color: #f1f5f9;
+}
+
+.tabela-moderna .btn-editar,
+.tabela-moderna .btn-excluir {
+    min-width: 38px; 
+    padding: 3px 0; 
+    font-size: 9px;
+    border-radius: 4px;
+    text-align: center;
+    margin: 0 2px;  
+    display: inline-block;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.tabela-moderna .btn-editar { background-color: #ffc107; color: #333; }
+.tabela-moderna .btn-excluir { background-color: #dc3545; color: white; }
+
+.tabela-moderna .btn-editar:hover { background-color: #e0a800; }
+.tabela-moderna .btn-excluir:hover { background-color: #c82333; }
+.tabela-moderna .btn-editar:hover,
+.tabela-moderna .btn-excluir:hover {
+    opacity: 1;
+}
+
+body.dark-mode .amorim-card {
+    background: #1e1e1e;
+    border-color: #333;
+}
+body.dark-mode .amorim-card-header {
+    background: #252525;
+    border-bottom-color: #333;
+}
+body.dark-mode .amorim-card-header h3 {
+    color: #e06c6e;
+}
+body.dark-mode .amorim-col {
+    border-right-color: #333;
+}
+body.dark-mode .amorim-actions-header h4 {
+    color: #e0e0e0;
+}
+body.dark-mode .input-pesquisa-moderno {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #fff;
+}
+body.dark-mode .input-pesquisa-moderno:focus {
+    border-color: #e06c6e;
+    box-shadow: 0 0 0 3px rgba(224, 108, 110, 0.2);
+}
+body.dark-mode .amorim-table-scroll {
+    border-color: #333;
+    scrollbar-color: #555 #2a2a2a;
+}
+body.dark-mode .tabela-moderna th {
+    background-color: #2a2a2a;
+    color: #aaa;
+    border-bottom-color: #444;
+}
+body.dark-mode .tabela-moderna td {
+    color: #ddd;
+    border-bottom-color: #333;
+}
+body.dark-mode .tabela-moderna tr:hover {
+    background-color: #2c2c2c;
+}
+
 @media (max-width: 768px) {
     header {
         flex-direction: column;
@@ -1084,7 +1326,23 @@ body.dark-mode .tabela-equipe td {
     .gerenciar-dados-secao table {
         min-width: 600px;
     }
-  
+  .amorim-col {
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        padding: 20px 15px; 
+    }
+    body.dark-mode .amorim-col {
+        border-bottom-color: #333;
+    }
+    .amorim-col:last-child {
+        border-bottom: none;
+    }
+    .amorim-card-header {
+        justify-content: center;
+    }
+    .amorim-table-scroll {
+        max-height: 300px; 
+    }
 }
 
 @media (max-width: 480px) {

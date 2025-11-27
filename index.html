@@ -137,6 +137,7 @@
                     <button class="subtab-button active" data-subtab="subtab-tecidos">Tecidos</button>
                     <button class="subtab-button" data-subtab="subtab-confeccao">Confecção</button>
                     <button class="subtab-button" data-subtab="subtab-trilho">Trilho</button>
+                    <button class="subtab-button" data-subtab="subtab-amorim">Amorim</button>
                     <button class="subtab-button" data-subtab="subtab-outros">Outros</button>
                 </nav>
 
@@ -212,11 +213,12 @@
                         </div>
                         <table id="tabela-frete">
                              <thead>
-                                <tr>
-                                    <th class="sortable-header" data-sort-key="valor">Valor <span class="sort-arrow"></span></th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
+    <tr>
+        <th class="sortable-header" data-sort-key="opcao">Descrição <span class="sort-arrow"></span></th>
+        <th class="sortable-header" data-sort-key="valor">Valor <span class="sort-arrow"></span></th>
+        <th style="width: 140px; text-align: center;">Ações</th>
+    </tr>
+</thead>
                             <tbody id="tabela-frete-body"></tbody>
                         </table>
                     </section>
@@ -228,15 +230,121 @@
                         </div>
                         <table id="tabela-instalacao">
                              <thead>
-                                <tr>
-                                    <th class="sortable-header" data-sort-key="valor">Valor <span class="sort-arrow"></span></th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
+    <tr>
+        <th class="sortable-header" data-sort-key="opcao">Descrição <span class="sort-arrow"></span></th>
+        <th class="sortable-header" data-sort-key="valor">Valor <span class="sort-arrow"></span></th>
+        <th style="width: 140px; text-align: center;">Ações</th>
+    </tr>
+</thead>
                             <tbody id="tabela-instalacao-body"></tbody>
                         </table>
                     </section>
                 </div>
+<div id="subtab-amorim" class="subtab-content">
+    
+    <div class="amorim-card">
+        <div class="amorim-card-header">
+            <h3>CORTINAS AMORIM</h3>
+        </div>
+        <div class="amorim-grid">
+            <div class="amorim-col">
+                <div class="amorim-actions-header">
+                    <h4>Modelos</h4>
+                    <button id="btn-abrir-modal-add-modelo-cortina" class="btn-adicionar-mini">+ Novo</button>
+                </div>
+                <div class="search-wrapper">
+                    <input type="text" id="input-pesquisa-amorim-modelos-cortina" class="input-pesquisa-moderno" placeholder="🔍 Pesquisar modelo...">
+                </div>
+                
+                <div class="amorim-table-scroll">
+                    <table id="tabela-modelo-cortina" class="tabela-moderna">
+                        <thead>
+                            <tr>
+                                <th class="sortable-header" data-sort-key="opcao">Nome <span class="sort-arrow"></span></th>
+                                <th style="width: 90px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-modelo-cortina-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="amorim-col">
+                <div class="amorim-actions-header">
+                    <h4>Cores Acessórios</h4>
+                    <button id="btn-abrir-modal-add-cor-cortina" class="btn-adicionar-mini">+ Nova</button>
+                </div>
+                <div class="search-wrapper">
+                    <input type="text" id="input-pesquisa-amorim-cores-cortina" class="input-pesquisa-moderno" placeholder="🔍 Pesquisar cor...">
+                </div>
+
+                <div class="amorim-table-scroll">
+                    <table id="tabela-cor-cortina" class="tabela-moderna">
+                        <thead>
+                            <tr>
+                                <th class="sortable-header" data-sort-key="opcao">Cor <span class="sort-arrow"></span></th>
+                                <th style="width: 90px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-cor-cortina-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="amorim-card">
+        <div class="amorim-card-header">
+            <h3>TOLDOS AMORIM</h3>
+        </div>
+        <div class="amorim-grid">
+            <div class="amorim-col">
+                <div class="amorim-actions-header">
+                    <h4>Modelos</h4>
+                    <button id="btn-abrir-modal-add-modelo-toldo" class="btn-adicionar-mini">+ Novo</button>
+                </div>
+                <div class="search-wrapper">
+                    <input type="text" id="input-pesquisa-amorim-modelos-toldo" class="input-pesquisa-moderno" placeholder="🔍 Pesquisar modelo...">
+                </div>
+
+                <div class="amorim-table-scroll">
+                    <table id="tabela-modelo-toldo" class="tabela-moderna">
+                        <thead>
+                            <tr>
+                                <th class="sortable-header" data-sort-key="opcao">Nome <span class="sort-arrow"></span></th>
+                                <th style="width: 90px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-modelo-toldo-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="amorim-col">
+                <div class="amorim-actions-header">
+                    <h4>Cores Acessórios</h4>
+                    <button id="btn-abrir-modal-add-cor-toldo" class="btn-adicionar-mini">+ Nova</button>
+                </div>
+                <div class="search-wrapper">
+                    <input type="text" id="input-pesquisa-amorim-cores-toldo" class="input-pesquisa-moderno" placeholder="🔍 Pesquisar cor...">
+                </div>
+
+                <div class="amorim-table-scroll">
+                    <table id="tabela-cor-toldo" class="tabela-moderna">
+                        <thead>
+                            <tr>
+                                <th class="sortable-header" data-sort-key="opcao">Cor <span class="sort-arrow"></span></th>
+                                <th style="width: 90px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-cor-toldo-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
             </div> </div> 
        <div id="tab-equipe" class="tab-content">
     <div class="list-container">
@@ -705,8 +813,9 @@
         <div class="modal-content">
             <h2>Adicionar Opção de Frete</h2>
             <form id="form-add-frete">
-                <div><label for="add-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="add-frete-valor" name="valor"></div>
-                <div class="modal-actions">
+    <div><label for="add-frete-opcao">Nome (Opcional):</label><input type="text" id="add-frete-opcao" name="opcao" placeholder="Ex: Entrega Expressa"></div>
+    <div><label for="add-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="add-frete-valor" name="valor"></div>
+    <div class="modal-actions">
                     <button type="button" id="btn-cancelar-add-frete" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar</button>
                 </div>
@@ -717,9 +826,11 @@
         <div class="modal-content">
             <h2>Editar Opção de Frete</h2>
             <form id="form-edit-frete">
-                <input type="hidden" name="id">
-                <div><label for="edit-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-frete-valor" name="valor"></div>
-                <div class="modal-actions">
+                <form id="form-edit-frete">
+    <input type="hidden" name="id">
+    <div><label for="edit-frete-opcao">Nome (Opcional):</label><input type="text" id="edit-frete-opcao" name="opcao" placeholder="Ex: Entrega Expressa"></div>
+    <div><label for="edit-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-frete-valor" name="valor"></div>
+    <div class="modal-actions">
                     <button type="button" id="btn-cancelar-edit-frete" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar Alterações</button>
                 </div>
@@ -731,8 +842,9 @@
         <div class="modal-content">
             <h2>Adicionar Opção de Instalação</h2>
             <form id="form-add-instalacao">
-                <div><label for="add-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="add-instalacao-valor" name="valor"></div>
-                <div class="modal-actions">
+    <div><label for="add-instalacao-opcao">Nome (Opcional):</label><input type="text" id="add-instalacao-opcao" name="opcao" placeholder="Ex: Instalação Teto Alto"></div>
+    <div><label for="add-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="add-instalacao-valor" name="valor"></div>
+    <div class="modal-actions">
                     <button type="button" id="btn-cancelar-add-instalacao" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar</button>
                 </div>
@@ -743,16 +855,27 @@
         <div class="modal-content">
             <h2>Editar Opção de Instalação</h2>
             <form id="form-edit-instalacao">
-                <input type="hidden" name="id">
-                <div><label for="edit-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-instalacao-valor" name="valor"></div>
-                <div class="modal-actions">
+    <input type="hidden" name="id">
+    <div><label for="edit-instalacao-opcao">Nome (Opcional):</label><input type="text" id="edit-instalacao-opcao" name="opcao" placeholder="Ex: Instalação Teto Alto"></div>
+    <div><label for="edit-instalacao-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-instalacao-valor" name="valor"></div>
+    <div class="modal-actions">
                     <button type="button" id="btn-cancelar-edit-instalacao" class="btn-cancelar">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar Alterações</button>
                 </div>
             </form>
         </div>
     </div>
+<div id="modal-add-modelo-cortina" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Adicionar Modelo Cortina</h2><form id="form-add-modelo-cortina"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-add-modelo-cortina" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
+<div id="modal-edit-modelo-cortina" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Editar Modelo Cortina</h2><form id="form-edit-modelo-cortina"><input type="hidden" name="id"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-edit-modelo-cortina" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
 
+<div id="modal-add-cor-cortina" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Adicionar Cor Acessórios (Cortina)</h2><form id="form-add-cor-cortina"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-add-cor-cortina" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
+<div id="modal-edit-cor-cortina" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Editar Cor Acessórios (Cortina)</h2><form id="form-edit-cor-cortina"><input type="hidden" name="id"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-edit-cor-cortina" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
+
+<div id="modal-add-modelo-toldo" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Adicionar Modelo Toldo</h2><form id="form-add-modelo-toldo"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-add-modelo-toldo" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
+<div id="modal-edit-modelo-toldo" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Editar Modelo Toldo</h2><form id="form-edit-modelo-toldo"><input type="hidden" name="id"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-edit-modelo-toldo" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
+
+<div id="modal-add-cor-toldo" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Adicionar Cor Acessórios (Toldo)</h2><form id="form-add-cor-toldo"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-add-cor-toldo" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
+<div id="modal-edit-cor-toldo" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Editar Cor Acessórios (Toldo)</h2><form id="form-edit-cor-toldo"><input type="hidden" name="id"><div><label>Nome:</label><input type="text" name="opcao" required></div><div class="modal-actions"><button type="button" id="btn-cancelar-edit-cor-toldo" class="btn-cancelar">Cancelar</button><button type="submit" class="btn-salvar">Salvar</button></div></form></div></div>
     <div id="modal-confirm-excluir-generico" class="modal-overlay" style="display: none;">
             <div class="modal-content">
                 <h2>Confirmar Exclusão</h2>

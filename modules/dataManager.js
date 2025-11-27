@@ -13,12 +13,8 @@ async function getMyLojaId() {
         }
     });
 
-    if (cachedLojaId) {
-        console.log("Usando loja_id do cache:", cachedLojaId);
-        return cachedLojaId;
-    }
+    if (cachedLojaId) return cachedLojaId;
     try {
-        console.log("Buscando loja_id do perfil...");
         const { data: { user } } = await _supabase.auth.getUser();
         if (!user) throw new Error("Usuário não autenticado.");
         
@@ -28,18 +24,12 @@ async function getMyLojaId() {
             .eq('user_id', user.id) 
             .single();
 
-        if (error && status !== 406) { 
-            throw error;
-        }
-        if (!data || !data.loja_id) {
-            throw new Error("Perfil ou loja_id não encontrados para o usuário atual.");
-        }
+        if (error && status !== 406) throw error;
+        if (!data || !data.loja_id) throw new Error("Perfil ou loja_id não encontrados.");
         cachedLojaId = data.loja_id;
-        console.log("Loja_id encontrada e cacheada:", cachedLojaId);
         return cachedLojaId;
     } catch (error) {
-        console.error("Erro ao buscar loja_id do perfil:", error);
-        showToast(`Erro crítico: Não foi possível identificar sua loja (${error.message}). Tente recarregar.`, "error");
+        console.error("Erro ao buscar loja_id:", error);
         return null; 
     }
 }
@@ -49,17 +39,17 @@ function formatDecimal(value, decimalPlaces = 2) {
     if (isNaN(num)) { return (0).toFixed(decimalPlaces).replace('.', ','); }
     return num.toFixed(decimalPlaces).replace('.', ',');
 }
+
 function setupInputFormatting(inputId, formatType) {
     const inputElement = document.getElementById(inputId);
     if (!inputElement) return;
 
     const isCurrency = formatType === 'currency';
     const decimalPlaces = (formatType === 'measure') ? 3 : 2;
-    const prefix = isCurrency ? 'R$ ' : '';
     const formatador = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }); 
 
     inputElement.addEventListener('focus', (e) => {
-        let value = e.target.value.replace(prefix, '').trim();
+        let value = e.target.value.replace('R$ ', '').trim();
         if (isCurrency) {
             value = value.replace(/\./g, "").replace(",", "."); 
         }
@@ -90,12 +80,56 @@ function initDataManager(domElements, dataRefs) {
     setupCRUD('frete');
     setupCRUD('instalacao');
 
+    setupAmorim(
+        'amorim_modelos_cortina', 
+        'btn-abrir-modal-add-modelo-cortina', 
+        'modal-add-modelo-cortina', 
+        'form-add-modelo-cortina',
+        'modal-edit-modelo-cortina', 
+        'form-edit-modelo-cortina', 
+        'tabela-modelo-cortina-body'
+    );
+
+    setupAmorim(
+        'amorim_cores_cortina', 
+        'btn-abrir-modal-add-cor-cortina', 
+        'modal-add-cor-cortina', 
+        'form-add-cor-cortina',
+        'modal-edit-cor-cortina', 
+        'form-edit-cor-cortina', 
+        'tabela-cor-cortina-body'
+    );
+
+    setupAmorim(
+        'amorim_modelos_toldo', 
+        'btn-abrir-modal-add-modelo-toldo', 
+        'modal-add-modelo-toldo', 
+        'form-add-modelo-toldo',
+        'modal-edit-modelo-toldo', 
+        'form-edit-modelo-toldo', 
+        'tabela-modelo-toldo-body'
+    );
+
+    setupAmorim(
+        'amorim_cores_toldo', 
+        'btn-abrir-modal-add-cor-toldo', 
+        'modal-add-cor-toldo', 
+        'form-add-cor-toldo',
+        'modal-edit-cor-toldo', 
+        'form-edit-cor-toldo', 
+        'tabela-cor-toldo-body'
+    );
+
     setupPesquisa('tecidos', 'produto');
     setupPesquisa('confeccao', 'opcao');
     setupPesquisa('trilho', 'opcao');
     setupPesquisa('frete', 'opcao'); 
     setupPesquisa('instalacao', 'opcao'); 
-
+    setupPesquisa('amorim_modelos_cortina', 'opcao');
+    setupPesquisa('amorim_cores_cortina', 'opcao');
+    setupPesquisa('amorim_modelos_toldo', 'opcao');
+    setupPesquisa('amorim_cores_toldo', 'opcao');
+    
     setupInputFormatting('add-tecido-largura', 'measure');
     setupInputFormatting('add-tecido-atacado', 'currency');
     setupInputFormatting('edit-tecido-largura', 'measure');
@@ -119,6 +153,10 @@ function getRenderFunction(tabela) {
         case 'trilho': return renderizarTabelaTrilho;
         case 'frete': return renderizarTabelaFrete;
         case 'instalacao': return renderizarTabelaInstalacao;
+        case 'amorim_modelos_cortina': return (dados) => renderizarTabelaAmorimGen(dados, 'tabela-modelo-cortina-body');
+        case 'amorim_cores_cortina': return (dados) => renderizarTabelaAmorimGen(dados, 'tabela-cor-cortina-body');
+        case 'amorim_modelos_toldo': return (dados) => renderizarTabelaAmorimGen(dados, 'tabela-modelo-toldo-body');
+        case 'amorim_cores_toldo': return (dados) => renderizarTabelaAmorimGen(dados, 'tabela-cor-toldo-body');
         default: return null;
     }
 }
@@ -134,12 +172,40 @@ function gerarBotoesAcao() {
     return html;
 }
 
+function renderizarTabelaAmorimGen(dados, bodyId) {
+    const tbody = document.getElementById(bodyId);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const lista = dados || [];
+    
+    if (lista.length === 0) { 
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Nenhum item encontrado.</td></tr>'; 
+        return; 
+    }
+    
+    lista.sort((a,b) => a.opcao.localeCompare(b.opcao));
+
+    lista.forEach(d => {
+        const row = tbody.insertRow();
+        row.dataset.id = d.id;
+        row.dataset.opcao = d.opcao; 
+        
+        row.innerHTML = `
+            <td>${d.opcao}</td>
+            <td style="text-align: center;">
+                <button class="btn-editar">Editar</button> 
+                <button class="btn-excluir">Excluir</button>
+            </td>`;
+    });
+}
+
 function renderizarTabelaFrete(opcoes) { 
     const tbody = elements.tabelaFreteBody;
     if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
-    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="2">Nenhuma opção encontrada.</td></tr>'; return; }
+    
+    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="3">Nenhuma opção encontrada.</td></tr>'; return; }
     
     const botoes = gerarBotoesAcao();
 
@@ -148,11 +214,13 @@ function renderizarTabelaFrete(opcoes) {
         row.dataset.id = d.id;
         row.dataset.opcao = d.opcao || ''; 
         row.dataset.valor = d.valor || 0;
-        const opcaoTd = d.hasOwnProperty('opcao') ? `<td>${d.opcao}</td>` : '';
+        
+        const nomeExibicao = d.opcao && d.opcao.trim() !== '' ? d.opcao : `R$ ${formatDecimal(d.valor, 2)}`;
+        
         row.innerHTML = `
-            ${opcaoTd}
+            <td>${nomeExibicao}</td>
             <td>R$ ${formatDecimal(d.valor, 2)}</td>
-            <td>${botoes}</td>`;
+            <td style="text-align: center;">${botoes}</td>`;
     });
 }
 
@@ -161,7 +229,8 @@ function renderizarTabelaInstalacao(opcoes) {
     if (!tbody) return;
     tbody.innerHTML = '';
     const filtradas = (opcoes || []).filter(item => item.opcao !== '-');
-    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="2">Nenhuma opção encontrada.</td></tr>'; return; }
+    
+    if (filtradas.length === 0) { tbody.innerHTML = '<tr><td colspan="3">Nenhuma opção encontrada.</td></tr>'; return; }
    
     const botoes = gerarBotoesAcao();
 
@@ -170,11 +239,13 @@ function renderizarTabelaInstalacao(opcoes) {
         row.dataset.id = d.id;
         row.dataset.opcao = d.opcao || '';
         row.dataset.valor = d.valor || 0;
-        const opcaoTd = d.hasOwnProperty('opcao') ? `<td>${d.opcao}</td>` : '';
+        
+        const nomeExibicao = d.opcao && d.opcao.trim() !== '' ? d.opcao : `R$ ${formatDecimal(d.valor, 2)}`;
+
         row.innerHTML = `
-             ${opcaoTd}
+             <td>${nomeExibicao}</td>
             <td>R$ ${formatDecimal(d.valor, 2)}</td>
-            <td>${botoes}</td>`;
+            <td style="text-align: center;">${botoes}</td>`;
     });
 }
 
@@ -459,6 +530,7 @@ function setupPesquisa(tabela, chaveNome) {
     const nomeCapitalizado = tabela.charAt(0).toUpperCase() + tabela.slice(1);
     const input = elements[`inputPesquisa${nomeCapitalizado}`];
     const renderFunction = getRenderFunction(tabela);
+    
     if (!input || !renderFunction) return;
 
     input.addEventListener('keyup', () => {
@@ -468,6 +540,112 @@ function setupPesquisa(tabela, chaveNome) {
         );
         renderFunction(dadosFiltrados); 
     });
+}
+
+function setupAmorim(tabelaBanco, idBtnAdd, idModalAdd, idFormAdd, idModalEdit, idFormEdit, idTbody) {
+    const btnAdd = document.getElementById(idBtnAdd);
+    const modalAdd = document.getElementById(idModalAdd);
+    const formAdd = document.getElementById(idFormAdd);
+    const modalEdit = document.getElementById(idModalEdit);
+    const formEdit = document.getElementById(idFormEdit);
+    const tbody = document.getElementById(idTbody);
+
+    const render = () => {
+        if(!tbody) return;
+        const dados = dataArrays[tabelaBanco] || [];
+        renderizarTabelaAmorimGen(dataArrays[tabelaBanco], idTbody);
+    };
+
+    render(); 
+    document.addEventListener('dadosBaseAlterados', render);
+    document.addEventListener('dadosBaseCarregados', render); 
+
+    if (btnAdd) {
+        btnAdd.addEventListener('click', () => { 
+            if(formAdd) formAdd.reset(); 
+            openModal(modalAdd); 
+        });
+    }
+    
+    if (modalAdd) {
+        modalAdd.querySelectorAll('.btn-close-modal, .btn-cancelar').forEach(b => 
+            b.addEventListener('click', () => closeModal(modalAdd))
+        );
+    }
+
+    if (formAdd) {
+        formAdd.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = formAdd.querySelector('[name=opcao]').value;
+            const lojaId = await getMyLojaId();
+            
+            const { error } = await _supabase.from(tabelaBanco).insert({ loja_id: lojaId, opcao: nome });
+            
+            if(!error) { 
+                closeModal(modalAdd); 
+                showToast("Adicionado!"); 
+                document.dispatchEvent(new CustomEvent('dadosBaseAlterados')); 
+            } else {
+                showToast("Erro ao salvar", "error");
+            }
+        });
+    }
+
+    if (modalEdit) {
+        modalEdit.querySelectorAll('.btn-close-modal, .btn-cancelar').forEach(b => 
+            b.addEventListener('click', () => closeModal(modalEdit))
+        );
+    }
+
+    if (formEdit) {
+        formEdit.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = formEdit.querySelector('[name=id]').value;
+            const nome = formEdit.querySelector('[name=opcao]').value;
+            const lojaId = await getMyLojaId();
+            
+            const { error } = await _supabase.from(tabelaBanco).update({ opcao: nome }).match({ id, loja_id: lojaId });
+            
+            if(!error) { 
+                closeModal(modalEdit); 
+                showToast("Atualizado!"); 
+                document.dispatchEvent(new CustomEvent('dadosBaseAlterados')); 
+            } else {
+                showToast("Erro ao atualizar", "error");
+            }
+        });
+    }
+
+    if (tbody) {
+        tbody.addEventListener('click', async (e) => {
+            const target = e.target;
+            const row = target.closest('tr');
+            if(!row) return;
+            const id = row.dataset.id;
+            const nome = row.dataset.opcao;
+
+            if (target.classList.contains('btn-editar')) {
+                if(formEdit) {
+                    formEdit.querySelector('[name=id]').value = id;
+                    formEdit.querySelector('[name=opcao]').value = nome;
+                    openModal(modalEdit);
+                }
+            }
+
+           if (target.classList.contains('btn-excluir')) {
+                const lojaId = await getMyLojaId();
+                if (window.prepararExclusaoGenerica) {
+                    window.prepararExclusaoGenerica({ 
+                        id, 
+                        nome, 
+                        tabela: tabelaBanco, 
+                        loja_id: lojaId, 
+                        elemento: row 
+                    });
+                }
+            }
+        });
+    }
 }
 
 export {
