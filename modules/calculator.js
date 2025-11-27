@@ -29,6 +29,7 @@ let DADOS_MODELO_CORTINA = [];
 let DADOS_MODELO_TOLDO = [];
 let DADOS_COR_ACESSORIOS = [];
 const DADOS_COMANDO = ["MANUAL", "MOTORIZADO"];
+const DADOS_LADO_COMANDO = ["DIREITO", "ESQUERDO"];
 
 let elements = {};
 let dataRefs = {};
@@ -599,6 +600,7 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
     preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-cortina'), DADOS_MODELO_CORTINA);
     preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS);
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-lado-comando'), DADOS_LADO_COMANDO);
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
     setupCurrencyFormatting(novaLinha.querySelector('.input-valor-manual'));
@@ -621,6 +623,7 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
         novaLinha.querySelector('.input-colecao').value = estadoLinha.colecao || '';
         novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
         selComando.value = estadoLinha.comando || DADOS_COMANDO[0];
+        novaLinha.querySelector('.select-lado-comando').value = estadoLinha.lado_comando || DADOS_LADO_COMANDO[0];
         if(estadoLinha.comando === 'MOTORIZADO') selMotor.value = estadoLinha.altura_comando || '127v';
         else inpManual.value = estadoLinha.altura_comando || '';
         toggleCmd();
@@ -648,6 +651,7 @@ function adicionarLinhaToldos(tableBody, estadoLinha, isInitialLoad) {
     preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-toldo'), DADOS_MODELO_TOLDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS);
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-lado-comando'), DADOS_LADO_COMANDO);
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
     setupCurrencyFormatting(novaLinha.querySelector('.input-valor-manual'));
@@ -670,6 +674,7 @@ function adicionarLinhaToldos(tableBody, estadoLinha, isInitialLoad) {
         novaLinha.querySelector('.input-colecao').value = estadoLinha.colecao || '';
         novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
         selComando.value = estadoLinha.comando || DADOS_COMANDO[0];
+        novaLinha.querySelector('.select-lado-comando').value = estadoLinha.lado_comando || DADOS_LADO_COMANDO[0];
         if(estadoLinha.comando === 'MOTORIZADO') selMotor.value = estadoLinha.altura_comando || '127v';
         else inpManual.value = estadoLinha.altura_comando || '';
         toggleCmd();
@@ -904,6 +909,7 @@ function obterEstadoSection(section) {
             obj.colecao = l.querySelector('.input-colecao')?.value;
             obj.cor_acessorios = l.querySelector('.select-cor-acessorios')?.value;
             obj.comando = l.querySelector('.select-comando')?.value;
+            obj.lado_comando = l.querySelector('.select-lado-comando')?.value;
             obj.altura_comando = (obj.comando==='MOTORIZADO') ? l.querySelector('.select-altura-comando-motor')?.value : l.querySelector('.input-altura-comando-manual')?.value;
             obj.valor_manual = l.querySelector('.input-valor-manual')?.value;
         }

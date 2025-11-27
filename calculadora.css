@@ -470,6 +470,10 @@ body.dark-mode .btn-print-orcamento:hover {
     transition: transform 0.3s ease-in-out;
     z-index: 10;
 }
+
+.tabela-calculo .select-lado-comando {
+    min-width: 90px;
+}
 @media (max-width: 768px) {
     .calculator-header { display: flex; align-items: center; gap: 10px; padding: 10px; flex-wrap: wrap; }
     #btn-voltar-clientes { order: 1; width: auto; flex-shrink: 0; font-size: 14px; padding: 8px 12px; margin-right: 0; }
@@ -757,7 +761,7 @@ body.dark-mode .btn-print-orcamento:hover {
     .quote-section[data-section-type="tecido"] .print-col-observacao { width: 11%; } 
 
     .quote-section[data-section-type="amorim"] .print-col-ambiente,
-    .quote-section[data-section-type="toldos"] .print-col-ambiente { width: 10%; }
+    .quote-section[data-section-type="toldos"] .print-col-ambiente { width: 8%; }
 
     .quote-section[data-section-type="amorim"] .print-col-largura,
     .quote-section[data-section-type="toldos"] .print-col-largura { width: 6%; }
@@ -781,7 +785,10 @@ body.dark-mode .btn-print-orcamento:hover {
     .quote-section[data-section-type="toldos"] .print-col-comando { width: 8%; }
 
     .quote-section[data-section-type="amorim"] .print-col-alt-comando,
-    .quote-section[data-section-type="toldos"] .print-col-alt-comando { width: 8%; }
+    .quote-section[data-section-type="toldos"] .print-col-alt-comando { width: 6%; }
+
+    .quote-section[data-section-type="amorim"] .print-col-lado-comando,
+    .quote-section[data-section-type="toldos"] .print-col-lado-comando { width: 6%; }
 
     .quote-section[data-section-type="amorim"] .print-col-valor,
     .quote-section[data-section-type="toldos"] .print-col-valor { width: 8%; }
@@ -790,7 +797,7 @@ body.dark-mode .btn-print-orcamento:hover {
     .quote-section[data-section-type="toldos"] .print-col-parcelado { width: 8%; }
 
     .quote-section[data-section-type="amorim"] .print-col-observacao,
-    .quote-section[data-section-type="toldos"] .print-col-observacao { width: 14%; } 
+    .quote-section[data-section-type="toldos"] .print-col-observacao { width: 12%; } 
     .tabela-calculo input::placeholder {
     color: transparent !important;
     opacity: 0 !important;
