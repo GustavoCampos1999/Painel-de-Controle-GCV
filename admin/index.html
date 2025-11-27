@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Super Admin - GCV</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="../images/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gerenciamento de Lojas</h1>
+            <button class="btn-voltar" onclick="window.location.href='../index.html'">Voltar ao Sistema</button>
+        </header>
+
+        <div id="loading" class="loading">Verificando permissões e carregando dados...</div>
+        
+        <table id="tabela-lojas" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Loja / Empresa</th>
+                    <th>Login (Dono)</th>
+                    <th>CNPJ</th>
+                    <th>Status</th>
+                    <th>Validade</th>
+                    <th style="text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-lojas"></tbody>
+        </table>
+    </div>
+
+    <div id="modal-funcionarios" class="modal-overlay">
+        <div class="modal-box">
+            <button class="modal-close btn-fechar-modal">×</button>
+            <h2 class="modal-title">Funcionários da Loja</h2>
+            <div id="lista-funcionarios" class="users-list">
+                <p style="color:#888; text-align:center;">Carregando...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmacao" class="modal-overlay">
+        <div class="modal-box" style="max-width: 400px; text-align: center;">
+            <h2 id="modal-confirm-titulo" class="modal-title" style="border:none; padding:0; margin-bottom:10px;">Confirmar</h2>
+            <p id="modal-confirm-texto" style="color:#ccc; margin-bottom: 25px;">Tem certeza?</p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button class="action-btn btn-voltar btn-fechar-modal" style="background:#444;">Cancelar</button>
+                <button id="btn-confirm-acao" class="action-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-editar-dias" class="modal-overlay">
+        <div class="modal-box" style="max-width: 400px;">
+            <h2 class="modal-title">Ajustar Validade</h2>
+            <p style="color:#ccc; font-size:14px; margin-bottom:15px;">
+                Digite o total de dias restantes ou use <code>+30</code> para somar.
+            </p>
+            <input type="text" id="input-dias" placeholder="Ex: 30 ou +15" 
+                   style="width:100%; padding:10px; margin-bottom:20px; background:#333; border:1px solid #555; color:#fff; border-radius:5px;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="action-btn btn-voltar btn-fechar-modal" style="background:#444;">Cancelar</button>
+                <button id="btn-salvar-dias" class="action-btn btn-ativar">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

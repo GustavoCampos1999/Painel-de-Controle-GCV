@@ -11,14 +11,21 @@
         
         <h2 style="font-size: 1.2em; margin-bottom: 15px;">Criar Acesso</h2>
         <form id="form-register">
+            <div style="margin-bottom: 20px;">
+                <label for="cnpj">CNPJ</label>
+                <input type="text" id="cnpj" required placeholder="Digite para buscar a empresa...">
+                
+                <div style="margin-top: 5px; line-height: 1.2;">
+                    <span id="mensagem-info" style="display: block; color: #007bff; font-size: 13px; font-weight: 500;"></span>
+                    <span id="mensagem-erro" style="display: block; color: #dc3545; font-size: 13px; font-weight: 500;"></span>
+                </div>
+            </div>
+
             <div>
                 <label for="nome_empresa">Nome da Empresa</label>
-                <input type="text" id="nome_empresa" required>
+                <input type="text" id="nome_empresa" required readonly style="background-color: #e9ecef; cursor: not-allowed; color: #555; font-weight: bold;">
             </div>
-            <div>
-                <label for="cnpj">CNPJ (Somente números)</label>
-                <input type="text" id="cnpj" required>
-            </div>
+
              <div>
                 <label for="telefone">Telefone</label>
                 <input type="tel" id="telefone" required>
@@ -28,7 +35,7 @@
                 <input type="text" id="nome_usuario" required>
             </div>
             <div>
-                <label for="email">Email (Será seu login de admin)</label>
+                <label for="email">Email (Será seu login)</label>
                 <input type="email" id="email" required>
             </div>
             <div>
@@ -39,9 +46,8 @@
                 <label for="confirmar_senha">Confirmar Senha</label>
                 <input type="password" id="confirmar_senha" placeholder="Repita a senha" required>
             </div>
+
             <button type="submit" id="btn-register">Criar Conta e Iniciar Teste de 7 Dias</button>
-            <p id="mensagem-info" style="color: #007bff; margin-top: 15px; font-size: 14px;"></p>
-            <p id="mensagem-erro" style="color: #dc3545; margin-top: 15px; font-size: 14px;"></p>
         </form>
         <div style="text-align: center; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
             <a href="login.html" style="text-decoration: none; color: #555;">Já tem uma conta? Faça Login</a>
