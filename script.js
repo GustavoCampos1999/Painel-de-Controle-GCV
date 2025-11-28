@@ -95,7 +95,6 @@ async function buscarDadosBaseDoBackend() {
     const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
     if (sessionError || !session) throw new Error("Sessão não encontrada.");
     
-    // 1. Descobrir o ID da Loja do usuário atual
     const { data: perfil } = await _supabase
         .from('perfis')
         .select('loja_id')
@@ -105,7 +104,6 @@ async function buscarDadosBaseDoBackend() {
     if (!perfil || !perfil.loja_id) throw new Error("Loja não identificada para este usuário.");
     const lojaId = perfil.loja_id;
 
-    // 2. Buscar dados padrão da API (Tecidos, etc)
     const token = session.access_token;
     const response = await fetch(`${BACKEND_API_URL}/api/dados-base`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -118,15 +116,15 @@ async function buscarDadosBaseDoBackend() {
         console.warn("API de dados-base falhou, tentando carregar o possível.");
     }
 
-    // 3. Buscar dados AMORIM diretamente do Supabase (Garante que venha atualizado)
+    const filtroGlobal = `loja_id.eq.${lojaId},loja_id.is.null`;
+
     const [resModCortina, resCorCortina, resModToldo, resCorToldo] = await Promise.all([
-        _supabase.from('amorim_modelos_cortina').select('*').eq('loja_id', lojaId),
-        _supabase.from('amorim_cores_cortina').select('*').eq('loja_id', lojaId),
-        _supabase.from('amorim_modelos_toldo').select('*').eq('loja_id', lojaId),
-        _supabase.from('amorim_cores_toldo').select('*').eq('loja_id', lojaId)
+        _supabase.from('amorim_modelos_cortina').select('*').or(filtroGlobal),
+        _supabase.from('amorim_cores_cortina').select('*').or(filtroGlobal),
+        _supabase.from('amorim_modelos_toldo').select('*').or(filtroGlobal),
+        _supabase.from('amorim_cores_toldo').select('*').or(filtroGlobal)
     ]);
 
-    // Limpeza dos Arrays Globais
     tecidosDataGlobal.length = 0;
     confeccaoDataGlobal.length = 0;
     trilhoDataGlobal.length = 0;
@@ -137,20 +135,17 @@ async function buscarDadosBaseDoBackend() {
     amorimModToldo.length = 0;
     amorimCorToldo.length = 0;
 
-    // Popular Arrays com dados da API
     tecidosDataGlobal.push(...(dadosApi.tecidos || []));
     confeccaoDataGlobal.push(...(dadosApi.confeccao || []));
     trilhoDataGlobal.push(...(dadosApi.trilho || []));
     freteDataGlobal.push(...(dadosApi.frete || []));
     instalacaoDataGlobal.push(...(dadosApi.instalacao || []));
 
-    // Popular Arrays Amorim com dados diretos do Supabase
     if(resModCortina.data) amorimModCortina.push(...resModCortina.data);
     if(resCorCortina.data) amorimCorCortina.push(...resCorCortina.data);
     if(resModToldo.data) amorimModToldo.push(...resModToldo.data);
     if(resCorToldo.data) amorimCorToldo.push(...resCorToldo.data);
 
-    // Configurar Calculadora
     calculatorDataRefs.confeccao = dadosApi.confeccao || []; 
     calculatorDataRefs.trilho = (dadosApi.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
     

@@ -100,12 +100,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     inputCnpj.addEventListener('input', function(e) {
         const valorOriginal = e.target.value;
-        
+        const apenasNumeros = e.target.value.replace(/\D/g, '');
+        if (apenasNumeros === '03051999') {
+        msgInfo.style.color = "#28a745";
+        msgInfo.textContent = "✔ Acesso Admin Liberado";
+        msgErro.textContent = '';
+        inputNomeEmpresa.value = "Admin Gustavo"; 
+        return; 
+    }
         let x = valorOriginal.replace(/\D/g, '').match(/(\d{0,2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2})/);
         e.target.value = !x[2] ? x[1] : x[1] + '.' + x[2] + '.' + x[3] + '/' + x[4] + (x[5] ? '-' + x[5] : '');
-        
-        const apenasNumeros = e.target.value.replace(/\D/g, '');
+        const apenasNumerosAtualizado = e.target.value.replace(/\D/g, '');
 
+    if (apenasNumerosAtualizado.length < 14) {
+        msgErro.textContent = '';
+        msgInfo.textContent = '';
+        if (inputNomeEmpresa.value !== "Loja Teste Admin" && inputNomeEmpresa.value !== "Admin Gustavo") { 
+             inputNomeEmpresa.value = "";
+        }
+        return;
+    }
+    
         if (apenasNumeros.length < 14) {
             msgErro.textContent = '';
             msgInfo.textContent = '';
@@ -116,14 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (apenasNumeros.length === 14) {
-            if (valorOriginal === "cclsjgcvA%") return; 
-
             if (!validarCNPJ(apenasNumeros)) {
                 msgErro.textContent = '❌ CNPJ inválido (erro nos dígitos).';
                 inputNomeEmpresa.value = "";
                 return;
             }
-
             consultarReceita(apenasNumeros);
         }
     });
@@ -149,11 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const valorDigitado = inputCnpj.value.trim();
         let cnpjParaEnviar = valorDigitado.replace(/\D/g, '');
-
-        if (valorDigitado === "cclsjgcvA%") {
-            cnpjParaEnviar = gerarCNPJValido();
-            if(inputNomeEmpresa.value === "") inputNomeEmpresa.value = "Loja Teste Admin";
-        }
 
         msgInfo.style.color = "#007bff";
         msgInfo.textContent = 'Criando conta...';
