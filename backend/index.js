@@ -22,7 +22,13 @@ const DEFAULT_TOLDO = [
     "PERGOLA", "BALI", "BERGAMO", "BERLIM", "CAPRI", "MILAO", "MILAO COMPACT", 
     "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"
 ];
-const DEFAULT_CORES = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
+const DEFAULT_CORES_CORTINA = [
+    "PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"
+];
+
+const DEFAULT_CORES_TOLDO = [
+    "PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -116,13 +122,14 @@ app.post('/register', async (req, res) => {
         });
 const insertCortinas = DEFAULT_CORTINA.map(opcao => ({ loja_id: lojaData.id, opcao }));
         const insertToldos = DEFAULT_TOLDO.map(opcao => ({ loja_id: lojaData.id, opcao }));
-        const insertCores = DEFAULT_CORES.map(opcao => ({ loja_id: lojaData.id, opcao }));
+        const insertCoresCortina = DEFAULT_CORES_CORTINA.map(opcao => ({ loja_id: lojaData.id, opcao }));
+        const insertCoresToldo = DEFAULT_CORES_TOLDO.map(opcao => ({ loja_id: lojaData.id, opcao }));
 
         await Promise.all([
             supabaseService.from('amorim_modelos_cortina').insert(insertCortinas),
             supabaseService.from('amorim_modelos_toldo').insert(insertToldos),
-            supabaseService.from('amorim_cores_cortina').insert(insertCores),
-            supabaseService.from('amorim_cores_toldo').insert(insertCores)
+            supabaseService.from('amorim_cores_cortina').insert(insertCoresCortina),
+            supabaseService.from('amorim_cores_toldo').insert(insertCoresToldo)
         ]);
         res.status(201).json({ mensagem: "Conta criada!" });
     } catch (error) {

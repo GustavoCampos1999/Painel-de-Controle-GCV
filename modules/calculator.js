@@ -14,20 +14,10 @@ const TAXAS_PADRAO = {
     '18x': 0.1457
 };
 let TAXAS_PARCELAMENTO = { ...TAXAS_PADRAO };
-const DEFAULT_CORTINA = [
-    "CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", 
-    "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", 
-    "PH 25", "PH 50", "PH 75", "PLISSADA", "ROLO", "ROMANA", 
-    "TRILHO MOTORIZADO", "VERTIGLISS"
-];
-const DEFAULT_TOLDO = [
-    "PERGOLA", "BALI", "BERGAMO", "BERLIM", "CAPRI", "MILAO", "MILAO COMPACT", 
-    "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"
-];
-const DEFAULT_CORES = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
 const DADOS_MODELO_CORTINA = []; 
 const DADOS_MODELO_TOLDO = [];
-const DADOS_COR_ACESSORIOS = [];
+const DADOS_COR_ACESSORIOS_CORTINA = [];
+const DADOS_COR_ACESSORIOS_TOLDO = [];
 const DADOS_COMANDO = ["MANUAL", "MOTORIZADO"];
 const DADOS_LADO_COMANDO = ["DIREITO", "ESQUERDO"];
 
@@ -592,9 +582,9 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
     
     preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-cortina'), DADOS_MODELO_CORTINA);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS);
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-lado-comando'), DADOS_LADO_COMANDO);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS_CORTINA);
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
     setupCurrencyFormatting(novaLinha.querySelector('.input-valor-manual'));
@@ -643,7 +633,7 @@ function adicionarLinhaToldos(tableBody, estadoLinha, isInitialLoad) {
     const template = document.getElementById('template-linha-toldos');
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
     preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-toldo'), DADOS_MODELO_TOLDO);
-    preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS_TOLDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-lado-comando'), DADOS_LADO_COMANDO);
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
@@ -666,7 +656,7 @@ function adicionarLinhaToldos(tableBody, estadoLinha, isInitialLoad) {
         novaLinha.querySelector('.select-modelo-toldo').value = estadoLinha.modelo_toldo || DADOS_MODELO_TOLDO[0];
         novaLinha.querySelector('.input-cod-tecido').value = estadoLinha.codigo_tecido || '';
         novaLinha.querySelector('.input-colecao').value = estadoLinha.colecao || '';
-        novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
+        novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS_TOLDO[0];
         selComando.value = estadoLinha.comando || DADOS_COMANDO[0];
         novaLinha.querySelector('.select-lado-comando').value = estadoLinha.lado_comando || DADOS_LADO_COMANDO[0];
         if(estadoLinha.comando === 'MOTORIZADO') selMotor.value = estadoLinha.altura_comando || '127v';
@@ -824,10 +814,14 @@ export function atualizarListasAmorim() {
         DADOS_MODELO_TOLDO.push(...dataRefs.amorim_modelos_toldo.map(i => i.opcao).sort());
     }
 
-    const coresBanco = [...(dataRefs.amorim_cores_cortina||[]), ...(dataRefs.amorim_cores_toldo||[])];
-    if (coresBanco.length > 0) {
-        DADOS_COR_ACESSORIOS.length = 0;
-        DADOS_COR_ACESSORIOS.push(...[...new Set(coresBanco.map(i => i.opcao))].sort());
+    if (dataRefs.amorim_cores_cortina) {
+        DADOS_COR_ACESSORIOS_CORTINA.length = 0;
+        DADOS_COR_ACESSORIOS_CORTINA.push(...dataRefs.amorim_cores_cortina.map(i => i.opcao).sort());
+    }
+
+    if (dataRefs.amorim_cores_toldo) {
+        DADOS_COR_ACESSORIOS_TOLDO.length = 0;
+        DADOS_COR_ACESSORIOS_TOLDO.push(...dataRefs.amorim_cores_toldo.map(i => i.opcao).sort());
     }
 }
 
