@@ -3,7 +3,7 @@ import { checkUserSession, setupLogoutButton } from './modules/auth.js';
 import { initUI, showToast, openModal, closeModal } from './modules/ui.js'; 
 import { initCRM, carregarClientes } from './modules/crm.js'; 
 import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js'; 
-import { initCalculator, showCalculatorView } from './modules/calculator.js'; 
+import { initCalculator, showCalculatorView, atualizarListasAmorim } from './modules/calculator.js';
 import { initTeamManager } from './modules/team.js';
 import { loadPermissions } from './modules/permissions.js';
 import { initRealtime } from './modules/realtime.js';
@@ -43,7 +43,11 @@ const calculatorDataRefs = {
      confeccao: {}, 
      trilho: {},    
      frete: {},    
-     instalacao: {} 
+     instalacao: {},
+     amorim_modelos_cortina: amorimModCortina,
+     amorim_cores_cortina: amorimCorCortina,
+     amorim_modelos_toldo: amorimModToldo,
+     amorim_cores_toldo: amorimCorToldo
 };
 
 function showClientListLocal() {
@@ -113,16 +117,14 @@ async function buscarDadosBaseDoBackend() {
     if (response.ok) {
         dadosApi = await response.json();
     } else {
-        console.warn("API de dados-base falhou, tentando carregar o possível.");
+        console.warn("API de dados-base falhou.");
     }
 
-    const filtroGlobal = `loja_id.eq.${lojaId},loja_id.is.null`;
-
     const [resModCortina, resCorCortina, resModToldo, resCorToldo] = await Promise.all([
-        _supabase.from('amorim_modelos_cortina').select('*').or(filtroGlobal),
-        _supabase.from('amorim_cores_cortina').select('*').or(filtroGlobal),
-        _supabase.from('amorim_modelos_toldo').select('*').or(filtroGlobal),
-        _supabase.from('amorim_cores_toldo').select('*').or(filtroGlobal)
+        _supabase.from('amorim_modelos_cortina').select('*').eq('loja_id', lojaId),
+        _supabase.from('amorim_cores_cortina').select('*').eq('loja_id', lojaId),
+        _supabase.from('amorim_modelos_toldo').select('*').eq('loja_id', lojaId),
+        _supabase.from('amorim_cores_toldo').select('*').eq('loja_id', lojaId)
     ]);
 
     tecidosDataGlobal.length = 0;
@@ -149,29 +151,32 @@ async function buscarDadosBaseDoBackend() {
     calculatorDataRefs.confeccao = dadosApi.confeccao || []; 
     calculatorDataRefs.trilho = (dadosApi.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
     
+    calculatorDataRefs.amorim_modelos_cortina = amorimModCortina;
+    calculatorDataRefs.amorim_cores_cortina = amorimCorCortina;
+    calculatorDataRefs.amorim_modelos_toldo = amorimModToldo;
+    calculatorDataRefs.amorim_cores_toldo = amorimCorToldo;
+
     calculatorDataRefs.frete = (dadosApi.frete || []).reduce((acc, item) => {
         const valor = item.valor || 0;
-        const valorFormatado = `R$ ${valor.toFixed(2).replace('.', ',')}`;
-        const key = (item.opcao && item.opcao.trim() !== '') ? `${item.opcao}` : valorFormatado;
+        const key = (item.opcao && item.opcao.trim() !== '') ? `${item.opcao}` : `R$ ${valor.toFixed(2).replace('.', ',')}`;
         acc[key] = valor;
         return acc;
      }, {});
 
     calculatorDataRefs.instalacao = (dadosApi.instalacao || []).reduce((acc, item) => {
         const valor = item.valor || 0;
-        const valorFormatado = `R$ ${valor.toFixed(2).replace('.', ',')}`;
-        const key = (item.opcao && item.opcao.trim() !== '') ? `${item.opcao}` : valorFormatado;
+        const key = (item.opcao && item.opcao.trim() !== '') ? `${item.opcao}` : `R$ ${valor.toFixed(2).replace('.', ',')}`;
         acc[key] = valor;
         return acc;
      }, {});
 
     isDataLoadedFlag.value = true; 
     document.dispatchEvent(new CustomEvent('dadosBaseCarregados')); 
-    console.log("Dados carregados com sucesso (Híbrido API + Supabase).");
+    console.log("Dados carregados com sucesso.");
 
   } catch (error) {
     console.error("Erro ao buscar dados:", error);
-    showToast("Erro ao sincronizar dados. Verifique sua conexão.", "error");
+    showToast("Erro ao sincronizar dados.", "error");
     isDataLoadedFlag.value = false;
   }
 }
@@ -342,6 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('dadosBaseAlterados', async () => {
         console.log("Evento 'dadosBaseAlterados' recebido, recarregando dados base do backend...");
         await buscarDadosBaseDoBackend(); 
+        atualizarListasAmorim();
         renderizarTabelaTecidos(dataRefs.tecidos);
         renderizarTabelaConfeccao(dataRefs.confeccao);
         renderizarTabelaTrilho(dataRefs.trilho);
@@ -412,7 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ]);
 
         console.log("Carregamento inicial concluído.");
-
+        atualizarListasAmorim();
         renderizarTabelaTecidos(dataRefs.tecidos);
         renderizarTabelaConfeccao(dataRefs.confeccao);
         renderizarTabelaTrilho(dataRefs.trilho);

@@ -25,9 +25,9 @@ const DEFAULT_TOLDO = [
     "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"
 ];
 const DEFAULT_CORES = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
-let DADOS_MODELO_CORTINA = [];
-let DADOS_MODELO_TOLDO = [];
-let DADOS_COR_ACESSORIOS = [];
+const DADOS_MODELO_CORTINA = []; 
+const DADOS_MODELO_TOLDO = [];
+const DADOS_COR_ACESSORIOS = [];
 const DADOS_COMANDO = ["MANUAL", "MOTORIZADO"];
 const DADOS_LADO_COMANDO = ["DIREITO", "ESQUERDO"];
 
@@ -60,24 +60,7 @@ function setDirty() {
 export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoadedFlag) {
     elements = domElements;
     dataRefs = dataArrays;
-    if (dataRefs.amorim_modelos_cortina && dataRefs.amorim_modelos_cortina.length > 0) {
-        DADOS_MODELO_CORTINA = dataRefs.amorim_modelos_cortina.map(i => i.opcao).sort();
-    } else { 
-        DADOS_MODELO_CORTINA = [...DEFAULT_CORTINA].sort(); 
-    }
-
-    if (dataRefs.amorim_modelos_toldo && dataRefs.amorim_modelos_toldo.length > 0) {
-        DADOS_MODELO_TOLDO = dataRefs.amorim_modelos_toldo.map(i => i.opcao).sort();
-    } else { 
-        DADOS_MODELO_TOLDO = [...DEFAULT_TOLDO].sort(); 
-    }
-
-    const coresBanco = [...(dataRefs.amorim_cores_cortina||[]), ...(dataRefs.amorim_cores_toldo||[])];
-    if (coresBanco.length > 0) {
-        DADOS_COR_ACESSORIOS = [...new Set(coresBanco.map(i => i.opcao))].sort();
-    } else {
-        DADOS_COR_ACESSORIOS = [...DEFAULT_CORES].sort();
-    }
+    atualizarListasAmorim();
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
     carregarTaxasDoBanco();
@@ -828,6 +811,26 @@ async function calcularOrcamentoLinha(linha) {
     recalcularTotaisSelecionados();
 }
 
+export function atualizarListasAmorim() {
+    console.log("Atualizando listas Amorim na calculadora...");
+    
+    if (dataRefs.amorim_modelos_cortina && dataRefs.amorim_modelos_cortina.length > 0) {
+        DADOS_MODELO_CORTINA.length = 0; 
+        DADOS_MODELO_CORTINA.push(...dataRefs.amorim_modelos_cortina.map(i => i.opcao).sort());
+    }
+
+    if (dataRefs.amorim_modelos_toldo && dataRefs.amorim_modelos_toldo.length > 0) {
+        DADOS_MODELO_TOLDO.length = 0;
+        DADOS_MODELO_TOLDO.push(...dataRefs.amorim_modelos_toldo.map(i => i.opcao).sort());
+    }
+
+    const coresBanco = [...(dataRefs.amorim_cores_cortina||[]), ...(dataRefs.amorim_cores_toldo||[])];
+    if (coresBanco.length > 0) {
+        DADOS_COR_ACESSORIOS.length = 0;
+        DADOS_COR_ACESSORIOS.push(...[...new Set(coresBanco.map(i => i.opcao))].sort());
+    }
+}
+
 export async function showCalculatorView(clientId, clientName) {
     if (!elements.clientListView) return;
     elements.clientListView.style.display = 'none';
@@ -962,7 +965,8 @@ function renderizarTabs() {
 }
 
 function ativarAba(index, isInitialLoad) {
-    if(!isInitialLoad && abaAtivaIndex >= 0) {
+    // 1. Se não for carregamento inicial, salva o estado da aba atual antes de trocar
+    if(!isInitialLoad && abaAtivaIndex >= 0 && estadoAbas[abaAtivaIndex]) {
         const sections = {};
         document.querySelectorAll('#quote-sections-container .quote-section').forEach(sec => {
             sections[sec.dataset.sectionType] = { active: true, ambientes: obterEstadoSection(sec) };
@@ -973,7 +977,11 @@ function ativarAba(index, isInitialLoad) {
     
     abaAtivaIndex = index;
     renderizarTabs();
-    
+    ['tecido', 'amorim', 'toldos'].forEach(type => {
+        const btn = document.getElementById(`btn-add-section-${type}`);
+        if(btn) btn.classList.remove('hidden');
+    });
+
     const container = document.getElementById('quote-sections-container');
     container.innerHTML = '';
     
@@ -986,17 +994,21 @@ function ativarAba(index, isInitialLoad) {
         if (data && data.active) {
             const btn = document.getElementById(`btn-add-section-${type}`);
             addSection(type, btn, isInitialLoad);
+            
             const body = container.querySelector(`.quote-section[data-section-type="${type}"] tbody`);
-            body.innerHTML = '';
-            (data.ambientes || []).forEach(amb => {
-                if(type==='tecido') adicionarLinhaTecido(body, amb);
-                else if(type==='amorim') adicionarLinhaAmorim(body, amb);
-                else adicionarLinhaToldos(body, amb);
-            });
+            if (body) {
+                body.innerHTML = '';
+                (data.ambientes || []).forEach(amb => {
+                    if(type==='tecido') adicionarLinhaTecido(body, amb);
+                    else if(type==='amorim') adicionarLinhaAmorim(body, amb);
+                    else if(type==='toldos') adicionarLinhaToldos(body, amb);
+                });
+            }
         }
     });
     
-    if(elements.chkSummaryVendaRealizada) elements.chkSummaryVendaRealizada.checked = aba.venda_realizada;
+    if(elements.chkSummaryVendaRealizada) elements.chkSummaryVendaRealizada.checked = aba.venda_realizada || false;
+    
     checkSectionControls();
     recalcularTotaisSelecionados();
 }

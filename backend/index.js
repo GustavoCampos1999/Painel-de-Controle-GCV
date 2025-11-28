@@ -12,6 +12,17 @@ const allowedOrigins = [
   'http://127.0.0.1:5500',
   'http://localhost:5500'
 ];
+const DEFAULT_CORTINA = [
+    "CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", 
+    "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", 
+    "PH 25", "PH 50", "PH 75", "PLISSADA", "ROLO", "ROMANA", 
+    "TRILHO MOTORIZADO", "VERTIGLISS"
+];
+const DEFAULT_TOLDO = [
+    "PERGOLA", "BALI", "BERGAMO", "BERLIM", "CAPRI", "MILAO", "MILAO COMPACT", 
+    "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"
+];
+const DEFAULT_CORES = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -103,7 +114,16 @@ app.post('/register', async (req, res) => {
             role: 'admin',
             nome_usuario
         });
+const insertCortinas = DEFAULT_CORTINA.map(opcao => ({ loja_id: lojaData.id, opcao }));
+        const insertToldos = DEFAULT_TOLDO.map(opcao => ({ loja_id: lojaData.id, opcao }));
+        const insertCores = DEFAULT_CORES.map(opcao => ({ loja_id: lojaData.id, opcao }));
 
+        await Promise.all([
+            supabaseService.from('amorim_modelos_cortina').insert(insertCortinas),
+            supabaseService.from('amorim_modelos_toldo').insert(insertToldos),
+            supabaseService.from('amorim_cores_cortina').insert(insertCores),
+            supabaseService.from('amorim_cores_toldo').insert(insertCores)
+        ]);
         res.status(201).json({ mensagem: "Conta criada!" });
     } catch (error) {
         console.error(error);
