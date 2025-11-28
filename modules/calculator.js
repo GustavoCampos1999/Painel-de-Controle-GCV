@@ -529,22 +529,22 @@ function adicionarLinhaTecido(tableBody, estadoLinha, isInitialLoad) {
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoCortina'), 'cortina');
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoForro'), 'forro'); 
     preencherSelectTecidosCalculadora(novaLinha.querySelector('.select-codTecidoBlackout'), 'blackout');
-    
-    const selConf = novaLinha.querySelector('.select-confecao');
-    selConf.innerHTML = '<option value="-" data-valor-real="0">NENHUM</option>';
-    
     preencherSelectCalculadora(novaLinha.querySelector('.select-trilho'), dataRefs.trilho, true, "NENHUM");
     preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "NENHUM", true);
-
-    novaLinha.querySelector('.input-altura').addEventListener('blur', () => { atualizarOpcoesConfeccao(novaLinha); calcularOrcamentoLinha(novaLinha); setDirty(); });
+    novaLinha.querySelector('.input-altura').addEventListener('blur', () => { calcularOrcamentoLinha(novaLinha); setDirty(); });
     novaLinha.querySelector('.input-largura').addEventListener('blur', () => { calcularOrcamentoLinha(novaLinha); setDirty(); });
 
     if (estadoLinha) {
         novaLinha.querySelector('.input-ambiente').value = estadoLinha.ambiente || '';
         novaLinha.querySelector('.input-largura').value = formatDecimal(estadoLinha.largura, 3);
         novaLinha.querySelector('.input-altura').value = formatDecimal(estadoLinha.altura, 3);
-        atualizarOpcoesConfeccao(novaLinha);
-        if(estadoLinha.confecaoTexto) selConf.value = estadoLinha.confecaoTexto;
+        
+        const selConf = novaLinha.querySelector('.select-confecao');
+        if(estadoLinha.confecaoTexto && selConf) {
+             selConf.innerHTML = `<option value="${estadoLinha.confecaoTexto}">${estadoLinha.confecaoTexto}</option>`;
+             selConf.value = estadoLinha.confecaoTexto;
+        }
+
         novaLinha.querySelector('.select-franzCortina').value = estadoLinha.franzCortina || DADOS_FRANZ_CORTINA[0];
         novaLinha.querySelector('.select-codTecidoCortina').value = estadoLinha.codTecidoCortina || 'SEM TECIDO';
         novaLinha.querySelector('.select-codTecidoForro').value = estadoLinha.codTecidoForro || 'SEM TECIDO';
@@ -574,7 +574,10 @@ function adicionarLinhaTecido(tableBody, estadoLinha, isInitialLoad) {
     setupCurrencyFormatting(inOutros);
 
     tableBody.appendChild(novaLinha);
-    if(!estadoLinha) { atualizarOpcoesConfeccao(novaLinha); calcularOrcamentoLinha(novaLinha); if(!isInitialLoad) setDirty(); }
+    if(!estadoLinha) { 
+        calcularOrcamentoLinha(novaLinha); 
+        if(!isInitialLoad) setDirty(); 
+    }
 }
 
 function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
@@ -605,7 +608,7 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
         novaLinha.querySelector('.select-modelo-cortina').value = estadoLinha.modelo_cortina || DADOS_MODELO_CORTINA[0];
         novaLinha.querySelector('.input-cod-tecido').value = estadoLinha.codigo_tecido || '';
         novaLinha.querySelector('.input-colecao').value = estadoLinha.colecao || '';
-        novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS[0];
+        novaLinha.querySelector('.select-cor-acessorios').value = estadoLinha.cor_acessorios || DADOS_COR_ACESSORIOS_CORTINA[0];
         selComando.value = estadoLinha.comando || DADOS_COMANDO[0];
         novaLinha.querySelector('.select-lado-comando').value = estadoLinha.lado_comando || DADOS_LADO_COMANDO[0];
         if(estadoLinha.comando === 'MOTORIZADO') selMotor.value = estadoLinha.altura_comando || '127v';
@@ -761,12 +764,53 @@ function recalcularTotaisSelecionados() {
 
 async function calcularOrcamentoLinha(linha) {
     if (!linha || !isDataLoadedRef.value) return;
+    const temCortina = linha.querySelector('.select-codTecidoCortina')?.value !== 'SEM TECIDO';
+    const temForro = linha.querySelector('.select-codTecidoForro')?.value !== 'SEM TECIDO';
+    const temBlackout = linha.querySelector('.select-codTecidoBlackout')?.value !== 'SEM TECIDO';
+
+    let partesConfeccao = [];
+    if (temCortina) partesConfeccao.push("Cortina");
+    if (temForro) partesConfeccao.push("Forro");
+    if (temBlackout) partesConfeccao.push("Blackout");
+    const chaveConfeccao = partesConfeccao.join(" + ");
+
+    const altura = parseFloat(linha.querySelector('.input-altura')?.value.replace(',', '.')) || 0;
+    const isAlturaEspecial = altura >= 3.50;
+
+    let valorConfecaoAutomatico = 0;
+    
+    if (partesConfeccao.length > 0) {
+        let itemConf = (dataRefs.confeccao || []).find(c => 
+            c.opcao === chaveConfeccao && Boolean(c.altura_especial) === isAlturaEspecial
+        );
+
+        if (itemConf) {
+            valorConfecaoAutomatico = itemConf.valor;
+        } else {
+            if(isAlturaEspecial) {
+                 let itemPadrao = (dataRefs.confeccao || []).find(c => c.opcao === chaveConfeccao && !c.altura_especial);
+                 if(itemPadrao) valorConfecaoAutomatico = itemPadrao.valor;
+            }
+        }
+    }
+
+    const selConf = linha.querySelector('.select-confecao');
+    if (selConf) {
+        selConf.innerHTML = '';
+        const opt = new Option(chaveConfeccao || "NENHUM", chaveConfeccao || "-");
+        opt.dataset.valorReal = valorConfecaoAutomatico;
+        selConf.appendChild(opt);
+        selConf.value = chaveConfeccao || "-";
+    }
+
     const dados = {
         largura: parseFloat(linha.querySelector('.input-largura')?.value.replace(',', '.')) || 0,
-        altura: parseFloat(linha.querySelector('.input-altura')?.value.replace(',', '.')) || 0,
+        altura: altura,
         franzCortina: parseFloat(linha.querySelector('.select-franzCortina')?.value) || 1,
         franzBlackout: parseFloat(linha.querySelector('.select-franzBlackout')?.value) || 1,
-        valorConfecao: obterValorRealSelect(linha.querySelector('.select-confecao')),
+        
+        valorConfecao: valorConfecaoAutomatico,
+        
         valorTrilho: obterValorRealSelect(linha.querySelector('.select-trilho')),
         valorInstalacao: parseFloat(linha.querySelector('.select-instalacao')?.value) || 0,
         valorOutros: parseCurrencyValue(linha.querySelector('.input-outros')?.value),
@@ -804,12 +848,12 @@ async function calcularOrcamentoLinha(linha) {
 export function atualizarListasAmorim() {
     console.log("Atualizando listas Amorim na calculadora...");
     
-    if (dataRefs.amorim_modelos_cortina && dataRefs.amorim_modelos_cortina.length > 0) {
+    if (dataRefs.amorim_modelos_cortina) {
         DADOS_MODELO_CORTINA.length = 0; 
         DADOS_MODELO_CORTINA.push(...dataRefs.amorim_modelos_cortina.map(i => i.opcao).sort());
     }
 
-    if (dataRefs.amorim_modelos_toldo && dataRefs.amorim_modelos_toldo.length > 0) {
+    if (dataRefs.amorim_modelos_toldo) {
         DADOS_MODELO_TOLDO.length = 0;
         DADOS_MODELO_TOLDO.push(...dataRefs.amorim_modelos_toldo.map(i => i.opcao).sort());
     }
@@ -822,6 +866,14 @@ export function atualizarListasAmorim() {
     if (dataRefs.amorim_cores_toldo) {
         DADOS_COR_ACESSORIOS_TOLDO.length = 0;
         DADOS_COR_ACESSORIOS_TOLDO.push(...dataRefs.amorim_cores_toldo.map(i => i.opcao).sort());
+    }
+}
+
+export function atualizarInterfaceCalculadora() {
+    const calcView = document.getElementById('calculator-view');
+    if (calcView && calcView.style.display !== 'none' && abaAtivaIndex >= 0) {
+        console.log("Redesenhando a calculadora com novos dados...");
+        ativarAba(abaAtivaIndex, false);
     }
 }
 
@@ -959,7 +1011,6 @@ function renderizarTabs() {
 }
 
 function ativarAba(index, isInitialLoad) {
-    // 1. Se não for carregamento inicial, salva o estado da aba atual antes de trocar
     if(!isInitialLoad && abaAtivaIndex >= 0 && estadoAbas[abaAtivaIndex]) {
         const sections = {};
         document.querySelectorAll('#quote-sections-container .quote-section').forEach(sec => {
@@ -1068,16 +1119,4 @@ function setupCurrencyFormatting(input) {
 function formatDecimal(val, places) {
     const v = parseFloat(String(val).replace(',','.'))||0;
     return v.toFixed(places).replace('.',',');
-}
-function atualizarOpcoesConfeccao(linha) {
-    const h = parseFloat(linha.querySelector('.input-altura').value.replace(',','.'))||0;
-    const sel = linha.querySelector('.select-confecao');
-    const valOld = sel.value;
-    sel.innerHTML = '<option value="-" data-valor-real="0">NENHUM</option>';
-    (dataRefs.confeccao||[]).forEach(c => {
-        if ((h >= 3.5 && c.altura_especial) || (h < 3.5 && !c.altura_especial)) {
-            const opt = new Option(c.opcao, c.opcao); opt.dataset.valorReal = c.valor; sel.appendChild(opt);
-        }
-    });
-    sel.value = valOld; if(sel.selectedIndex===-1) sel.value='-';
 }

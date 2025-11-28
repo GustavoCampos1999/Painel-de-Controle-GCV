@@ -1168,6 +1168,62 @@ body.dark-mode #subtab-amorim div[style*="border-right"] {
     border-collapse: collapse;
     font-size: 14px;
 }
+.tabela-moderna {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabela-moderna th:first-child,
+.tabela-moderna td:first-child {
+    width: 45px;     
+    max-width: 45px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px 5px;
+}
+
+.tabela-moderna th:nth-child(2),
+.tabela-moderna td:nth-child(2) {
+    width: auto;     
+    text-align: left;
+    padding-left: 15px;
+    white-space: nowrap;      
+    overflow: hidden;         
+    text-overflow: ellipsis; 
+}
+
+.tabela-moderna th:last-child,
+.tabela-moderna td:last-child {
+    width: 110px;     
+    text-align: center;
+    vertical-align: middle;
+    padding: 5px;
+}
+
+.tabela-moderna .btn-editar,
+.tabela-moderna .btn-excluir {
+    width: auto;
+    min-width: 45px;   
+    padding: 5px 8px;
+    margin: 0 2px;
+    font-size: 11px;
+    display: inline-block;
+}
+
+.btn-favorito {
+    font-size: 18px; 
+    cursor: pointer;
+    line-height: 1;
+    display: block;  
+}
+.tabela-moderna tbody tr {
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+.tabela-moderna tbody tr:hover {
+    background-color: #f1f8ff; 
+}
 
 .tabela-moderna th {
     background-color: #f8f9fa;
@@ -1187,10 +1243,6 @@ body.dark-mode #subtab-amorim div[style*="border-right"] {
     padding: 12px 15px;
     border-bottom: 1px solid #f0f0f0;
     color: #333;
-}
-
-.tabela-moderna tr:last-child td {
-    border-bottom: none;
 }
 
 .tabela-moderna tr:hover {
@@ -1289,6 +1341,42 @@ body.dark-mode .tabela-moderna tr:hover {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+.toggle-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.btn-toggle-type {
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    background-color: #696969; 
+    color: #ffffff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+    flex: 1;
+}
+
+.btn-toggle-type:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-toggle-type.active[data-value="Cortina"] {
+    background-color: #007bff; color: white; border-color: #0056b3;
+}
+.btn-toggle-type.active[data-value="Forro"] {
+    background-color: #28a745; color: white; border-color: #1e7e34;
+}
+.btn-toggle-type.active[data-value="Blackout"] {
+    background-color: #6f42c1; color: white; border-color: #5a32a3;
+}
+.col-confeccao-header,
+.col-confeccao-cell {
+    display: none !important;
 }
 
 @media (max-width: 768px) {

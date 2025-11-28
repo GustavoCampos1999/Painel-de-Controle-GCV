@@ -701,6 +701,8 @@ body.dark-mode #container-inputs-taxas input:focus {
     #btn-abrir-config-calculadora,
     .btn-abrir-config-calculadora, 
     .summary-venda-container,
+    #btn-restaurar-taxas,
+    #btn-config-taxas,
     .btn-print-orcamento,
     #btn-manual-save,
     #save-status-message,
@@ -852,58 +854,45 @@ body.dark-mode #container-inputs-taxas input:focus {
     .tabela-calculo col.print-col-qtd-blackout {
         display: none !important;
     }
-    .quote-section[data-section-type="tecido"] .print-col-ambiente { width: 8%; }
-    .quote-section[data-section-type="tecido"] .print-col-largura { width: 4%; }
-    .quote-section[data-section-type="tecido"] .print-col-altura { width: 4%; }
-    .quote-section[data-section-type="tecido"] .print-col-franz-cortina { width: 5%; }
-    .quote-section[data-section-type="tecido"] .print-col-cod-cortina { width: 10%; }
-    .quote-section[data-section-type="tecido"] .print-col-cod-forro { width: 10%; }
-    .quote-section[data-section-type="tecido"] .print-col-franz-blackout { width: 5%; }
-    .quote-section[data-section-type="tecido"] .print-col-cod-blackout { width: 10%; }
-    .quote-section[data-section-type="tecido"] .print-col-confeccao { width: 6%; }
-    .quote-section[data-section-type="tecido"] .print-col-trilho { width: 6%; }
-    .quote-section[data-section-type="tecido"] .print-col-instalacao { width: 6%; }
-    .quote-section[data-section-type="tecido"] .print-col-outros { width: 5%; }
-    .quote-section[data-section-type="tecido"] .print-col-total { width: 5%; }
-    .quote-section[data-section-type="tecido"] .print-col-parcelado { width: 5%; }
-    .quote-section[data-section-type="tecido"] .print-col-observacao { width: 11%; } 
-
+    .print-col-confeccao { display: none !important; }
+    .quote-section[data-section-type="tecido"] .print-col-ambiente { width: 9% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-largura { width: 5% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-altura { width: 5% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-franz-cortina,
+    .quote-section[data-section-type="tecido"] .print-col-franz-blackout { width: 4% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-cod-cortina,
+    .quote-section[data-section-type="tecido"] .print-col-cod-forro,
+    .quote-section[data-section-type="tecido"] .print-col-cod-blackout { width: 12% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-trilho { width: 7% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-instalacao { width: 6% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-outros { width: 5% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-total { width: 7% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-parcelado { width: 7% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-observacao { width: 9% !important; }
     .quote-section[data-section-type="amorim"] .print-col-ambiente,
     .quote-section[data-section-type="toldos"] .print-col-ambiente { width: 8%; }
-
     .quote-section[data-section-type="amorim"] .print-col-largura,
     .quote-section[data-section-type="toldos"] .print-col-largura { width: 6%; }
-
     .quote-section[data-section-type="amorim"] .print-col-altura,
     .quote-section[data-section-type="toldos"] .print-col-altura { width: 6%; }
-
     .quote-section[data-section-type="amorim"] .print-col-modelo,
     .quote-section[data-section-type="toldos"] .print-col-modelo { width: 12%; }
-
     .quote-section[data-section-type="amorim"] .print-col-cod-tecido,
     .quote-section[data-section-type="toldos"] .print-col-cod-tecido { width: 6%; } 
-
     .quote-section[data-section-type="amorim"] .print-col-colecao,
     .quote-section[data-section-type="toldos"] .print-col-colecao { width: 6%; } 
-
     .quote-section[data-section-type="amorim"] .print-col-cor-acessorios,
     .quote-section[data-section-type="toldos"] .print-col-cor-acessorios { width: 8%; }
-
     .quote-section[data-section-type="amorim"] .print-col-comando,
     .quote-section[data-section-type="toldos"] .print-col-comando { width: 8%; }
-
     .quote-section[data-section-type="amorim"] .print-col-alt-comando,
     .quote-section[data-section-type="toldos"] .print-col-alt-comando { width: 6%; }
-
     .quote-section[data-section-type="amorim"] .print-col-lado-comando,
     .quote-section[data-section-type="toldos"] .print-col-lado-comando { width: 6%; }
-
     .quote-section[data-section-type="amorim"] .print-col-valor,
     .quote-section[data-section-type="toldos"] .print-col-valor { width: 8%; }
-
     .quote-section[data-section-type="amorim"] .print-col-parcelado,
     .quote-section[data-section-type="toldos"] .print-col-parcelado { width: 8%; }
-
     .quote-section[data-section-type="amorim"] .print-col-observacao,
     .quote-section[data-section-type="toldos"] .print-col-observacao { width: 12%; } 
     .tabela-calculo input::placeholder {
@@ -930,4 +919,5 @@ body.dark-mode #container-inputs-taxas input:focus {
     color: transparent !important;
     opacity: 0 !important;
 }
+.print-col-confeccao { display: none !important; }
 }

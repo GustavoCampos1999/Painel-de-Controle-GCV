@@ -3,10 +3,11 @@ import { checkUserSession, setupLogoutButton } from './modules/auth.js';
 import { initUI, showToast, openModal, closeModal } from './modules/ui.js'; 
 import { initCRM, carregarClientes } from './modules/crm.js'; 
 import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js'; 
-import { initCalculator, showCalculatorView, atualizarListasAmorim } from './modules/calculator.js';
+import { initCalculator, showCalculatorView, atualizarListasAmorim, atualizarInterfaceCalculadora } from './modules/calculator.js';
 import { initTeamManager } from './modules/team.js';
 import { loadPermissions } from './modules/permissions.js';
 import { initRealtime } from './modules/realtime.js';
+
 const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
 let tecidosDataGlobal = [];
@@ -109,7 +110,7 @@ async function buscarDadosBaseDoBackend() {
     const lojaId = perfil.loja_id;
 
     const token = session.access_token;
-    const response = await fetch(`${BACKEND_API_URL}/api/dados-base`, {
+    const response = await fetch(`${BACKEND_API_URL}/api/dados-base?t=${Date.now()}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
@@ -348,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("Evento 'dadosBaseAlterados' recebido, recarregando dados base do backend...");
         await buscarDadosBaseDoBackend(); 
         atualizarListasAmorim();
+        atualizarInterfaceCalculadora();
         renderizarTabelaTecidos(dataRefs.tecidos);
         renderizarTabelaConfeccao(dataRefs.confeccao);
         renderizarTabelaTrilho(dataRefs.trilho);
@@ -382,9 +384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 showToast('Item excluído com sucesso.');
                 itemParaExcluirGenericoInfo.elemento?.remove();
-                if (['tecidos', 'confeccao', 'trilho', 'frete', 'instalacao'].includes(tabela)) {
-                    document.dispatchEvent(new CustomEvent('dadosBaseAlterados'));
-                }
+                document.dispatchEvent(new CustomEvent('dadosBaseAlterados'));
             }
             closeModal(elements.modalExcluirGenerico);
             itemParaExcluirGenericoInfo = null;
