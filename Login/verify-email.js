@@ -41,12 +41,10 @@ btnSaveCorrection.addEventListener('click', async () => {
         correctionMsg.style.color = 'red';
         return;
     }
-
     btnSaveCorrection.disabled = true;
     btnSaveCorrection.textContent = 'Salvando...';
-
     try {
-        const response = await fetch(`${BACKEND_API_URL}/api/correction-email`, {
+        const response = await fetch(`${BACKEND_API_URL}/correction-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -54,7 +52,6 @@ btnSaveCorrection.addEventListener('click', async () => {
                 newEmail: newEmail
             })
         });
-
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.erro || 'Erro ao atualizar');
