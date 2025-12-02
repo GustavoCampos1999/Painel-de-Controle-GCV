@@ -15,19 +15,21 @@
         
         <h2 style="color: #333; margin-bottom: 15px;">Verifique seu E-mail</h2>
         
-        <p style="color: #666; line-height: 1.6; margin-bottom: 10px;">
+        <p style="color: #666; line-height: 1.6; margin-bottom: 5px;">
             Enviamos um link de confirmação para:
         </p>
-        
-        <p style="font-weight: bold; font-size: 1.1em; color: #333; margin-bottom: 5px;">
+
+        <div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-weight: bold; color: #333; word-break: break-all;">
             <span id="user-email-display">Carregando...</span>
-        </p>
+        </div>
 
-        <a href="register.html" style="display: block; font-size: 13px; color: #dc3545; text-decoration: underline; margin-bottom: 20px;">
-            Digitou errado? Corrigir e-mail
-        </a>
-
-        <p style="color: #666; line-height: 1.6; margin-bottom: 20px; font-size: 14px;">
+        <div style="margin-bottom: 20px;">
+            <a href="#" id="btn-open-correction" style="font-size: 13px; color: #dc3545; text-decoration: underline;">
+                Digitou errado? Corrigir e-mail
+            </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
             <strong>Você precisa clicar no link para ativar sua conta.</strong>
         </p>
 
@@ -42,6 +44,22 @@
         <a href="login.html">
             <button style="background-color: #6c757d;">Voltar para o Login</button>
         </a>
+    </div>
+
+    <div id="modal-correction" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Corrigir E-mail</h3>
+            <p style="font-size: 13px; color: #666;">O CNPJ já está vinculado a este cadastro. Digite o e-mail correto para atualizarmos.</p>
+            
+            <input type="email" id="new-email-input" placeholder="Novo e-mail correto">
+            
+            <div id="correction-msg" style="font-size: 12px; margin-bottom: 10px;"></div>
+
+            <div class="modal-actions">
+                <button id="btn-cancel-correction" class="btn-cancelar">Cancelar</button>
+                <button id="btn-save-correction" style="background-color: #28a745;">Salvar e Reenviar</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
