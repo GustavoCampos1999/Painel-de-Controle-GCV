@@ -1,20 +1,24 @@
-import { _supabase } from './supabaseClient.js';
+import { _supabase } from '../supabaseClient.js';
 
 const btnResend = document.getElementById('btn-resend');
 const resendMsg = document.getElementById('resend-msg');
+const emailDisplay = document.getElementById('user-email-display');
 
 const params = new URLSearchParams(window.location.search);
 const email = params.get('email');
 
-btnResend.addEventListener('click', async () => {
-    if (!email) {
-        resendMsg.style.color = 'red';
-        resendMsg.textContent = 'E-mail não identificado. Tente fazer login novamente.';
-        resendMsg.style.display = 'block';
-        return;
-    }
-
+if (email) {
+    emailDisplay.textContent = email;
+} else {
+    emailDisplay.textContent = "E-mail não identificado";
+    resendMsg.style.color = '#dc3545';
+    resendMsg.textContent = 'Erro: E-mail não encontrado na URL.';
+    resendMsg.style.display = 'block';
     btnResend.disabled = true;
+}
+
+btnResend.addEventListener('click', async () => {
+    btnResend.disabled = true; 
     btnResend.textContent = 'Enviando...';
     resendMsg.style.display = 'none';
 
@@ -24,19 +28,20 @@ btnResend.addEventListener('click', async () => {
             email: email
         });
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
         resendMsg.style.color = '#28a745';
-        resendMsg.innerHTML = '✔ E-mail reenviado! Aguarde alguns minutos.';
+        resendMsg.innerHTML = '✔ E-mail reenviado com sucesso!';
         resendMsg.style.display = 'block';
 
         let countdown = 30;
+        btnResend.textContent = `Aguarde ${countdown}s`;
+
         const interval = setInterval(() => {
-            btnResend.textContent = `Aguarde ${countdown}s`;
             countdown--;
-            if (countdown < 0) {
+            btnResend.textContent = `Aguarde ${countdown}s`;
+
+            if (countdown <= 0) {
                 clearInterval(interval);
                 btnResend.disabled = false;
                 btnResend.textContent = 'Reenviar E-mail';
@@ -46,14 +51,17 @@ btnResend.addEventListener('click', async () => {
     } catch (err) {
         console.error(err);
         resendMsg.style.color = '#dc3545';
-        
-        if (err.message.includes('Too many requests') || err.status === 429) {
-            resendMsg.textContent = 'Muitas tentativas. Aguarde um pouco.';
+
+        if (err.message && (err.message.includes('Too many requests') || err.status === 429)) {
+            resendMsg.textContent = 'Muitas tentativas. Aguarde 60 segundos.';
         } else {
-            resendMsg.textContent = 'Erro ao reenviar. Verifique se o e-mail está correto.';
+            resendMsg.textContent = 'Erro ao reenviar. Verifique o console.';
         }
+        
         resendMsg.style.display = 'block';
-        btnResend.disabled = false;
-        btnResend.textContent = 'Reenviar E-mail';
+        setTimeout(() => {
+            btnResend.disabled = false;
+            btnResend.textContent = 'Reenviar E-mail';
+        }, 3000);
     }
 });

@@ -159,6 +159,13 @@ message-feedback, .message-error {
     border-color: transparent transparent #ffeeba transparent;
 }
 
+button:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
         @media (max-width: 400px) {
     .login-container {
         width: 90%;
