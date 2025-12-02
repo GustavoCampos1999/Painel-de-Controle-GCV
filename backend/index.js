@@ -1,12 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const { calcularOrcamento } = require('./calculo.js');
 const db = require('./database.js'); 
-
 const app = express();
-
 const allowedOrigins = [
   'https://gustavocampos1999.github.io', 
   'http://127.0.0.1:5500',
@@ -98,7 +97,7 @@ app.post('/register', async (req, res) => {
         if (existingLoja) return res.status(409).json({ erro: "CNPJ já cadastrado." });
 
         const { data: userData, error: userError } = await supabaseService.auth.admin.createUser({
-            email, password, email_confirm: true
+            email, password, email_confirm: false
         });
         if (userError) throw userError;
 

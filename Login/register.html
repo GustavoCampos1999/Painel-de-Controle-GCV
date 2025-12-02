@@ -25,19 +25,23 @@
                 <label for="nome_empresa">Nome da Empresa</label>
                 <input type="text" id="nome_empresa" required readonly style="background-color: #e9ecef; cursor: not-allowed; color: #555; font-weight: bold;">
             </div>
-
-             <div>
-                <label for="telefone">Telefone</label>
-                <input type="tel" id="telefone" required>
-            </div>
+<div style="margin-bottom: 15px;">
+    <label for="telefone">Telefone</label>
+    <input type="tel" id="telefone" required maxlength="15" placeholder="(99) 99999-9999">
+    
+    <div id="telefone-bubble" class="bubble-warning">⚠ Insira um telefone válido com DDD.</div>
+</div>
             <div>
                 <label for="nome_usuario">Nome de Usuário</label>
                 <input type="text" id="nome_usuario" required>
             </div>
-            <div>
-                <label for="email">Email (Será seu login)</label>
-                <input type="email" id="email" required>
-            </div>
+            <label for="email">E-mail (Login)</label>
+            
+            <input type="email" id="email" required>
+            <div id="email-bubble" class="bubble-warning">⚠ Insira um e-mail válido.</div>
+            <small style="display: block; color: #666; font-size: 11px; margin-bottom: 6px; font-weight: normal;">
+                    Será necessário verificar o e-mail.
+                </small>
             <div>
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" placeholder="Mínimo 6 caracteres" required>
