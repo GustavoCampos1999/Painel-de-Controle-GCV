@@ -146,6 +146,7 @@ const insertCortinas = DEFAULT_CORTINA.map(opcao => ({ loja_id: lojaData.id, opc
 
 app.post('/correction-email', async (req, res) => {
     const { oldEmail, newEmail } = req.body;
+
     try {
         const { data: { users }, error: findError } = await supabaseService.auth.admin.listUsers();
         if (findError) throw findError;
@@ -156,7 +157,7 @@ app.post('/correction-email', async (req, res) => {
         if (user.email_confirmed_at) return res.status(400).json({ erro: "Este usuário já está verificado." });
         const { error: updateError } = await supabaseService.auth.admin.updateUserById(
             user.id, 
-            { email: newEmail, email_confirm: true } 
+            { email: newEmail } 
         );
 
         if (updateError) throw updateError;
@@ -461,29 +462,6 @@ app.post('/api/config/taxas', async (req, res) => {
     } catch (error) {
         console.error("Erro POST taxas:", error);
         res.status(500).json({ erro: error.message });
-    }
-});
-app.post('/api/correction-email', async (req, res) => {
-    const { oldEmail, newEmail } = req.body;
-
-    try {
-        const { data: { users }, error: findError } = await supabaseService.auth.admin.listUsers();
-        const user = users.find(u => u.email === oldEmail);
-
-        if (!user) return res.status(404).json({ erro: "Usuário não encontrado." });
-        if (user.email_confirmed_at) return res.status(400).json({ erro: "Este usuário já está verificado." });
-
-        const { error: updateError } = await supabaseService.auth.admin.updateUserById(
-            user.id, 
-            { email: newEmail, email_confirm: true } 
-        );
-
-        if (updateError) throw updateError;
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ erro: "Erro ao corrigir e-mail." });
     }
 });
 
