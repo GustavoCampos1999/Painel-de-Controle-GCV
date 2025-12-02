@@ -23,6 +23,66 @@ if (currentEmail) {
     btnResend.disabled = true;
 }
 
+async function dispararReenvio() {
+    btnResend.disabled = true;
+    btnResend.textContent = 'Enviando...';
+    resendMsg.style.display = 'none';
+
+    try {
+        const { error } = await _supabase.auth.resend({
+            type: 'signup',
+            email: currentEmail
+        });
+
+        if (error) throw error;
+
+        resendMsg.style.color = '#28a745';
+        resendMsg.innerHTML = '✔ E-mail enviado com sucesso!';
+        resendMsg.style.display = 'block';
+        iniciarTimer();
+        return true; 
+
+    } catch (err) {
+        console.warn("Erro no envio:", err);
+        
+        if (err.message && (err.message.includes('Too many requests') || err.status === 429)) {
+            resendMsg.style.color = '#e0a800'; 
+            resendMsg.innerHTML = '⚠ E-mail atualizado! Aguarde o tempo abaixo para reenviar.';
+            resendMsg.style.display = 'block';
+            iniciarTimer();
+            return false;
+        } else {
+            resendMsg.style.color = '#dc3545';
+            resendMsg.textContent = 'Erro ao enviar. Tente novamente em instantes.';
+            resendMsg.style.display = 'block';
+            
+            setTimeout(() => {
+                btnResend.disabled = false;
+                btnResend.textContent = 'Reenviar E-mail';
+            }, 3000);
+            return false;
+        }
+    }
+}
+
+function iniciarTimer() {
+    let countdown = 60; 
+    btnResend.textContent = `Aguarde ${countdown}s`;
+    
+    btnResend.disabled = true;
+
+    const interval = setInterval(() => {
+        countdown--;
+        btnResend.textContent = `Aguarde ${countdown}s`;
+
+        if (countdown <= 0) {
+            clearInterval(interval);
+            btnResend.disabled = false;
+            btnResend.textContent = 'Reenviar E-mail';
+        }
+    }, 1000);
+}
+
 btnOpenCorrection.addEventListener('click', (e) => {
     e.preventDefault();
     modalCorrection.style.display = 'flex';
@@ -41,8 +101,10 @@ btnSaveCorrection.addEventListener('click', async () => {
         correctionMsg.style.color = 'red';
         return;
     }
+
     btnSaveCorrection.disabled = true;
     btnSaveCorrection.textContent = 'Salvando...';
+
     try {
         const response = await fetch(`${BACKEND_API_URL}/correction-email`, {
             method: 'POST',
@@ -52,17 +114,19 @@ btnSaveCorrection.addEventListener('click', async () => {
                 newEmail: newEmail
             })
         });
+
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.erro || 'Erro ao atualizar');
 
-        correctionMsg.textContent = 'E-mail atualizado! Reenviando confirmação...';
-        correctionMsg.style.color = 'green';
-        
         currentEmail = newEmail;
         emailDisplay.textContent = newEmail;
+        correctionMsg.textContent = 'E-mail atualizado!';
+        correctionMsg.style.color = 'green';
         
-        await _supabase.auth.resend({ type: 'signup', email: newEmail });
+        await new Promise(r => setTimeout(r, 1000));
+        
+        await dispararReenvio(); 
 
         setTimeout(() => {
             modalCorrection.style.display = 'none';
@@ -79,48 +143,6 @@ btnSaveCorrection.addEventListener('click', async () => {
     }
 });
 
-btnResend.addEventListener('click', async () => {
-    btnResend.disabled = true;
-    btnResend.textContent = 'Enviando...';
-    resendMsg.style.display = 'none';
-
-    try {
-        const { error } = await _supabase.auth.resend({
-            type: 'signup',
-            email: currentEmail
-        });
-
-        if (error) throw error;
-
-        resendMsg.style.color = '#28a745';
-        resendMsg.innerHTML = '✔ E-mail reenviado com sucesso!';
-        resendMsg.style.display = 'block';
-
-        let countdown = 30;
-        btnResend.textContent = `Aguarde ${countdown}s`;
-
-        const interval = setInterval(() => {
-            countdown--;
-            btnResend.textContent = `Aguarde ${countdown}s`;
-
-            if (countdown <= 0) {
-                clearInterval(interval);
-                btnResend.disabled = false;
-                btnResend.textContent = 'Reenviar E-mail';
-            }
-        }, 1000);
-
-    } catch (err) {
-        resendMsg.style.color = '#dc3545';
-        if (err.message && err.message.includes('Too many requests')) {
-            resendMsg.textContent = 'Muitas tentativas. Aguarde 60s.';
-        } else {
-            resendMsg.textContent = 'Erro ao enviar. Verifique o e-mail.';
-        }
-        resendMsg.style.display = 'block';
-        setTimeout(() => {
-            btnResend.disabled = false;
-            btnResend.textContent = 'Reenviar E-mail';
-        }, 3000);
-    }
+btnResend.addEventListener('click', () => {
+    dispararReenvio();
 });
