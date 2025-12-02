@@ -144,7 +144,7 @@ const insertCortinas = DEFAULT_CORTINA.map(opcao => ({ loja_id: lojaData.id, opc
     }
 });
 
-pp.post('/correction-email', async (req, res) => {
+app.post('/correction-email', async (req, res) => {
     const { oldEmail, newEmail } = req.body;
     try {
         const { data: { users }, error: findError } = await supabaseService.auth.admin.listUsers();
