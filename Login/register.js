@@ -3,7 +3,12 @@ const DOMINIOS_PROIBIDOS = [
     "abc.com", "123.com","usuario.com", "admin.com", "yopmail.com", "mailinator.com", "tempmail.com", "10minutemail.com",
     "guerrillamail.com", "sharklasers.com", "dispostable.com"
 ];
-const NUMEROS_PROIBIDOS = ["12345678912", "11111111111", "22222222222", "33333333333", "44444444444", "55555555555", "66666666666", "77777777777", "88888888888", "99999999999"]
+const NUMEROS_PROIBIDOS = [
+    "12345678912", "11111111111", "22222222222", "33333333333", 
+    "44444444444", "55555555555", "66666666666", "77777777777", 
+    "88888888888", "99999999999", "00000000000"
+];
+
 function validarEmail(email) {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!regex.test(email)) return false;
@@ -65,31 +70,33 @@ function validarCNPJ(cnpj) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Sistema de Registro Carregado: Email + Telefone + CNPJ');
+    console.log('Sistema de Registro Carregado');
 
     const form = document.getElementById('form-register');
-    const inputEmail = document.getElementById('email');
-    const emailBubble = document.getElementById('email-bubble'); 
     
+    const inputEmail = document.getElementById('email');
     const inputTelefone = document.getElementById('telefone');
-    const telefoneBubble = document.getElementById('telefone-bubble');
-
     const inputNomeEmpresa = document.getElementById('nome_empresa');
     const inputCnpj = document.getElementById('cnpj');
     const inputSenha = document.getElementById('senha');
     const inputConfirmarSenha = document.getElementById('confirmar_senha');
     const inputNomeUsuario = document.getElementById('nome_usuario');
-    
-    const msgErro = document.getElementById('mensagem-erro');
-    const msgInfo = document.getElementById('mensagem-info');
     const btnRegister = document.getElementById('btn-register');
+
+    const emailBubble = document.getElementById('email-bubble'); 
+    const telefoneBubble = document.getElementById('telefone-bubble');
+
+    const cnpjMsgInfo = document.getElementById('cnpj-msg-info');
+    const cnpjMsgErro = document.getElementById('cnpj-msg-erro');
+
+    const submitMsgInfo = document.getElementById('submit-msg-info');
+    const submitMsgErro = document.getElementById('submit-msg-erro');
 
     const BACKEND_API_URL = 'https://painel-de-controle-gcv.onrender.com';
 
     if (inputTelefone) {
         inputTelefone.addEventListener('input', (e) => {
             e.target.value = mascaraTelefone(e.target.value);
-            
             if (validarTelefone(e.target.value)) {
                 if(telefoneBubble) telefoneBubble.style.display = 'none';
                 inputTelefone.style.borderColor = '#28a745';
@@ -99,6 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         inputTelefone.addEventListener('blur', () => {
             const valor = inputTelefone.value;
+            submitMsgErro.textContent = ''; 
+
             if (valor.length > 0 && !validarTelefone(valor)) {
                 if(telefoneBubble) telefoneBubble.style.display = 'block';
                 inputTelefone.style.borderColor = '#ffc107'; 
@@ -146,9 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function consultarReceita(cnpjNumeros) {
-        msgInfo.style.color = "#007bff";
-        msgInfo.textContent = '⏳ Buscando dados na Receita Federal...';
-        msgErro.textContent = '';
+        cnpjMsgInfo.style.color = "#007bff";
+        cnpjMsgInfo.textContent = '⏳ Buscando dados na Receita Federal...';
+        cnpjMsgErro.textContent = '';
+        
         inputNomeEmpresa.value = "Buscando...";
         inputCnpj.disabled = true; 
         
@@ -161,19 +171,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const dados = await response.json();
 
             if (dados.descricao_situacao_cadastral !== "ATIVA") {
-                msgErro.textContent = `Situação do CNPJ: ${dados.descricao_situacao_cadastral}`;
-                msgInfo.textContent = '';
+                cnpjMsgErro.textContent = `Situação do CNPJ: ${dados.descricao_situacao_cadastral}`;
+                cnpjMsgInfo.textContent = '';
             } else {
-                msgInfo.style.color = "#28a745";
-                msgInfo.textContent = "✔ Empresa localizada!";
+                cnpjMsgInfo.style.color = "#28a745";
+                cnpjMsgInfo.textContent = "✔ Empresa localizada!";
             }
 
             inputNomeEmpresa.value = dados.nome_fantasia || dados.razao_social;
 
         } catch (error) {
             console.warn(error);
-            msgInfo.textContent = '';
-            msgErro.textContent = error.message;
+            cnpjMsgInfo.textContent = '';
+            cnpjMsgErro.textContent = error.message;
             inputNomeEmpresa.value = ""; 
         } finally {
             inputCnpj.disabled = false;
@@ -186,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const apenasNumeros = e.target.value.replace(/\D/g, '');
         
         if (apenasNumeros === '03051999') { 
-            msgInfo.textContent = "✔ Admin Mode";
+            cnpjMsgInfo.textContent = "✔ Admin Mode";
             inputNomeEmpresa.value = "Admin Gustavo"; 
             return; 
         }
@@ -196,22 +206,28 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (apenasNumeros.length === 14) {
             if (!validarCNPJ(apenasNumeros)) {
-                msgErro.textContent = '❌ CNPJ inválido.';
+                cnpjMsgErro.textContent = '❌ CNPJ inválido.';
+                cnpjMsgInfo.textContent = '';
                 inputNomeEmpresa.value = "";
                 return;
             }
             consultarReceita(apenasNumeros);
+        } else {
+            cnpjMsgInfo.textContent = '';
+            cnpjMsgErro.textContent = '';
         }
     });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        msgErro.textContent = '';
-        msgInfo.textContent = '';
+        
+        submitMsgErro.textContent = '';
+        submitMsgInfo.textContent = '';
 
         const emailTrimmed = inputEmail.value.trim();
+    
         if (!validarEmail(emailTrimmed)) {
-            msgErro.textContent = '❌ E-mail inválido ou domínio não permitido.';
+            submitMsgErro.textContent = '❌ E-mail inválido ou domínio não permitido.';
             inputEmail.focus();
             emailBubble.style.display = 'block'; 
             inputEmail.style.borderColor = '#dc3545';
@@ -219,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!validarTelefone(inputTelefone.value)) {
-            msgErro.textContent = '❌ Telefone inválido. Use o formato com DDD.';
+            submitMsgErro.textContent = '❌ Telefone inválido. Use o formato com DDD.';
             inputTelefone.focus();
             if(telefoneBubble) telefoneBubble.style.display = 'block';
             inputTelefone.style.borderColor = '#dc3545';
@@ -227,21 +243,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (inputNomeEmpresa.value === "" || inputNomeEmpresa.value === "Buscando...") {
-            msgErro.textContent = 'Valide o CNPJ antes de continuar.';
+            submitMsgErro.textContent = 'Valide o CNPJ antes de continuar.';
+            inputCnpj.focus();
             return;
         }
 
         if (inputSenha.value.length < 6) {
-            msgErro.textContent = 'A senha precisa ter 6 ou mais caracteres.';
+            submitMsgErro.textContent = 'A senha precisa ter 6 ou mais caracteres.';
             return;
         }
         if (inputSenha.value !== inputConfirmarSenha.value) {
-            msgErro.textContent = 'As senhas não conferem.';
+            submitMsgErro.textContent = 'As senhas não conferem.';
             return;
         }
 
-        msgInfo.style.color = "#007bff";
-        msgInfo.textContent = 'Criando conta...';
+        submitMsgInfo.style.color = "#007bff";
+        submitMsgInfo.textContent = 'Criando conta...';
         btnRegister.disabled = true;
 
         try {
@@ -266,12 +283,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 throw new Error(data.erro || `Erro no servidor.`);
             }
-            window.location.href = 'verify-email.html';
+            
+            window.location.href = `verify-email.html?email=${encodeURIComponent(emailTrimmed)}`;
 
         } catch (err) {
             console.error(err);
-            msgInfo.textContent = '';
-            msgErro.textContent = err.message;
+            submitMsgInfo.textContent = '';
+            submitMsgErro.textContent = err.message;
             btnRegister.disabled = false;
         }
     });

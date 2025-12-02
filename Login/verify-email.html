@@ -16,17 +16,24 @@
         <h2 style="color: #333; margin-bottom: 15px;">Verifique seu E-mail</h2>
         
         <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            Enviamos um link de confirmação para o seu endereço de e-mail.<br>
-            <strong>Você precisa clicar no link para ativar sua conta antes de fazer login.</strong>
+            Enviamos um link de confirmação para o seu e-mail.<br>
+            <strong>Você precisa clicar no link para ativar sua conta.</strong>
         </p>
 
-        <p style="font-size: 13px; color: #888; margin-bottom: 30px;">
-            Não recebeu? Verifique sua caixa de spam ou lixo eletrônico.
-        </p>
+        <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px; border: 1px solid #eee;">
+            <p style="font-size: 13px; color: #888; margin-bottom: 10px; margin-top: 0;">
+                Não recebeu? Verifique o Spam ou clique abaixo:
+            </p>
+            <button id="btn-resend" style="background-color: #007bff; font-size: 14px; padding: 8px;">Reenviar E-mail</button>
+            <p id="resend-msg" style="font-size: 13px; margin-top: 10px; display: none;"></p>
+        </div>
 
         <a href="login.html">
             <button style="background-color: #6c757d;">Voltar para o Login</button>
         </a>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="verify-email.js"></script>
 </body>
 </html>
