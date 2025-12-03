@@ -677,6 +677,7 @@ function setupAmorim(tabelaBanco, idBtnAdd, idModalAdd, idFormAdd, idModalEdit, 
     render(); 
     document.addEventListener('dadosBaseAlterados', () => setTimeout(render, 100));
     document.addEventListener('dadosBaseCarregados', render);
+    document.addEventListener('permissionsUpdated', render);
 
     if (btnAdd) {
         btnAdd.addEventListener('click', () => { 

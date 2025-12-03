@@ -297,9 +297,6 @@ body.dark-mode #btn-config-taxas:hover {
 #summary-total-entrada { background-color: var(--cor-medidas); }
 #summary-total-entrada label { color: #8a6d00; }
 #summary-total-entrada span { color: #8a6d00; }
-#summary-total-restante { background-color: var(--cor-medidas); }
-#summary-total-restante label { color: #8a6d00; }
-#summary-total-restante span { color: #8a6d00; }
 .summary-venda-container { text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; }
 .summary-venda-container input[type="checkbox"] { width: 16px; height: 16px; margin-right: 8px; vertical-align: middle; cursor: pointer; }
 .summary-venda-container label { font-size: 1.1em; font-weight: bold; color: #333; vertical-align: middle; cursor: pointer; }
@@ -392,15 +389,6 @@ body.dark-mode #btn-config-taxas:hover {
     body.dark-mode .summary-total-box:first-child { border-right-color: #444; }
     body.dark-mode .summary-total-box label { color: #aaa; }
     body.dark-mode .summary-total-box span { color: #4dabf7; }
-    body.dark-mode #summary-total-restante {
-        background-color: #2c2b27;
-    }
-    body.dark-mode #summary-total-restante label {
-        color: #e6b90f; 
-    }
-    body.dark-mode #summary-total-restante span {
-        color: #e6b90f; 
-    }
     body.dark-mode #summary-total-entrada {
         background-color: #2c2b27;
     }

@@ -54,6 +54,14 @@ export function initTeamManager(domElements) {
     if (elements.btnCancelarRole) elements.btnCancelarRole.addEventListener('click', () => closeModal(elements.modalRoleEditor));
     if (elements.formRoleEditor) elements.formRoleEditor.addEventListener('submit', handleSaveRole);
     checkAdminRole();
+    document.addEventListener('permissionsUpdated', () => {
+        if (elements.viewMembros && elements.viewMembros.style.display !== 'none') {
+            carregarEquipe();
+        } else if (elements.viewCargos && elements.viewCargos.style.display !== 'none') {
+            carregarCargos();
+        }
+        checkAdminRole(); 
+    });
 }
 
 function switchSubTab(tab) {

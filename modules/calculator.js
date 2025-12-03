@@ -753,11 +753,8 @@ function recalcularTotaisSelecionados() {
         if(entrada > 0 && algumSelect) {
             elements.summaryTotalEntrada.style.display = 'block';
             elements.summaryTotalEntradaValue.textContent = formatadorReaisCalc.format(entrada);
-            elements.summaryTotalRestante.style.display = 'block';
-            elements.summaryTotalRestanteValue.textContent = formatadorReaisCalc.format(totalFinalSelecionado - entrada);
         } else {
             elements.summaryTotalEntrada.style.display = 'none';
-            elements.summaryTotalRestante.style.display = 'none';
         }
     }
 }

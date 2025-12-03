@@ -282,9 +282,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         summaryParceladoLabel: document.getElementById('summary-parcelado-label'),
         summaryTotalEntrada: document.getElementById('summary-total-entrada'),
         summaryTotalEntradaValue: document.getElementById('summary-total-entrada-value'),
-        summaryTotalRestante: document.getElementById('summary-total-restante'),
-        summaryRestanteLabel: document.getElementById('summary-restante-label'),
-        summaryTotalRestanteValue: document.getElementById('summary-total-restante-value'),
         modalExcluirAba: document.getElementById('modal-confirm-excluir-aba'),
         btnConfirmarExcluirAba: document.getElementById('btn-confirmar-excluir-aba'),
         btnCancelarExcluirAba: document.getElementById('btn-cancelar-excluir-aba'),
@@ -409,6 +406,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('tabelaTrilhoSortRequest', () => { if (triggerTrilhoSort) triggerTrilhoSort(); });
     document.addEventListener('tabelaFreteSortRequest', () => { if (triggerFreteSort) triggerFreteSort(); });
     document.addEventListener('tabelaInstalacaoSortRequest', () => { if (triggerInstalacaoSort) triggerInstalacaoSort(); });
+    document.addEventListener('permissionsUpdated', () => {
+        console.log("Permissões alteradas em tempo real. Redesenhando interfaces...");
+        carregarClientes(); 
+        renderizarTabelaTecidos(dataRefs.tecidos);
+        renderizarTabelaConfeccao(dataRefs.confeccao);
+        renderizarTabelaTrilho(dataRefs.trilho);
+        renderizarTabelaFrete(dataRefs.frete);
+        renderizarTabelaInstalacao(dataRefs.instalacao);
+    });
 
     console.log("Iniciando carregamento de dados (Clientes e Dados Base)...");
     try {
