@@ -65,10 +65,11 @@
                     <button id="btn-voltar-clientes">&larr; Voltar para Clientes</button>
                     <h2 id="calculator-client-name">Calculadora para Cliente</h2>
                     <div id="save-status-wrapper" class="save-status-wrapper">
-                        <span id="save-status-message" class="save-status-message"></span>
-                        <button id="btn-print-orcamento" class="btn-print-orcamento" title="Imprimir Orçamento">🖨️</button>
-                        <button id="btn-manual-save" class="btn-manual-save hidden">Salvar</button>
-                    </div>
+    <span id="save-status-message" class="save-status-message"></span>
+    <button id="btn-config-print" class="btn-print-orcamento" title="Configurar Impressão" style="font-size: 18px;">⚙️</button>
+    <button id="btn-print-orcamento" class="btn-print-orcamento" title="Imprimir Orçamento">🖨️</button>
+    <button id="btn-manual-save" class="btn-manual-save hidden">Salvar</button>
+</div>
                 </div>
 
                 <div id="calc-tabs-container">
@@ -1122,6 +1123,44 @@
                     <button type="submit" class="btn-salvar">Salvar Taxas</button>
                 </div>
             </form>
+        </div>
+    </div>
+    <div id="modal-config-print" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2>Personalizar Impressão</h2>
+            <p style="font-size: 13px; color: #666; text-align: center;">Selecione as colunas que devem aparecer na impressão.</p>
+           <form id="form-config-print">
+    <h4 style="margin: 10px 0 5px; color: #931011; border-bottom: 1px solid #eee;">Cortinas Tecido</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-tecido-medidas"> <label for="print-tecido-medidas">Medidas</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-tecido-cortina"> <label for="print-tecido-cortina">Tecido Cortina</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-tecido-forro"> <label for="print-tecido-forro">Tecido Forro</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-tecido-blackout"> <label for="print-tecido-blackout">Blackout</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-tecido-valores"> <label for="print-tecido-valores">Valores</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-tecido-orcamento"> <label for="print-tecido-orcamento">Orçamento</label></div>
+    </div>
+
+    <h4 style="margin: 15px 0 5px; color: #931011; border-bottom: 1px solid #eee;">Cortinas Amorim</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-cortina-medidas"> <label for="print-amorim-cortina-medidas">Medidas</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-cortina-modelo"> <label for="print-amorim-cortina-modelo">Modelo</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-cortina-detalhes"> <label for="print-amorim-cortina-detalhes">Detalhes</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-cortina-orcamento"> <label for="print-amorim-cortina-orcamento">Orçamento</label></div>
+    </div>
+
+    <h4 style="margin: 15px 0 5px; color: #931011; border-bottom: 1px solid #eee;">Toldos Amorim</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-toldo-medidas"> <label for="print-amorim-toldo-medidas">Medidas</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-toldo-modelo"> <label for="print-amorim-toldo-modelo">Modelo</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-toldo-detalhes"> <label for="print-amorim-toldo-detalhes">Detalhes</label></div>
+        <div class="checkbox-wrapper-simple"><input type="checkbox" id="print-amorim-toldo-orcamento"> <label for="print-amorim-toldo-orcamento">Orçamento</label></div>
+    </div>
+
+    <div class="modal-actions">
+        <button type="button" id="btn-cancelar-config-print" class="btn-cancelar">Fechar</button>
+        <button type="submit" class="btn-salvar">Aplicar e Salvar</button>
+    </div>
+</form>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

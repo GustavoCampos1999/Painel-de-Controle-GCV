@@ -392,76 +392,119 @@ function setupCRUD(tabela) {
     if (formAdd) {
         formAdd.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!can('perm_data_add')) {
-                showToast("Sem permissão para adicionar.", "error");
-                return;
-            }
-            const dadosFormulario = getFormData(formAdd, tabela);
             
-            if (tabela === 'confeccao') {
-                if (!dadosFormulario.opcao) {
-                    showToast("Selecione pelo menos uma opção (Cortina, Forro ou Blackout).", "error");
-                    return;
-                }
-                const duplicado = (dataArrays.confeccao || []).find(item => 
-                    item.opcao === dadosFormulario.opcao && 
-                    Boolean(item.altura_especial) === Boolean(dadosFormulario.altura_especial)
-                );
-                if (duplicado) {
-                    const tipoAltura = dadosFormulario.altura_especial ? "Altura ≥ 3,50m" : "Altura Padrão";
-                    showToast(`Já existe: "${dadosFormulario.opcao}" para ${tipoAltura}.`, "error");
-                    return;
-                }
+            const btnSubmit = formAdd.querySelector('button[type="submit"]');
+            const textoOriginal = btnSubmit ? btnSubmit.textContent : "Salvar";
+            
+            if(btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = "Salvando...";
             }
 
-            const lojaId = await getMyLojaId(); 
-            if (!lojaId) return;
+            try {
+                if (!can('perm_data_add')) {
+                    showToast("Sem permissão para adicionar.", "error");
+                    return;
+                }
+                
+                const dadosFormulario = getFormData(formAdd, tabela);
+                
+                if (tabela === 'confeccao') {
+                    if (!dadosFormulario.opcao) {
+                        showToast("Selecione pelo menos uma opção (Cortina, Forro ou Blackout).", "error");
+                        return;
+                    }
+                    const duplicado = (dataArrays.confeccao || []).find(item => 
+                        item.opcao === dadosFormulario.opcao && 
+                        Boolean(item.altura_especial) === Boolean(dadosFormulario.altura_especial)
+                    );
+                    if (duplicado) {
+                        const tipoAltura = dadosFormulario.altura_especial ? "Altura ≥ 3,50m" : "Altura Padrão";
+                        showToast(`Já existe: "${dadosFormulario.opcao}" para ${tipoAltura}.`, "error");
+                        return;
+                    }
+                }
 
-            const dadosParaInserir = { ...dadosFormulario, loja_id: lojaId };
-            const { error } = await _supabase.from(tabela).insert(dadosParaInserir);
+                const lojaId = await getMyLojaId(); 
+                if (!lojaId) return;
 
-            handleSaveResponse(error, modalAdd, tabela, `✅ ${nomeSingular} adicionado(a)!`);
+                const dadosParaInserir = { ...dadosFormulario, loja_id: lojaId };
+                const { error } = await _supabase.from(tabela).insert(dadosParaInserir);
+
+                handleSaveResponse(error, modalAdd, tabela, `✅ ${nomeSingular} adicionado(a)!`);
+            
+            } catch (erro) {
+                console.error(erro);
+                showToast("Erro inesperado ao salvar.", "error");
+            } finally {
+                if(btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = textoOriginal;
+                }
+            }
         });
     }
+    
     if (btnCancelAdd) btnCancelAdd.addEventListener('click', () => closeModal(modalAdd));
 
     if (formEdit) {
         formEdit.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!can('perm_data_edit')) {
-                showToast("Sem permissão para editar.", "error");
-                return;
-            }
-            const dadosFormulario = getFormData(formEdit, tabela);
-            const id = formEdit.querySelector(`input[name="id"]`)?.value; 
-            if (!id) return;
 
-            if (tabela === 'confeccao') {
-                if (!dadosFormulario.opcao) {
-                    showToast("Selecione pelo menos uma opção.", "error");
-                    return;
-                }
-                const duplicado = (dataArrays.confeccao || []).find(item => 
-                    item.id != id && 
-                    item.opcao === dadosFormulario.opcao && 
-                    Boolean(item.altura_especial) === Boolean(dadosFormulario.altura_especial)
-                );
-                if (duplicado) {
-                    showToast(`Conflito: Essa combinação já existe em outro cadastro.`, "error");
-                    return;
-                }
+            const btnSubmit = formEdit.querySelector('button[type="submit"]');
+            const textoOriginal = btnSubmit ? btnSubmit.textContent : "Salvar";
+
+            if(btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = "Salvando...";
             }
 
-            const lojaId = await getMyLojaId(); 
-            if (!lojaId) return;
+            try {
+                if (!can('perm_data_edit')) {
+                    showToast("Sem permissão para editar.", "error");
+                    return;
+                }
+                const dadosFormulario = getFormData(formEdit, tabela);
+                const id = formEdit.querySelector(`input[name="id"]`)?.value; 
+                if (!id) return;
 
-            const updateData = {...dadosFormulario};
-            delete updateData.id;
+                if (tabela === 'confeccao') {
+                    if (!dadosFormulario.opcao) {
+                        showToast("Selecione pelo menos uma opção.", "error");
+                        return;
+                    }
+                    const duplicado = (dataArrays.confeccao || []).find(item => 
+                        item.id != id && 
+                        item.opcao === dadosFormulario.opcao && 
+                        Boolean(item.altura_especial) === Boolean(dadosFormulario.altura_especial)
+                    );
+                    if (duplicado) {
+                        showToast(`Conflito: Essa combinação já existe em outro cadastro.`, "error");
+                        return;
+                    }
+                }
 
-            const { error } = await _supabase.from(tabela).update(updateData).match({ id: id, loja_id: lojaId }); 
-            handleSaveResponse(error, modalEdit, tabela, `✅ ${nomeSingular} atualizado(a)!`);
+                const lojaId = await getMyLojaId(); 
+                if (!lojaId) return;
+
+                const updateData = {...dadosFormulario};
+                delete updateData.id;
+
+                const { error } = await _supabase.from(tabela).update(updateData).match({ id: id, loja_id: lojaId }); 
+                handleSaveResponse(error, modalEdit, tabela, `✅ ${nomeSingular} atualizado(a)!`);
+            
+            } catch(erro) {
+                console.error(erro);
+                showToast("Erro inesperado ao editar.", "error");
+            } finally {
+                if(btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = textoOriginal;
+                }
+            }
         });
     }
+    
     if (btnCancelEdit) btnCancelEdit.addEventListener('click', () => closeModal(modalEdit));
 
     if (tbody) {
@@ -479,19 +522,23 @@ function setupCRUD(tabela) {
                  const starElement = target;
                  const isFavorito = row.dataset.favorito === 'true';
                  const newStatus = !isFavorito;
+                 
                  starElement.textContent = newStatus ? '★' : '☆';
                  starElement.classList.toggle('favorito', newStatus);
                  row.dataset.favorito = newStatus;
+                 
                  const { error } = await _supabase.from(tabela).update({ favorito: newStatus }).match({ id: id, loja_id: lojaId }); 
-                 if (error) { showToast('Erro ao atualizar favorito.', true); } 
-                 else { 
+                 if (error) { 
+                     showToast('Erro ao atualizar favorito.', true); 
+                     starElement.textContent = isFavorito ? '★' : '☆';
+                     starElement.classList.toggle('favorito', isFavorito);
+                 } else { 
                     const itemInData = dataArrays[tabela].find(item => item.id == id);
                     if (itemInData) itemInData.favorito = newStatus;
                     document.dispatchEvent(new CustomEvent(`tabela${nomeCapitalizado}SortRequest`));
                  }
                  return;
             }
-            
             if (target.classList.contains('btn-excluir')) {
                 if (!can('perm_data_delete')) {
                     showToast("Sem permissão para excluir.", "error");
@@ -501,7 +548,6 @@ function setupCRUD(tabela) {
                 if (window.prepararExclusaoGenerica) window.prepararExclusaoGenerica({ id, nome, tabela, loja_id: lojaId, elemento: row });
                 return; 
             }
-
             if (target.classList.contains('btn-editar')) {
                 if (!can('perm_data_edit')) { showToast("Sem permissão.", "error"); return; }
                 if(formEdit){
@@ -715,7 +761,6 @@ function setupAmorim(tabelaBanco, idBtnAdd, idModalAdd, idFormAdd, idModalEdit, 
             b.addEventListener('click', () => closeModal(modalEdit))
         );
     }
-
     if (formEdit) {
         formEdit.addEventListener('submit', async (e) => {
             e.preventDefault();

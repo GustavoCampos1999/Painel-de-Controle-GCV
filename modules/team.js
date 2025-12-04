@@ -228,11 +228,15 @@ async function handleSaveMembro(e) {
     btn.textContent = "Salvando...";
     
     const formData = new FormData(elements.formAddMembro);
+    
+    let roleValue = formData.get('role');
+    let roleIdParsed = roleValue ? parseInt(roleValue) : null;
+
     const dados = {
         nome: formData.get('nome'),
         email: formData.get('email'), 
         senha: formData.get('senha'),
-        role_id: formData.get('role')
+        role_id: roleIdParsed 
     };
     
     const selectRole = elements.formAddMembro.querySelector('select[name="role"]');
@@ -260,15 +264,20 @@ async function handleSaveMembro(e) {
             body: JSON.stringify(dados)
         });
 
-        if (!response.ok) throw new Error("Erro na operação");
+        if (!response.ok) {
+            const errJson = await response.json();
+            throw new Error(errJson.erro || "Erro na operação");
+        }
+        
         showToast(membroEmEdicao ? "Atualizado!" : "Criado!");
         closeModal(elements.modalAddMembro);
         carregarEquipe();
     } catch (error) {
-        showToast("Erro ao salvar.", "error");
+        console.error(error);
+        showToast(error.message || "Erro ao salvar.", "error");
     } finally {
         btn.disabled = false;
-        btn.textContent = "Salvar";
+        btn.textContent = "Salvar"; 
     }
 }
 

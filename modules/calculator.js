@@ -33,6 +33,11 @@ let abaParaExcluir = { index: null, element: null };
 let secaoParaExcluir = { element: null, type: null, button: null };
 let isDirty = false;
 
+let printSettings = {
+    tecido: { medidas: true, cortina: true, forro: true, blackout: true, valores: true, orcamento: true },
+    amorim_cortina: { medidas: true, modelo: true, detalhes: true, orcamento: true },
+    amorim_toldo: { medidas: true, modelo: true, detalhes: true, orcamento: true }
+};
 async function getAuthToken() {
   const { data: { session }, error } = await _supabase.auth.getSession();
   if (error || !session) return null;
@@ -54,62 +59,65 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
     carregarTaxasDoBanco();
-    const btnConfigTaxas = document.getElementById('btn-config-taxas');
-    const modalConfigTaxas = document.getElementById('modal-config-taxas');
-    const formConfigTaxas = document.getElementById('form-config-taxas');
-    const btnCancelarTaxas = document.getElementById('btn-cancelar-taxas');
-    const btnRestaurarTaxas = document.getElementById('btn-restaurar-taxas');
+    
+    const btnConfigPrint = document.getElementById('btn-config-print');
+    const modalConfigPrint = document.getElementById('modal-config-print');
+    const formConfigPrint = document.getElementById('form-config-print');
+    const btnCancelarConfigPrint = document.getElementById('btn-cancelar-config-print');
 
-    if (btnConfigTaxas) {
-        btnConfigTaxas.addEventListener('click', () => {
-            if (!can('perm_calc_taxas')) {
-                showToast("Sem permissão para configurar taxas.", "error");
-                return;
-            }
-            abrirModalTaxas();
+    if (btnConfigPrint) {
+        btnConfigPrint.addEventListener('click', () => {
+            document.getElementById('print-tecido-medidas').checked = printSettings.tecido.medidas;
+            document.getElementById('print-tecido-cortina').checked = printSettings.tecido.cortina;
+            document.getElementById('print-tecido-forro').checked = printSettings.tecido.forro;
+            document.getElementById('print-tecido-blackout').checked = printSettings.tecido.blackout;
+            document.getElementById('print-tecido-valores').checked = printSettings.tecido.valores;
+            document.getElementById('print-tecido-orcamento').checked = printSettings.tecido.orcamento;
+            const amCortina = printSettings.amorim_cortina || { medidas: true, modelo: true, detalhes: true, orcamento: true };
+            document.getElementById('print-amorim-cortina-medidas').checked = amCortina.medidas;
+            document.getElementById('print-amorim-cortina-modelo').checked = amCortina.modelo;
+            document.getElementById('print-amorim-cortina-detalhes').checked = amCortina.detalhes;
+            document.getElementById('print-amorim-cortina-orcamento').checked = amCortina.orcamento;
+            const amToldo = printSettings.amorim_toldo || { medidas: true, modelo: true, detalhes: true, orcamento: true };
+            document.getElementById('print-amorim-toldo-medidas').checked = amToldo.medidas;
+            document.getElementById('print-amorim-toldo-modelo').checked = amToldo.modelo;
+            document.getElementById('print-amorim-toldo-detalhes').checked = amToldo.detalhes;
+            document.getElementById('print-amorim-toldo-orcamento').checked = amToldo.orcamento;
+
+            openModal(modalConfigPrint);
         });
     }
-    if (btnCancelarTaxas) btnCancelarTaxas.addEventListener('click', () => closeModal(modalConfigTaxas));
-    if (btnRestaurarTaxas) {
-        btnRestaurarTaxas.addEventListener('click', async () => {
-            if(confirm("Isso apagará as taxas personalizadas e voltará ao padrão. Continuar?")) {
-                TAXAS_PARCELAMENTO = { ...TAXAS_PADRAO };
-                await salvarNovasTaxasNoBanco(TAXAS_PADRAO); 
-                preencherSelectParcelamento();
-                recalcularParceladoAmorimToldos();
-                recalcularTotaisSelecionados();
-                closeModal(modalConfigTaxas);
-                showToast("Taxas padrão restauradas.");
-            }
-        });
-    }
-    if (formConfigTaxas) {
-        formConfigTaxas.addEventListener('submit', async (e) => {
+
+    if (btnCancelarConfigPrint) btnCancelarConfigPrint.addEventListener('click', () => closeModal(modalConfigPrint));
+
+    if (formConfigPrint) {
+        formConfigPrint.addEventListener('submit', (e) => {
             e.preventDefault();
-            await aplicarEdicaoTaxas();
-        });
-    }
+            printSettings.tecido.medidas = document.getElementById('print-tecido-medidas').checked;
+            printSettings.tecido.cortina = document.getElementById('print-tecido-cortina').checked;
+            printSettings.tecido.forro = document.getElementById('print-tecido-forro').checked;
+            printSettings.tecido.blackout = document.getElementById('print-tecido-blackout').checked;
+            printSettings.tecido.valores = document.getElementById('print-tecido-valores').checked;
+            printSettings.tecido.orcamento = document.getElementById('print-tecido-orcamento').checked;
+            if(!printSettings.amorim_cortina) printSettings.amorim_cortina = {};
+            if(!printSettings.amorim_toldo) printSettings.amorim_toldo = {};
+            printSettings.amorim_cortina.medidas = document.getElementById('print-amorim-cortina-medidas').checked;
+            printSettings.amorim_cortina.modelo = document.getElementById('print-amorim-cortina-modelo').checked;
+            printSettings.amorim_cortina.detalhes = document.getElementById('print-amorim-cortina-detalhes').checked;
+            printSettings.amorim_cortina.orcamento = document.getElementById('print-amorim-cortina-orcamento').checked;
+            printSettings.amorim_toldo.medidas = document.getElementById('print-amorim-toldo-medidas').checked;
+            printSettings.amorim_toldo.modelo = document.getElementById('print-amorim-toldo-modelo').checked;
+            printSettings.amorim_toldo.detalhes = document.getElementById('print-amorim-toldo-detalhes').checked;
+            printSettings.amorim_toldo.orcamento = document.getElementById('print-amorim-toldo-orcamento').checked;
 
-    if (elements.btnVoltarClientes) {
-        elements.btnVoltarClientes.addEventListener('click', async () => {
-            if (isDirty) {
-                const modalTitle = elements.modalConfirmSair.querySelector('h2');
-                const modalText = elements.modalConfirmSair.querySelector('p');
-                const btnSalvarSair = elements.btnSalvarESair;
-
-                if (!can('perm_calc_save')) {
-                    modalTitle.textContent = "Sem Permissão";
-                    modalText.textContent = "Você não tem permissão para salvar. Deseja sair sem salvar?";
-                    if(btnSalvarSair) btnSalvarSair.style.display = 'none'; 
-                } else {
-                    modalTitle.textContent = "Alterações não salvas";
-                    modalText.textContent = "Você possui alterações não salvas. Deseja realmente sair sem salvar?";
-                    if(btnSalvarSair) btnSalvarSair.style.display = 'inline-block'; 
-                }
-                openModal(elements.modalConfirmSair);
-            } else {
-                window.location.hash = '';
+            if (estadoAbas[abaAtivaIndex]) {
+                estadoAbas[abaAtivaIndex].printSettings = JSON.parse(JSON.stringify(printSettings));
             }
+            
+            aplicarClassesImpressao();
+            setDirty(); 
+            closeModal(modalConfigPrint);
+            showToast("Configuração de impressão aplicada!");
         });
     }
 
@@ -259,6 +267,46 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     if (elements.btnFecharConfigCalculadora) elements.btnFecharConfigCalculadora.addEventListener('click', () => closeModal(elements.modalConfigCalculadora));
 }
 
+function aplicarClassesImpressao() {
+    const container = document.getElementById('quote-sections-container');
+    if (!container) return;
+
+    const classesParaRemover = [
+        'print-hide-tecido-medidas', 'print-hide-tecido-cortina', 'print-hide-tecido-forro', 
+        'print-hide-tecido-blackout', 'print-hide-tecido-valores', 'print-hide-tecido-orcamento',
+        'print-hide-amorim-cortina-medidas', 'print-hide-amorim-cortina-modelo', 'print-hide-amorim-cortina-detalhes', 'print-hide-amorim-cortina-orcamento',
+        'print-hide-amorim-toldo-medidas', 'print-hide-amorim-toldo-modelo', 'print-hide-amorim-toldo-detalhes', 'print-hide-amorim-toldo-orcamento'
+    ];
+
+    document.querySelectorAll('.quote-section').forEach(section => {
+        section.classList.remove(...classesParaRemover);
+        const type = section.dataset.sectionType;
+
+        if (type === 'tecido') {
+            if (!printSettings.tecido.medidas) section.classList.add('print-hide-tecido-medidas');
+            if (!printSettings.tecido.cortina) section.classList.add('print-hide-tecido-cortina');
+            if (!printSettings.tecido.forro) section.classList.add('print-hide-tecido-forro');
+            if (!printSettings.tecido.blackout) section.classList.add('print-hide-tecido-blackout');
+            if (!printSettings.tecido.valores) section.classList.add('print-hide-tecido-valores');
+            if (!printSettings.tecido.orcamento) section.classList.add('print-hide-tecido-orcamento');
+        } 
+        else if (type === 'amorim') {
+            const settings = printSettings.amorim_cortina || { medidas: true, modelo: true, detalhes: true, orcamento: true };
+            if (!settings.medidas) section.classList.add('print-hide-amorim-cortina-medidas');
+            if (!settings.modelo) section.classList.add('print-hide-amorim-cortina-modelo');
+            if (!settings.detalhes) section.classList.add('print-hide-amorim-cortina-detalhes');
+            if (!settings.orcamento) section.classList.add('print-hide-amorim-cortina-orcamento');
+        } 
+        else if (type === 'toldos') { 
+            const settings = printSettings.amorim_toldo || { medidas: true, modelo: true, detalhes: true, orcamento: true };
+            if (!settings.medidas) section.classList.add('print-hide-amorim-toldo-medidas');
+            if (!settings.modelo) section.classList.add('print-hide-amorim-toldo-modelo');
+            if (!settings.detalhes) section.classList.add('print-hide-amorim-toldo-detalhes');
+            if (!settings.orcamento) section.classList.add('print-hide-amorim-toldo-orcamento');
+        }
+    });
+}
+
 async function carregarTaxasDoBanco() {
     try {
         const token = await getAuthToken();
@@ -404,6 +452,7 @@ function addSection(sectionType, buttonElement, isInitialLoad = false) {
     atualizarHeaderParcelado();
     checkSectionControls(); 
     updateMoveButtonsVisibility();
+    aplicarClassesImpressao(); 
     if (!isInitialLoad) setDirty();
 }
 
@@ -894,6 +943,7 @@ export async function showCalculatorView(clientId, clientName) {
         if(elements.saveStatusMessage) elements.saveStatusMessage.textContent = '';
     }
 }
+
 async function carregarEstadoCalculadora(clientId) {
     isDirty = false;
     const container = document.getElementById('quote-sections-container');
@@ -908,6 +958,11 @@ async function carregarEstadoCalculadora(clientId) {
         if (res.status === 404) {
             estadoAbas = [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
             if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
+            printSettings = {
+        tecido: { medidas: true, cortina: true, forro: true, blackout: true, valores: true, orcamento: true },
+        amorim_cortina: { medidas: true, modelo: true, detalhes: true, orcamento: true },
+        amorim_toldo: { medidas: true, modelo: true, detalhes: true, orcamento: true }
+    };
         } else {
             const data = await res.json();
             estadoAbas = data.abas || [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
@@ -935,6 +990,8 @@ async function salvarEstadoCalculadora(clientId) {
     estadoAbas[abaAtivaIndex].sections = sections;
     estadoAbas[abaAtivaIndex].venda_realizada = elements.chkSummaryVendaRealizada?.checked || false;
     
+    estadoAbas[abaAtivaIndex].printSettings = JSON.parse(JSON.stringify(printSettings));
+
     const payload = {
         abas: estadoAbas,
         markup: elements.calculatorMarkupInput?.value,
@@ -1015,6 +1072,7 @@ function ativarAba(index, isInitialLoad) {
         });
         estadoAbas[abaAtivaIndex].sections = sections;
         estadoAbas[abaAtivaIndex].venda_realizada = elements.chkSummaryVendaRealizada?.checked;
+        estadoAbas[abaAtivaIndex].printSettings = JSON.parse(JSON.stringify(printSettings));
     }
     
     abaAtivaIndex = index;
@@ -1050,7 +1108,27 @@ function ativarAba(index, isInitialLoad) {
     });
     
     if(elements.chkSummaryVendaRealizada) elements.chkSummaryVendaRealizada.checked = aba.venda_realizada || false;
-    
+
+    if (aba.printSettings) {
+        if (aba.printSettings.amorim && !aba.printSettings.amorim_cortina) {
+            console.log("Migrando configurações de impressão antigas...");
+            aba.printSettings.amorim_cortina = aba.printSettings.amorim;
+            aba.printSettings.amorim_toldo = aba.printSettings.amorim;
+            delete aba.printSettings.amorim;
+        }
+        printSettings = JSON.parse(JSON.stringify(aba.printSettings));
+    } else {
+        printSettings = {
+            tecido: { medidas: true, cortina: true, forro: true, blackout: true, valores: true, orcamento: true },
+            amorim_cortina: { medidas: true, modelo: true, detalhes: true, orcamento: true },
+            amorim_toldo: { medidas: true, modelo: true, detalhes: true, orcamento: true }
+        };
+    }
+    if (!printSettings.amorim_cortina) printSettings.amorim_cortina = { medidas: true, modelo: true, detalhes: true, orcamento: true };
+    if (!printSettings.amorim_toldo) printSettings.amorim_toldo = { medidas: true, modelo: true, detalhes: true, orcamento: true };
+
+    aplicarClassesImpressao();
+
     checkSectionControls();
     recalcularTotaisSelecionados();
 }
@@ -1062,6 +1140,7 @@ function adicionarAba() {
             sections[sec.dataset.sectionType] = { active: true, ambientes: obterEstadoSection(sec) };
         });
         estadoAbas[abaAtivaIndex].sections = sections;
+        estadoAbas[abaAtivaIndex].printSettings = JSON.parse(JSON.stringify(printSettings));
     }
     estadoAbas.push({ nome: `Orçamento ${estadoAbas.length+1}`, sections: {} });
     ativarAba(estadoAbas.length-1);

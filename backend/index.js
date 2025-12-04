@@ -9,11 +9,31 @@ const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 const { calcularOrcamento } = require('./calculo.js');
 const db = require('./database.js'); 
-
 const app = express();
+const allowedOrigins = [
+  'https://gustavocampos1999.github.io', 
+  'http://127.0.0.1:5500',
+  'http://localhost:5500'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("Bloqueado pelo CORS:", origin); 
+      callback(new Error('Não permitido pela política de CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], 
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true 
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(helmet());
 app.use(morgan('combined')); 
-
+app.use(express.json()); 
 const createAccountLimiter = rateLimit({
 	windowMs: 60 * 60 * 1000, 
 	max: 5, 
@@ -27,9 +47,23 @@ const apiLimiter = rateLimit({
 	max: 100, 
     message: { erro: "Muitos pedidos. Tente mais tarde." }
 });
-
 app.use('/api', apiLimiter);
+const PORTA = process.env.PORT || 3000;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; 
 
+if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+  console.error("Erro: Variáveis de ambiente obrigatórias ausentes.");
+  process.exit(1);
+}
+
+const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
+
+const DEFAULT_CORTINA = ["CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", "PH 25", "PH 50", "PH 75", "PLISSADA", "ROLO", "ROMANA", "TRILHO MOTORIZADO", "VERTIGLISS"];
+const DEFAULT_TOLDO = ["PERGOLA", "BALI", "BERGAMO", "BERLIM", "CAPRI", "MILAO", "MILAO COMPACT", "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"];
+const DEFAULT_CORES_CORTINA = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
+const DEFAULT_CORES_TOLDO = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
 const registerSchema = z.object({
     email: z.string().email({ message: "E-mail inválido" }),
     password: z.string().min(6, { message: "A senha deve ter no mínimo 6 caracteres" }),
@@ -47,45 +81,6 @@ const teamAddSchema = z.object({
     senha: z.string().min(6, { message: "Senha deve ter 6 caracteres" }),
     role_id: z.number().nullable().optional()
 });
-
-const allowedOrigins = [
-  'https://gustavocampos1999.github.io', 
-  'http://127.0.0.1:5500',
-  'http://localhost:5500'
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Não permitido pela política de CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],    
-  allowedHeaders: ['Content-Type', 'Authorization'] 
-};
-
-app.use(express.json());
-app.use(cors(corsOptions)); 
-
-const PORTA = process.env.PORT || 3000;
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; 
-
-if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-  console.error("Erro: Variáveis de ambiente obrigatórias ausentes.");
-  process.exit(1);
-}
-
-const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
-
-const DEFAULT_CORTINA = ["CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", "PH 25", "PH 50", "PH 75", "PLISSADA", "ROLO", "ROMANA", "TRILHO MOTORIZADO", "VERTIGLISS"];
-const DEFAULT_TOLDO = ["PERGOLA", "BALI", "BERGAMO", "BERLIM", "CAPRI", "MILAO", "MILAO COMPACT", "MILAO MATIK", "MILAO PLUS", "MILAO SEMI BOX", "MONACO", "ZURIQUE", "ZIP SYSTEM"];
-const DEFAULT_CORES_CORTINA = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
-const DEFAULT_CORES_TOLDO = ["PADRAO", "BRANCO", "BRONZE", "CINZA", "MARFIM", "MARROM", "PRETO"];
-
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -120,7 +115,6 @@ const requireAdmin = async (req, res, next) => {
         next(error); 
     }
 };
-
 app.get('/health', (req, res) => res.status(200).send('Online.'));
 
 app.post('/api/check-email', async (req, res, next) => {
@@ -210,7 +204,6 @@ app.post('/correction-email', async (req, res, next) => {
         next(error);
     }
 });
-
 app.use('/api', authMiddleware);
 
 app.post('/api/calcular', (req, res, next) => {

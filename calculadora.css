@@ -319,6 +319,19 @@ body.dark-mode #btn-config-taxas:hover {
 #btn-imprimir-orcamento:hover {
     background-color: #218838;
 }
+.tabela-calculo th.col-acoes-calc,
+.tabela-calculo td.col-acoes-calc {
+    width: 50px !important;
+    min-width: 50px !important;
+    max-width: 50px !important;
+}
+
+.tabela-calculo th.col-selecionar-calc,
+.tabela-calculo td.col-selecionar-calc {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+}
 
 @media screen {
     body.dark-mode { background-color: #121212; color: #e0e0e0; }
@@ -634,7 +647,15 @@ body.dark-mode #container-inputs-taxas input:focus {
     .summary-total-box:nth-child(n+3) {
         border-top: 1px solid #ddd;
     }
-
+#form-config-print h4 {
+    border-bottom: none !important;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #931011;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
 @media screen {
     body.dark-mode .summary-total-box + .summary-total-box { 
         border-left-color: transparent; 
@@ -888,16 +909,8 @@ body.dark-mode #container-inputs-taxas input:focus {
     opacity: 0 !important;
 }
 
-.tabela-calculo input::-webkit-input-placeholder { 
-    color: transparent !important;
-    opacity: 0 !important;
-}
-
-.tabela-calculo input::-moz-placeholder { 
-    color: transparent !important;
-    opacity: 0 !important;
-}
-
+.tabela-calculo input::-webkit-input-placeholder, 
+.tabela-calculo input::-moz-placeholder,
 .tabela-calculo input:-ms-input-placeholder { 
     color: transparent !important;
     opacity: 0 !important;
@@ -907,5 +920,119 @@ body.dark-mode #container-inputs-taxas input:focus {
     color: transparent !important;
     opacity: 0 !important;
 }
-.print-col-confeccao { display: none !important; }
+    .print-col-confeccao,
+    .print-hide-tecido-medidas .sessao-medidas,
+    .print-hide-tecido-medidas .print-col-largura, 
+    .print-hide-tecido-medidas .print-col-altura,
+    .print-hide-tecido-cortina .sessao-cortina,
+    .print-hide-tecido-cortina .print-col-franz-cortina,
+    .print-hide-tecido-cortina .print-col-cod-cortina,
+    .print-hide-tecido-forro .sessao-forro,
+    .print-hide-tecido-forro .print-col-cod-forro,
+    .print-hide-tecido-blackout .sessao-blackout,
+    .print-hide-tecido-blackout .print-col-franz-blackout,
+    .print-hide-tecido-blackout .print-col-cod-blackout,
+    .print-hide-tecido-valores .sessao-valores,
+    .print-hide-tecido-valores .print-col-trilho,
+    .print-hide-tecido-valores .print-col-instalacao,
+    .print-hide-tecido-valores .print-col-outros,
+    .print-hide-tecido-orcamento .sessao-orcamento,
+    .print-hide-tecido-orcamento .print-col-total,
+    .print-hide-tecido-orcamento .print-col-parcelado,
+    .print-hide-tecido-orcamento .print-col-observacao,
+    .print-hide-tecido-medidas tr:nth-child(2) th:nth-child(1), 
+    .print-hide-tecido-medidas tr:nth-child(2) th:nth-child(2), 
+    .print-hide-tecido-medidas tbody td:nth-child(4),          
+    .print-hide-tecido-medidas tbody td:nth-child(5),
+    .print-hide-tecido-cortina tr:nth-child(2) th:nth-child(3),
+    .print-hide-tecido-cortina tr:nth-child(2) th:nth-child(4),
+    .print-hide-tecido-cortina tr:nth-child(2) th:nth-child(5),
+    .print-hide-tecido-cortina tbody td:nth-child(6),
+    .print-hide-tecido-cortina tbody td:nth-child(7),
+    .print-hide-tecido-cortina tbody td:nth-child(8),
+    .print-hide-tecido-forro tr:nth-child(2) th:nth-child(6),
+    .print-hide-tecido-forro tr:nth-child(2) th:nth-child(7),
+    .print-hide-tecido-forro tbody td:nth-child(9),
+    .print-hide-tecido-forro tbody td:nth-child(10),
+    .print-hide-tecido-blackout tr:nth-child(2) th:nth-child(8),
+    .print-hide-tecido-blackout tr:nth-child(2) th:nth-child(9),
+    .print-hide-tecido-blackout tr:nth-child(2) th:nth-child(10),
+    .print-hide-tecido-blackout tbody td:nth-child(11),
+    .print-hide-tecido-blackout tbody td:nth-child(12),
+    .print-hide-tecido-blackout tbody td:nth-child(13),
+    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(11),
+    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(12),
+    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(13),
+    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(14),
+    .print-hide-tecido-valores tbody td:nth-child(14),
+    .print-hide-tecido-valores tbody td:nth-child(15),
+    .print-hide-tecido-valores tbody td:nth-child(16),
+    .print-hide-tecido-valores tbody td:nth-child(17),
+    .print-hide-tecido-orcamento tr:nth-child(2) th:nth-child(15),
+    .print-hide-tecido-orcamento tr:nth-child(2) th:nth-child(16),
+    .print-hide-tecido-orcamento tr:nth-child(2) th:nth-child(17),
+    .print-hide-tecido-orcamento tbody td:nth-child(18),
+    .print-hide-tecido-orcamento tbody td:nth-child(19),
+    .print-hide-tecido-orcamento tbody td:nth-child(20),
+    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(5),
+    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(5),
+    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(5),
+    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(5),
+    .print-hide-amorim-modelo .tabela-amorim-cortina th:nth-child(6),
+    .print-hide-amorim-modelo .tabela-amorim-cortina td:nth-child(6),
+    .print-hide-amorim-modelo .tabela-amorim-toldos th:nth-child(6),
+    .print-hide-amorim-modelo .tabela-amorim-toldos td:nth-child(6),
+    .print-hide-amorim-detalhes .tabela-amorim-cortina th:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-detalhes .tabela-amorim-cortina td:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-detalhes .tabela-amorim-toldos th:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-detalhes .tabela-amorim-toldos td:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-orcamento .tabela-amorim-cortina th:nth-child(n+13),
+    .print-hide-amorim-cortina td:nth-child(n+13),
+    .print-hide-amorim-toldos th:nth-child(n+13),
+    .print-hide-amorim-toldos td:nth-child(n+13),
+    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(5),
+    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(5),
+    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(4),
+    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(5),
+    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(5),
+    .print-hide-amorim-modelo .tabela-amorim-cortina th:nth-child(6),
+    .print-hide-amorim-modelo .tabela-amorim-cortina td:nth-child(6),
+    .print-hide-amorim-modelo .tabela-amorim-toldos th:nth-child(6),
+    .print-hide-amorim-modelo .tabela-amorim-toldos td:nth-child(6), 
+    .print-hide-amorim-detalhes .tabela-amorim-cortina th:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-detalhes .tabela-amorim-cortina td:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-detalhes .tabela-amorim-toldos th:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-detalhes .tabela-amorim-toldos td:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-orcamento .tabela-amorim-cortina th:nth-child(n+13),
+    .print-hide-amorim-cortina td:nth-child(n+13),
+    .print-hide-amorim-toldos th:nth-child(n+13),
+    .print-hide-amorim-toldos td:nth-child(n+13),
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina th:nth-child(4), 
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina td:nth-child(4),
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina th:nth-child(5), 
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina td:nth-child(5),
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina th:nth-child(6), 
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina td:nth-child(6),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina th:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina td:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina th:nth-child(n+13),
+    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina td:nth-child(n+13),
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos th:nth-child(4), 
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos td:nth-child(4),
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos th:nth-child(5), 
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos td:nth-child(5),
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos th:nth-child(6), 
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos td:nth-child(6),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos th:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos td:nth-child(n+7):nth-child(-n+12),
+    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos th:nth-child(n+13),
+    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos td:nth-child(n+13) { 
+        display: none !important; }
 }
