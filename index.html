@@ -21,11 +21,12 @@
             <h1>Painel de Controle</h1>
             <button id="btn-theme-toggle" class="theme-toggle-button" title="Mudar tema">🌙</button>
         </div>
-        <div>
-            <span id="subscription-timer" style="margin-right: 15px; font-weight: bold; color: #ffc107; font-size: 0.9em;"></span>
-            <span id="user-email">Carregando...</span>
-            <a href="#" id="btn-logout" style="margin-left: 15px;">Sair</a>
-        </div>
+        <div style="display: flex; align-items: center;">
+    <span id="subscription-timer" style="margin-right: 15px; font-weight: bold; color: #ffc107; font-size: 0.9em;"></span>
+    <button id="btn-subscription-status" class="btn-assinatura-header" style="display: none; margin-right: 15px;">Assine</button>
+    <span id="user-email">Carregando...</span>
+    <a href="#" id="btn-logout" style="margin-left: 15px;">Sair</a>
+</div>
     </header>
 
     <nav class="tabs">
@@ -1163,6 +1164,60 @@
 </form>
         </div>
     </div>
+    <div id="modal-pricing" class="modal-overlay" style="display: none; z-index: 2000;">
+    <div class="modal-content pricing-modal-content">
+        <button class="btn-close-pricing" onclick="document.getElementById('modal-pricing').style.display='none'">×</button>
+        <h2 style="color: #931011; margin-bottom: 5px;">Escolha seu Plano</h2>
+        <p style="text-align: center; margin-bottom: 20px;">Libere acesso total ao Painel GCV</p>
+        
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Mensal</h3>
+                <div class="price">R$ 49,90<span>/mês</span></div>
+                <ul class="features">
+                    <li>Acesso Completo</li>
+                    <li>Suporte Básico</li>
+                </ul>
+                <button class="btn-pagseguro" data-plan="mensal">Assinar Mensal</button>
+            </div>
+
+            <div class="pricing-card">
+                <h3>Trimestral</h3>
+                <div class="price">R$ 139,90<span>/3 meses</span></div>
+                <div class="economy">Economize 7%</div>
+                <button class="btn-pagseguro" data-plan="trimestral">Assinar Trimestral</button>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="badge-pop">Mais Popular</div>
+                <h3>Semestral</h3>
+                <div class="price">R$ 269,90<span>/6 meses</span></div>
+                <div class="economy">Economize 10%</div>
+                <button class="btn-pagseguro btn-featured" data-plan="semestral">Assinar Semestral</button>
+            </div>
+
+            <div class="pricing-card">
+                <h3>Anual</h3>
+                <div class="price">R$ 499,90<span>/ano</span></div>
+                <div class="economy">Economize 16%</div>
+                <button class="btn-pagseguro" data-plan="anual">Assinar Anual</button>
+            </div>
+        </div>
+        <p style="font-size: 11px; text-align: center; margin-top: 15px; color: #666;">Pagamento processado via <strong>PagSeguro</strong>.</p>
+    </div>
+</div>
+
+<div id="modal-my-plan" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Meu Plano</h2>
+        <div id="my-plan-details" style="text-align: center; padding: 20px;">
+            <p>Carregando informações...</p>
+        </div>
+        <div class="modal-actions" style="justify-content: center;">
+            <button type="button" class="btn-cancelar" onclick="document.getElementById('modal-my-plan').style.display='none'">Fechar</button>
+        </div>
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="script.js"></script>
 </body>
