@@ -1035,4 +1035,13 @@ body.dark-mode #container-inputs-taxas input:focus {
     .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos th:nth-child(n+13),
     .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos td:nth-child(n+13) { 
         display: none !important; }
+    .tabela-calculo.tabela-amorim-cortina,
+    .tabela-calculo.tabela-amorim-toldos {
+        table-layout: auto !important;
+        width: 100% !important;
+    }
+    .quote-section[data-section-type="amorim"] col,
+    .quote-section[data-section-type="toldos"] col {
+        width: auto !important;
+    }
 }

@@ -157,7 +157,18 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             elements.btnManualSave.disabled = false;
         });
     }
-
+if (elements.btnVoltarClientes) {
+        elements.btnVoltarClientes.addEventListener('click', () => {
+            if (isDirty) {
+                openModal(elements.modalConfirmSair);
+            } else {
+                window.location.hash = '';
+                
+                if(elements.clientListView) elements.clientListView.style.display = 'block';
+                if(elements.calculatorView) elements.calculatorView.style.display = 'none';
+            }
+        });
+    }
     if (elements.btnPrintOrcamento) {
         elements.btnPrintOrcamento.addEventListener('click', () => window.print());
     }
