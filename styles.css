@@ -1360,11 +1360,9 @@ body.dark-mode .tabela-moderna tr:hover {
     transition: all 0.2s;
     flex: 1;
 }
-
 .btn-toggle-type:hover {
     background-color: #e0e0e0;
 }
-
 .btn-toggle-type.active[data-value="Cortina"] {
     background-color: #007bff; color: white; border-color: #0056b3;
 }
@@ -1379,8 +1377,8 @@ body.dark-mode .tabela-moderna tr:hover {
     display: none !important;
 }
 .btn-assinatura-header {
-    background-color: #ffc107;
-    color: #333;
+    background-color: #ffc107 !important; 
+    color: #333 !important; 
     border: none;
     padding: 6px 12px;
     border-radius: 4px;
@@ -1388,15 +1386,28 @@ body.dark-mode .tabela-moderna tr:hover {
     cursor: pointer;
     font-size: 13px;
     text-transform: uppercase;
-    transition: all 0.2s;
+    transition: transform 0.2s;
 }
 .btn-assinatura-header:hover {
-    background-color: #e0a800;
+    background-color: #e0a800 !important;
     transform: scale(1.05);
 }
 .btn-assinatura-header.meu-plano {
-    background-color: #28a745;
-    color: white;
+    background-color: #28a745 !important; 
+    color: white !important; 
+}
+.btn-assinatura-header.meu-plano:hover {
+    background-color: #218838 !important;
+}
+.btn-assinatura-header.btn-expirado {
+    background-color: #dc3545 !important;
+    color: white !important;
+    animation: pulsar 2s infinite;
+}
+@keyframes pulsar {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
 }
 .pricing-modal-content {
     max-width: 900px !important;

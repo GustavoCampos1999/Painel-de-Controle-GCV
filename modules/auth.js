@@ -47,56 +47,60 @@ function processarStatusAssinatura(loja, isLoginPage) {
     let textoBotao = "Assine";
     let classeBotao = ""; 
     let textoStatus = "";
-    let dataAlvo = null;
-
+    
     if (loja.status_assinatura === 'trialing' || loja.status_assinatura === 'teste') {
-        dataAlvo = new Date(loja.data_fim_teste);
-        const diffTime = dataAlvo - agora;
+        const dataFim = new Date(loja.data_fim_teste);
+        const diffTime = dataFim - agora;
         diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (diasRestantes <= 0) {
             planoExpirado = true;
             textoStatus = "Teste Expirado";
+            textoBotao = "Assinar Agora";
+            classeBotao = "btn-expirado"; 
         } else {
             textoStatus = `Teste: ${diasRestantes} dias`;
+            textoBotao = "Assine Agora";
+            classeBotao = "btn-teste"; 
         }
-        textoBotao = "Assinar Agora"; 
     } 
     else if (loja.status_assinatura === 'active' || loja.status_assinatura === 'ativo') {
-        dataAlvo = new Date(loja.data_expiracao_assinatura);
-        const diffTime = dataAlvo - agora;
+        const dataFim = new Date(loja.data_expiracao_assinatura);
+        const diffTime = dataFim - agora;
         diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (diasRestantes <= 0) {
             planoExpirado = true;
             textoStatus = "Plano Vencido";
             textoBotao = "Renovar";
+            classeBotao = "btn-expirado"; 
         } else {
-            textoStatus = "Plano Ativo";
+            textoStatus = "Assinatura Ativa";
             textoBotao = "Meu Plano";
-            classeBotao = "meu-plano"; 
+            classeBotao = "btn-ativo"; 
         }
     }
     else {
         planoExpirado = true;
         textoStatus = "Sem Acesso";
-        textoBotao = "Assinar";
+        textoBotao = "Regularizar";
+        classeBotao = "btn-expirado";
     }
 
     const timerElement = document.getElementById('subscription-timer');
     if (timerElement) {
         timerElement.textContent = textoStatus;
-        if (diasRestantes <= 5 || planoExpirado) timerElement.style.color = "#dc3545"; 
-        else timerElement.style.color = "#28a745"; 
+        if (planoExpirado) timerElement.style.color = "#dc3545"; 
+        else if (loja.status_assinatura.includes('activ')) timerElement.style.color = "#28a745"; 
+        else timerElement.style.color = "#ffc107"; 
     }
 
     const btnAssinatura = document.getElementById('btn-subscription-status');
     if (btnAssinatura) {
-        btnAssinatura.style.display = 'block'; 
+        btnAssinatura.style.display = 'block';
         btnAssinatura.textContent = textoBotao;
         
-        btnAssinatura.className = 'btn-assinatura-header';
-        if (classeBotao) btnAssinatura.classList.add(classeBotao);
+        btnAssinatura.className = 'btn-assinatura-header ' + classeBotao;
         
         const newBtn = btnAssinatura.cloneNode(true);
         btnAssinatura.parentNode.replaceChild(newBtn, btnAssinatura);
@@ -111,14 +115,10 @@ function processarStatusAssinatura(loja, isLoginPage) {
     }
 
     if (planoExpirado && !isLoginPage) {
-        const modalPricing = document.getElementById('modal-pricing');
-        if (modalPricing) {
-            openModal(modalPricing);
-            const closeBtn = modalPricing.querySelector('.btn-close-pricing');
-            if (closeBtn) closeBtn.style.display = 'none';
-        }
-        
-        showToast(`Seu período de acesso encerrou. Escolha um plano para continuar.`, "error");
+        openModal(document.getElementById('modal-pricing'));
+        const closeBtn = document.querySelector('.btn-close-pricing');
+        if (closeBtn) closeBtn.style.display = 'none';
+        showToast(`Seu acesso expirou. Renove seu plano.`, "error");
     }
 }
 

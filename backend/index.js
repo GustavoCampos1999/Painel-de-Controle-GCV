@@ -10,7 +10,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { calcularOrcamento } = require('./calculo.js');
 const db = require('./database.js'); 
 const app = express();
-
+app.set('trust proxy', 1);
 const allowedOrigins = [
   'https://gustavocampos1999.github.io', 
   'http://127.0.0.1:5500',
