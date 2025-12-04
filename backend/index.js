@@ -39,9 +39,9 @@ app.use(morgan('combined'));
 app.use(express.json()); 
 
 const createAccountLimiter = rateLimit({
-	windowMs: 60 * 60 * 1000, 
-	max: 5, 
-	message: { erro: "Muitas tentativas de criação de conta. Tente novamente em 1 hora." },
+	windowMs: 15 * 60 * 1000, 
+	max: 100,
+	message: { erro: "Muitas tentativas seguidas. Aguarde 15 minutos." },
 	standardHeaders: true, 
 	legacyHeaders: false,
 });

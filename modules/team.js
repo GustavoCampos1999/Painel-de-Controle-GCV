@@ -121,7 +121,10 @@ function renderizarTabelaEquipe(lista) {
 
     lista.forEach(membro => {
         const tr = document.createElement('tr');
-        const roleDisplay = membro.role_custom_name || membro.role || 'Vendedor';
+        let roleDisplay = membro.role_custom_name;
+if (!roleDisplay) {
+    roleDisplay = (membro.role === 'admin') ? 'Administrador' : 'Nenhum Cargo';
+}
         
         let botoes = '';
         if (membro.role !== 'admin') {
@@ -161,7 +164,7 @@ async function preencherSelectCargos() {
         const roles = await response.json();
         
         select.innerHTML = '';
-        
+        select.appendChild(new Option("Nenhum Cargo", ""));
         if (roles.length === 0) {
              select.innerHTML = '<option value="">Nenhum cargo criado</option>';
         }
