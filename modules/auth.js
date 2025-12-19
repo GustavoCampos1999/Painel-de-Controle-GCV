@@ -18,7 +18,7 @@ export async function checkUserSession() {
                 .select('nome_usuario, is_super_admin, loja_id') 
                 .eq('user_id', session.user.id) 
                 .single();
-
+            console.log("Perfil vindo do banco:", perfil);
             if (perfilError) throw perfilError;
             const userElement = document.getElementById('user-email');
             if (userElement) userElement.textContent = `Olá, ${perfil.nome_usuario || 'Usuário'}`;

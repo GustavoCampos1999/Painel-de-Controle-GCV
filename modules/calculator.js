@@ -64,6 +64,16 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     const modalConfigPrint = document.getElementById('modal-config-print');
     const formConfigPrint = document.getElementById('form-config-print');
     const btnCancelarConfigPrint = document.getElementById('btn-cancelar-config-print');
+   const ajustarAlturaModalPrint = () => {
+        const modal = document.getElementById('modal-config-print');
+        const content = modal ? modal.querySelector('.modal-content') : null;
+        
+        if (modal && content && modal.style.display !== 'none') {
+            const windowHeight = window.innerHeight;
+            content.style.maxHeight = `${windowHeight * 0.90}px`;
+        }
+    };
+    window.addEventListener('resize', ajustarAlturaModalPrint);
 
     if (btnConfigPrint) {
         btnConfigPrint.addEventListener('click', () => {
@@ -85,6 +95,7 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
             document.getElementById('print-amorim-toldo-orcamento').checked = amToldo.orcamento;
 
             openModal(modalConfigPrint);
+            setTimeout(ajustarAlturaModalPrint, 10);
         });
     }
 
@@ -480,11 +491,21 @@ function moverSecao(section, direction) {
 
 function calcularParceladoLinhaAmorim(linha, taxaParcelamento) {
     if (!linha) return;
+    const inputProduto = linha.querySelector('.input-valor-manual');
+    const inputOutros = linha.querySelector('.input-outros');
+    const selectInstalacao = linha.querySelector('.select-instalacao');
     const inputTotal = linha.querySelector('.resultado-preco-total');
     const inputParcelado = linha.querySelector('.resultado-preco-parcelado');
-    if (!inputTotal || !inputParcelado) return;
-    const valorTotal = parseCurrencyValue(inputTotal.value);
-    inputParcelado.value = formatadorReaisCalc.format(valorTotal * (1 + taxaParcelamento));
+    if (!inputProduto || !inputTotal || !inputParcelado) return;
+    const valProduto = parseCurrencyValue(inputProduto.value);
+    const valOutros = parseCurrencyValue(inputOutros.value);
+    const valInstalacao = obterValorRealSelect(selectInstalacao);
+    const totalGeral = valProduto + valOutros + valInstalacao;
+    inputTotal.value = formatadorReaisCalc.format(totalGeral);
+    const baseParcelar = valProduto + valOutros;
+    const totalParcelado = (baseParcelar * (1 + taxaParcelamento)) + valInstalacao;
+
+    inputParcelado.value = formatadorReaisCalc.format(totalParcelado);
 }
 
 function recalcularParceladoAmorimToldos() {
@@ -648,9 +669,13 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-lado-comando'), DADOS_LADO_COMANDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS_CORTINA);
+    
+    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "NENHUM", true);
+
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
     setupCurrencyFormatting(novaLinha.querySelector('.input-valor-manual'));
+    setupCurrencyFormatting(novaLinha.querySelector('.input-outros'));
 
     const selComando = novaLinha.querySelector('.select-comando');
     const inpManual = novaLinha.querySelector('.input-altura-comando-manual');
@@ -674,16 +699,24 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
         if(estadoLinha.comando === 'MOTORIZADO') selMotor.value = estadoLinha.altura_comando || '127v';
         else inpManual.value = estadoLinha.altura_comando || '';
         toggleCmd();
-        novaLinha.querySelector('.input-valor-manual').value = estadoLinha.valor_manual || '';
+        novaLinha.querySelector('.input-valor-manual').value = estadoLinha.valor_manual || ''; 
+        novaLinha.querySelector('.select-instalacao').value = estadoLinha.instalacao || '0';
+        const vOutros = parseFloat(String(estadoLinha.outros).replace(/[^\d,]/g,'').replace(',','.')) || 0;
+        novaLinha.querySelector('.input-outros').value = vOutros > 0 ? formatadorReaisCalc.format(vOutros) : '';
+
         novaLinha.querySelector('.input-observacao').value = estadoLinha.observacao || '';
         novaLinha.querySelector('.select-linha-checkbox').checked = estadoLinha.selecionado === true;
     } else toggleCmd();
 
-    novaLinha.querySelectorAll('input, select').forEach(el => el.addEventListener(el.tagName==='SELECT'?'change':'input', () => { recalcularTotaisSelecionados(); setDirty(); }));
-    novaLinha.querySelector('.input-valor-manual').addEventListener('blur', () => {
-        const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
-        calcularParceladoLinhaAmorim(novaLinha, taxa);
-    });
+    novaLinha.querySelectorAll('input, select').forEach(el => el.addEventListener(el.tagName==='SELECT'?'change':'input', () => { 
+        if (el.classList.contains('input-valor-manual') || el.classList.contains('input-outros') || el.classList.contains('select-instalacao')) {
+             const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
+             calcularParceladoLinhaAmorim(novaLinha, taxa);
+        }
+        recalcularTotaisSelecionados(); 
+        setDirty(); 
+    }));
+
     novaLinha.querySelector('.btn-remover-linha').addEventListener('click', () => removerLinhaCalculadora(novaLinha));
     
     tableBody.appendChild(novaLinha);
@@ -695,13 +728,18 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
 function adicionarLinhaToldos(tableBody, estadoLinha, isInitialLoad) {
     const template = document.getElementById('template-linha-toldos');
     const novaLinha = template.content.cloneNode(true).querySelector('tr');
+    
     preencherSelectCalculadora(novaLinha.querySelector('.select-modelo-toldo'), DADOS_MODELO_TOLDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS_TOLDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-lado-comando'), DADOS_LADO_COMANDO);
+    
+    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "NENHUM", true);
+
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
     setupCurrencyFormatting(novaLinha.querySelector('.input-valor-manual'));
+    setupCurrencyFormatting(novaLinha.querySelector('.input-outros')); 
 
     const selComando = novaLinha.querySelector('.select-comando');
     const inpManual = novaLinha.querySelector('.input-altura-comando-manual');
@@ -725,23 +763,31 @@ function adicionarLinhaToldos(tableBody, estadoLinha, isInitialLoad) {
         if(estadoLinha.comando === 'MOTORIZADO') selMotor.value = estadoLinha.altura_comando || '127v';
         else inpManual.value = estadoLinha.altura_comando || '';
         toggleCmd();
-        novaLinha.querySelector('.input-valor-manual').value = estadoLinha.valor_manual || '';
+    
+        novaLinha.querySelector('.input-valor-manual').value = estadoLinha.valor_manual || ''; 
+        novaLinha.querySelector('.select-instalacao').value = estadoLinha.instalacao || '0';
+        const vOutros = parseFloat(String(estadoLinha.outros).replace(/[^\d,]/g,'').replace(',','.')) || 0;
+        novaLinha.querySelector('.input-outros').value = vOutros > 0 ? formatadorReaisCalc.format(vOutros) : '';
+
         novaLinha.querySelector('.input-observacao').value = estadoLinha.observacao || '';
         novaLinha.querySelector('.select-linha-checkbox').checked = estadoLinha.selecionado === true;
     } else toggleCmd();
 
-    novaLinha.querySelectorAll('input, select').forEach(el => el.addEventListener(el.tagName==='SELECT'?'change':'input', () => { recalcularTotaisSelecionados(); setDirty(); }));
-    novaLinha.querySelector('.input-valor-manual').addEventListener('blur', () => {
-        const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
-        calcularParceladoLinhaAmorim(novaLinha, taxa);
-    });
+    novaLinha.querySelectorAll('input, select').forEach(el => el.addEventListener(el.tagName==='SELECT'?'change':'input', () => { 
+        if (el.classList.contains('input-valor-manual') || el.classList.contains('input-outros') || el.classList.contains('select-instalacao')) {
+             const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
+             calcularParceladoLinhaAmorim(novaLinha, taxa);
+        }
+        recalcularTotaisSelecionados(); 
+        setDirty(); 
+    }));
+    
     novaLinha.querySelector('.btn-remover-linha').addEventListener('click', () => removerLinhaCalculadora(novaLinha));
     tableBody.appendChild(novaLinha);
     const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
     calcularParceladoLinhaAmorim(novaLinha, taxa);
     if(!estadoLinha && !isInitialLoad) setDirty();
 }
-
 function recalcularTodasLinhas() {
     document.querySelectorAll('#quote-sections-container .linha-calculo-cliente[data-linha-type="tecido"]').forEach(l => calcularOrcamentoLinha(l));
 }
@@ -1056,6 +1102,8 @@ function obterEstadoSection(section) {
             obj.lado_comando = l.querySelector('.select-lado-comando')?.value;
             obj.altura_comando = (obj.comando==='MOTORIZADO') ? l.querySelector('.select-altura-comando-motor')?.value : l.querySelector('.input-altura-comando-manual')?.value;
             obj.valor_manual = l.querySelector('.input-valor-manual')?.value;
+            obj.instalacao = l.querySelector('.select-instalacao')?.value;
+            obj.outros = l.querySelector('.input-outros')?.value;
         }
         linhas.push(obj);
     });

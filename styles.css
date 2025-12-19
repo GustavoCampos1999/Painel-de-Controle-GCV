@@ -876,7 +876,6 @@ body.dark-mode .client-filter-select {
 .tabela-calculo .input-valor-manual {
     font-weight: bold;
     text-align: right;
-    background-color: #fffde7;
     min-width: 120px;
 }
 .tabela-calculo .input-observacao {
@@ -918,9 +917,6 @@ body.dark-mode .tabela-calculo tbody select {
     background-color: #333;
     color: #e0e0e0;
     border-color: #555;
-}
-body.dark-mode .tabela-calculo .input-valor-manual {
-    background-color: #3b3a30; 
 }
 .filter-container {
     display: flex;
@@ -1512,7 +1508,68 @@ body.dark-mode .pricing-card { background-color: #252525; border-color: #444; }
 body.dark-mode .pricing-card h3 { color: #e0e0e0; }
 body.dark-mode .pricing-card .price span { color: #aaa; }
 body.dark-mode .pricing-card ul { color: #ccc; }
+#modal-config-print .modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important; 
+    max-height: 90vh !important; 
+    width: 95% !important;
+    max-width: 500px !important;
+    overflow: hidden !important; 
+    background: #fff;
+    border-radius: 8px;
+}
 
+#modal-config-print h2 {
+    margin: 20px 20px 5px 20px !important;
+    flex-shrink: 0;
+}
+#modal-config-print p {
+    margin: 0 20px 15px 20px !important;
+    flex-shrink: 0;
+}
+#form-config-print {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 0 20px;
+    flex-grow: 1;
+}
+#form-config-print .modal-actions {
+    position: sticky;
+    bottom: 0;
+    background-color: #fff; 
+    padding: 15px 20px; 
+    margin: 0 -20px; 
+    border-top: 1px solid #eee; 
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+body.dark-mode #modal-config-print .modal-content {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #333;
+}
+
+body.dark-mode #form-config-print h4 {
+    color: #ff6b6b !important; 
+    border-bottom-color: #444 !important;
+}
+body.dark-mode #form-config-print .modal-actions {
+    background-color: #1e1e1e !important; 
+    border-top-color: #333 !important;
+}
+
+body.dark-mode #form-config-print .checkbox-wrapper-simple {
+    background-color: #2a2a2a !important;
+    border-color: #444 !important;
+}
+
+body.dark-mode #form-config-print .checkbox-wrapper-simple label {
+    color: #fff !important;
+}
 @media (max-width: 768px) {
     header {
         flex-direction: column;
@@ -1594,86 +1651,114 @@ body.dark-mode .pricing-card ul { color: #ccc; }
 }
 
 @media (max-width: 480px) {
-    header > div:last-child {
+    header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-     #btn-logout {
-        margin-left: 0 !important;
-    }
-    .theme-toggle-button {
-        margin-left: 0 !important;
-    }
-    #user-email {
-        max-width: 100%;
-    }
-
-    .list-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    .btn-adicionar {
-        width: 100%;
-        text-align: center;
-        box-sizing: border-box;
-    }
-
-    .cliente-card {
-        flex-direction: column; 
-        align-items: stretch;
-    }
-    .card-content {
-        margin-right: 0;
-        margin-bottom: 15px; 
-        min-width: 0;
-    }
-   .card-header {
-    display: flex;
-    flex-wrap: wrap; 
-    justify-content: space-between;
-    align-items: flex-start; 
-    margin-bottom: 10px;
-}
-    .cliente-nome {
-    font-weight: bold;
-    font-size: 1.1em;
-    flex-shrink: 0; 
-}
-    .cliente-nome strong {
-        text-decoration: none !important; 
-        border-bottom: none !important;
-    }
-   .cliente-timestamps {
-    flex-basis: 100%;
-    margin-top: 5px; 
-    text-align: right; 
-    white-space: normal; 
-}
-    .cliente-details {
-        margin-top: 5px; 
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-    .cliente-acoes {
-        flex-direction: row;
-        justify-content: flex-end;
-        width: 100%;
+        padding: 10px 15px;
         gap: 8px;
     }
-    .modal-content {
-        width: 90%;
-        padding: 20px 15px;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-    .modal-actions {
-        flex-direction: column;
-        gap: 10px;
-    }
-    .modal-actions button {
+
+    .header-logo-container {
         width: 100%;
-        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: space-between; 
+    }
+
+    #header-logo {
+        height: 32px; 
+    }
+
+    header h1 {
+        font-size: 18px; 
+        margin: 0 auto 0 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+    }
+
+    .theme-toggle-button {
+        margin: 0 !important;
+        padding: 5px;
+        font-size: 20px;
+    }
+
+    header > div:last-child {
+        width: 100%;
+        display: flex !important;
+        flex-direction: row !important; 
+        align-items: center;
+        justify-content: space-between; 
+        border-top: 1px solid rgba(255, 255, 255, 0.2); 
+        padding-top: 8px;
+        margin-top: 2px;
+        gap: 0;
+    }
+
+    #user-email {
+        font-size: 13px;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+    }
+
+    header a#btn-logout {
+        font-size: 12px;
+        padding: 4px 10px;
+        margin: 0 !important;
+        white-space: nowrap;
+    }
+
+    #subscription-timer {
+        display: none; 
+    }
+    
+    #btn-subscription-status {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+     #form-config-print > div[style*="grid"] {
+        grid-template-columns: 1fr !important;
+    }
+    .card-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-header {
+        display: contents; 
+    }
+
+    .cliente-nome {
+        order: 1;
+        margin-bottom: 8px;
+        width: 100%;
+    }
+    .cliente-details {
+        order: 2;
+        margin-bottom: 10px;
+    }
+
+    .cliente-timestamps {
+        order: 3;
+        text-align: left; 
+        margin-top: 5px;
+        padding-top: 8px;
+        border-top: 1px solid #eee; 
+        width: 100%;
+        display: flex;
+        flex-direction: column; 
+        gap: 2px;
+    }
+    
+    .timestamp {
+        font-size: 10px !important; 
+        color: #999 !important;
+    }
+    
+    body.dark-mode .cliente-timestamps {
+        border-top-color: #333;
     }
 }

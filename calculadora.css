@@ -571,6 +571,7 @@ body.dark-mode #container-inputs-taxas input:focus {
     border-color: #28a745; 
 }
 
+
 @media (max-width: 768px) {
     .calculator-header { display: flex; align-items: center; gap: 10px; padding: 10px; flex-wrap: wrap; }
     #btn-voltar-clientes { order: 1; width: auto; flex-shrink: 0; font-size: 14px; padding: 8px 12px; margin-right: 0; }
@@ -589,459 +590,427 @@ body.dark-mode #container-inputs-taxas input:focus {
     #select-parcelamento-global { width: 170px; }
     #input-valor-entrada-global, #select-frete-global { width: 100px; }
 }
-
-@media (max-width: 480px) {
-    .calculator-header { display: flex; align-items: center; gap: 8px; padding: 8px; flex-wrap: wrap; justify-content: space-between; }
-#btn-voltar-clientes { order: 1; width: auto; flex-shrink: 0; font-size: 13px; padding: 6px 10px; margin-right: 0; }
-
-.save-status-wrapper { display: contents; } 
-
-#btn-manual-save { order: 3; font-size: 13px; padding: 6px 12px; } 
-
-#btn-print-orcamento { order: 2; margin-left: 25%;} 
-
-.calculator-header h2 { order: 4; flex-basis: 100%; flex-grow: 1; text-align: center; width: auto; min-width: 0; font-size: 14px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.save-status-message { order: 5; flex-basis: 100%; text-align: right; font-size: 11px; }
-
-    .tabela-calculo th, .tabela-calculo td { font-size: 11px; } 
-    .wrapper-markups.calculator-markups { flex-direction: column; align-items: center; gap: 10px; padding: 10px; }
-    
-    .quote-section-title-group .btn-abrir-config-calculadora { 
-        font-size: 18px; 
+@media (max-width: 600px) {
+    .print-options-grid {
+        grid-template-columns: 1fr;
     }
 
-    .calculator-markups .grupo-markups { flex-wrap: wrap; justify-content: center; gap: 10px; }
-    .calculator-markups .grupo-markups input, .calculator-markups .grupo-markups select { width: 130px; }
-    #select-parcelamento-global { width: 170px; }
-    #input-valor-entrada-global, #select-frete-global { width: 100px; }
-
-    #calculator-summary {
-        padding: 10px 15px;
-    }
-    .summary-totals-container { display: flex; justify-content: center; gap: 0; margin-top: 10px; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; max-width: 100%; flex-wrap: wrap; margin-left: auto; margin-right: auto; }
-    .summary-total-box { flex: 1 1 120px; padding: 10px; text-align: center; background-color: #e9ecef; }
-    .summary-total-box label { font-size: 10px; }
-    .summary-total-box span { font-size: 1.1em; }
-
-    .summary-total-box + .summary-total-box {
-         border-left: none;
-    }
-    .summary-total-box:nth-child(2),
-    .summary-total-box:nth-child(4) {
-         border-left: 1px solid #ddd;
-    }
-    .summary-total-box:nth-child(3),
-    .summary-total-box:nth-child(4) {
-        border-top: 1px solid #ddd;
-    }
-    .summary-total-box:nth-child(2),
-    .summary-total-box:nth-child(4) {
-         border-left: none; 
+    #modal-config-print .checkbox-wrapper-simple {
+        padding: 12px; 
     }
     
-    .summary-total-box:nth-child(2) {
-         border-left: 1px solid #ddd;
+    #modal-config-print label {
+        font-size: 16px; 
     }
-    
-    .summary-total-box:nth-child(n+3) {
-        border-top: 1px solid #ddd;
-    }
-#form-config-print h4 {
-    border-bottom: none !important;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    color: #931011;
-    font-size: 14px;
-    text-transform: uppercase;
-    font-weight: bold;
 }
-@media screen {
-    body.dark-mode .summary-total-box + .summary-total-box { 
-        border-left-color: transparent; 
-    }
-    body.dark-mode .summary-total-box:first-child {
-        border-right-color: transparent; 
-    }
-    body.dark-mode .summary-total-box:nth-child(2),
-    body.dark-mode .summary-total-box:nth-child(4) {
-         border-left-color: #444;
-    }
-    body.dark-mode .summary-total-box:nth-child(3),
-    body.dark-mode .summary-total-box:nth-child(4) {
-        border-top-color: #444;
-    }
-} 
-}
+
 @media print {
     @page {
         size: A4 landscape;
-        margin: 1cm;
+        margin: 5mm;
     }
+
     body > *:not(main),
     main > *:not(#tab-clientes),
     #tab-clientes > *:not(#calculator-view),
-    header,
-    .tabs,
-    #client-list-view,
-    #tab-gerenciar-dados,
-    .modal-overlay,
-    .toast,
-    #loading-overlay {
-        display: none !important;
-    }
-    body, main, #tab-clientes, #calculator-view {
-        display: block !important;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        color: #000 !important;
-        box-shadow: none !important;
-        border: none !important;
-    }
-    #btn-voltar-clientes,
-    #save-status-wrapper,
-    #calc-tabs-container,
-    #section-controls,
-    .btn-add-linha,
-    .btn-remover-secao,
-    .btn-move-secao,
-    .btn-remover-linha,
-    #btn-abrir-config-calculadora,
-    .btn-abrir-config-calculadora, 
-    .summary-venda-container,
-    #btn-restaurar-taxas,
-    #btn-config-taxas,
-    .btn-print-orcamento,
-    #btn-manual-save,
-    #save-status-message,
+    header, .tabs, #client-list-view, #tab-gerenciar-dados,
+    .modal-overlay, .toast, #loading-overlay,
+    #btn-voltar-clientes, #save-status-wrapper, #calc-tabs-container,
+    #section-controls, .btn-add-linha, .btn-remover-secao,
+    .btn-move-secao, .btn-remover-linha, #btn-abrir-config-calculadora,
+    .btn-abrir-config-calculadora, .summary-venda-container,
+    #btn-restaurar-taxas, #btn-config-taxas, .btn-print-orcamento,
+    #btn-manual-save, #save-status-message,
     .linha-calculo-cliente .select-linha-checkbox:not(:checked) {
         display: none !important;
     }
-    .quote-section:not(:has(.select-linha-checkbox:checked)),
-    .linha-calculo-cliente:has(.select-linha-checkbox:not(:checked)) {
-        display: none !important; 
+
+    body, main, #tab-clientes, #calculator-view {
+        display: block !important;
+        padding: 0; margin: 0; width: 100%;
+        color: #000 !important;
+        background: #fff !important;
+        font-family: Arial, sans-serif;
+        font-size: 8pt;
     }
+
     .calculator-header {
+        display: block !important;
         padding: 0 !important;
-        box-shadow: none !important;
         border: none !important;
-        justify-content: center !important;
+        box-shadow: none !important;
+        margin-bottom: 5px;
+        text-align: center;
     }
     #calculator-client-name {
-        display: block !important;
-        font-size: 24px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .wrapper-markups.calculator-markups {
-        display: block !important;
-        page-break-inside: avoid;
-        box-shadow: none !important;
-        border: 1px solid #ccc;
-        padding: 10px;
-        margin-bottom: 20px;
-    }
-    .calculator-markups .grupo-markups {
-        gap: 30px;
-        justify-content: center;
-    }
-    .calculator-markups .grupo-markups input,
-    .calculator-markups .grupo-markups select {
-        border: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
+        font-size: 14pt;
         font-weight: bold;
-        font-size: 1.1em;
-        padding: 0;
-    }
-    .calculator-markups .grupo-markups select option:not(:checked) {
-        display: none;
-    }
-
-    #calculator-summary {
-        display: block !important;
-        page-break-inside: avoid;
-        box-shadow: none !important;
-        border: 1px solid #ccc;
-        text-align: center;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    .summary-totals-container {
-        border: none;
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    .summary-total-box {
-        border: 1px solid #ccc;
-        flex-basis: 150px !important;
+        margin: 0 0 5px 0;
+        border-bottom: 2px solid #931011;
+        padding-bottom: 2px;
+        display: block;
     }
 
     .quote-section {
         page-break-inside: avoid;
-        border: 1px solid #ccc;
+        border: 1px solid #000;
         box-shadow: none !important;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
+        display: block !important;
     }
     .quote-section-header {
-        border-bottom: 1px solid #ccc;
+        background-color: #eee !important;
+        border-bottom: 1px solid #000;
+        padding: 2px 5px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
     .quote-section-header h3 {
+        margin: 0;
         color: #000 !important;
+        font-size: 9pt;
+        text-transform: uppercase;
+        font-weight: bold;
     }
 
     .tabela-container.calculator-container {
-        overflow-x: visible !important;
+        overflow: visible !important;
         width: 100%;
+        padding: 0;
+        border: none;
     }
+
     .tabela-calculo {
-        table-layout: fixed; 
-        min-width: 0 !important;
-        width: 100%;
-        font-size: 5px; 
-        word-wrap: break-word; 
+        width: 100% !important;
+        min-width: 100% !important;
+        table-layout: fixed;
+        border-collapse: collapse;
+        font-size: 7pt;
     }
+
     .tabela-calculo th, .tabela-calculo td {
-        padding: 2px; 
+        border: 1px solid #444;
+        padding: 1px !important;
+        vertical-align: middle !important;
         color: #000 !important;
-        vertical-align: middle;
-        min-width: 0 !important; 
+        overflow: hidden;
+        white-space: nowrap;
+        height: 18px; 
     }
+
     .tabela-calculo th {
-        font-size: 6px; 
-        white-space: normal !important; 
+        font-size: 6pt;
+        font-weight: bold;
+        background-color: #ddd !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        line-height: 1;
+        padding: 2px 1px !important;
     }
 
     .tabela-calculo tbody input,
     .tabela-calculo tbody select {
         border: none !important;
-        background: transparent !important; 
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        padding: 0 2px; 
-        font-size: 8px; 
-        width: 100%;
-        height: 100%; 
-        word-wrap: break-word; 
-        box-sizing: border-box; 
-        display: block; 
-        color: #000 !important; 
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        
+        width: 100% !important;
+        min-width: 0 !important; 
+        max-width: none !important;
+        height: 100% !important;
+        
+        font-size: 7pt !important;
+        font-family: Arial, sans-serif;
+        font-weight: normal; 
+        color: #000 !important;
+        letter-spacing: -0.2px; 
+        box-shadow: none !important;
+        display: block;
+        line-height: 18px; 
+        
+        text-align: center !important;
+        text-align-last: center !important; 
+        -moz-text-align-last: center !important; 
+        
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        text-indent: 0.01px;
+        text-overflow: '';
     }
-    .tabela-calculo tbody select option:not(:checked) {
-        display: none;
-    }
-    .tabela-calculo input.resultado,
+
+    .tabela-calculo input.format-money,
     .tabela-calculo input.resultado-preco-total,
     .tabela-calculo input.resultado-preco-parcelado,
-    .tabela-calculo .input-valor-manual {
-        font-weight: bold;
-        text-align: left
+    .tabela-calculo input.input-valor-manual { 
+        text-align: right !important;
+        text-align-last: right !important;
+        font-weight: bold; 
+        padding-right: 2px !important;
     }
-    
+
     .tabela-calculo input.input-ambiente,
-    .tabela-calculo input.input-observacao,
-    .tabela-calculo input.input-cod-tecido,
-    .tabela-calculo input.input-colecao {
-        text-align: left;
+    .tabela-calculo input.input-observacao { 
+        text-align: left !important; 
+        text-align-last: left !important;
+        padding-left: 2px !important;
     }
+
+    .tabela-calculo input::placeholder { color: transparent !important; opacity: 0 !important; }
     
-    .tabela-calculo col.print-col-acoes,
-    .tabela-calculo th.col-acoes-calc,
-    .tabela-calculo td.col-acoes-calc,
-    .tabela-calculo col.print-col-selecionar,
-    .tabela-calculo th.col-selecionar-calc,
-    .tabela-calculo td.col-selecionar-calc {
-        display: none !important;
-    }
-.tabela-calculo col.print-col-qtd-cortina,
-    .tabela-calculo col.print-col-qtd-forro,
-    .tabela-calculo col.print-col-qtd-blackout {
-        display: none !important;
-    }
+    .col-acoes-calc, .col-selecionar-calc,
+    .print-col-acoes, .print-col-selecionar,
+    .print-col-qtd-cortina, .print-col-qtd-forro, .print-col-qtd-blackout,
     .print-col-confeccao { display: none !important; }
-    .quote-section[data-section-type="tecido"] .print-col-ambiente { width: 9% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-largura { width: 5% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-altura { width: 5% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-ambiente { width: 8%; }
+    .quote-section[data-section-type="tecido"] .print-col-largura,
+    .quote-section[data-section-type="tecido"] .print-col-altura { width: 4.5%; } 
     .quote-section[data-section-type="tecido"] .print-col-franz-cortina,
-    .quote-section[data-section-type="tecido"] .print-col-franz-blackout { width: 4% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-franz-blackout { width: 4.5%; } 
     .quote-section[data-section-type="tecido"] .print-col-cod-cortina,
     .quote-section[data-section-type="tecido"] .print-col-cod-forro,
-    .quote-section[data-section-type="tecido"] .print-col-cod-blackout { width: 12% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-trilho { width: 7% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-instalacao { width: 6% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-outros { width: 5% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-total { width: 7% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-parcelado { width: 7% !important; }
-    .quote-section[data-section-type="tecido"] .print-col-observacao { width: 9% !important; }
+    .quote-section[data-section-type="tecido"] .print-col-cod-blackout { width: 11%; } 
+    .quote-section[data-section-type="tecido"] .print-col-trilho { width: 7%; }
+    .quote-section[data-section-type="tecido"] .print-col-instalacao { width: 7%; }
+    .quote-section[data-section-type="tecido"] .print-col-outros { width: 5.5%; }
+    .quote-section[data-section-type="tecido"] .print-col-total { width: 7%; }
+    .quote-section[data-section-type="tecido"] .print-col-parcelado { width: 7%; }
+    .quote-section[data-section-type="tecido"] .print-col-observacao { width: 8%; }
+
     .quote-section[data-section-type="amorim"] .print-col-ambiente,
-    .quote-section[data-section-type="toldos"] .print-col-ambiente { width: 8%; }
+    .quote-section[data-section-type="toldos"] .print-col-ambiente { width: 7%; }
+
     .quote-section[data-section-type="amorim"] .print-col-largura,
-    .quote-section[data-section-type="toldos"] .print-col-largura { width: 6%; }
+    .quote-section[data-section-type="toldos"] .print-col-largura,
     .quote-section[data-section-type="amorim"] .print-col-altura,
-    .quote-section[data-section-type="toldos"] .print-col-altura { width: 6%; }
+    .quote-section[data-section-type="toldos"] .print-col-altura { width: 5%; }
+
     .quote-section[data-section-type="amorim"] .print-col-modelo,
-    .quote-section[data-section-type="toldos"] .print-col-modelo { width: 12%; }
+    .quote-section[data-section-type="toldos"] .print-col-modelo { width: 9%; }
+
     .quote-section[data-section-type="amorim"] .print-col-cod-tecido,
-    .quote-section[data-section-type="toldos"] .print-col-cod-tecido { width: 6%; } 
+    .quote-section[data-section-type="toldos"] .print-col-cod-tecido { width: 5%; }
     .quote-section[data-section-type="amorim"] .print-col-colecao,
-    .quote-section[data-section-type="toldos"] .print-col-colecao { width: 6%; } 
+    .quote-section[data-section-type="toldos"] .print-col-colecao { width: 5%; }
+
     .quote-section[data-section-type="amorim"] .print-col-cor-acessorios,
-    .quote-section[data-section-type="toldos"] .print-col-cor-acessorios { width: 8%; }
+    .quote-section[data-section-type="toldos"] .print-col-cor-acessorios { width: 7%; }
+
     .quote-section[data-section-type="amorim"] .print-col-comando,
-    .quote-section[data-section-type="toldos"] .print-col-comando { width: 8%; }
+    .quote-section[data-section-type="toldos"] .print-col-comando { width: 7.5%; } 
+
     .quote-section[data-section-type="amorim"] .print-col-alt-comando,
-    .quote-section[data-section-type="toldos"] .print-col-alt-comando { width: 6%; }
+    .quote-section[data-section-type="toldos"] .print-col-alt-comando { width: 4.5%; }
+
     .quote-section[data-section-type="amorim"] .print-col-lado-comando,
-    .quote-section[data-section-type="toldos"] .print-col-lado-comando { width: 6%; }
-    .quote-section[data-section-type="amorim"] .print-col-valor,
-    .quote-section[data-section-type="toldos"] .print-col-valor { width: 8%; }
+    .quote-section[data-section-type="toldos"] .print-col-lado-comando { width: 6.5%; }
+
+    .quote-section[data-section-type="amorim"] .print-col-instalacao,
+    .quote-section[data-section-type="toldos"] .print-col-instalacao { width: 6%; }
+
+    .quote-section[data-section-type="amorim"] .print-col-outros,
+    .quote-section[data-section-type="toldos"] .print-col-outros { width: 5%; }
+
+    .quote-section[data-section-type="amorim"] .print-col-valor-produto,
+    .quote-section[data-section-type="toldos"] .print-col-valor-produto { width: 6.5%; }
+
+    .quote-section[data-section-type="amorim"] .print-col-total,
+    .quote-section[data-section-type="toldos"] .print-col-total { width: 7%; }
+
     .quote-section[data-section-type="amorim"] .print-col-parcelado,
-    .quote-section[data-section-type="toldos"] .print-col-parcelado { width: 8%; }
+    .quote-section[data-section-type="toldos"] .print-col-parcelado { width: 7%; }
+
     .quote-section[data-section-type="amorim"] .print-col-observacao,
-    .quote-section[data-section-type="toldos"] .print-col-observacao { width: 12%; } 
-    .tabela-calculo input::placeholder {
-    color: transparent !important;
-    opacity: 0 !important;
-}
-
-.tabela-calculo input::-webkit-input-placeholder, 
-.tabela-calculo input::-moz-placeholder,
-.tabela-calculo input:-ms-input-placeholder { 
-    color: transparent !important;
-    opacity: 0 !important;
-}
-
-.tabela-calculo input:-moz-placeholder { 
-    color: transparent !important;
-    opacity: 0 !important;
-}
-    .print-col-confeccao,
-    .print-hide-tecido-medidas .sessao-medidas,
-    .print-hide-tecido-medidas .print-col-largura, 
-    .print-hide-tecido-medidas .print-col-altura,
-    .print-hide-tecido-cortina .sessao-cortina,
-    .print-hide-tecido-cortina .print-col-franz-cortina,
-    .print-hide-tecido-cortina .print-col-cod-cortina,
-    .print-hide-tecido-forro .sessao-forro,
-    .print-hide-tecido-forro .print-col-cod-forro,
-    .print-hide-tecido-blackout .sessao-blackout,
-    .print-hide-tecido-blackout .print-col-franz-blackout,
-    .print-hide-tecido-blackout .print-col-cod-blackout,
-    .print-hide-tecido-valores .sessao-valores,
-    .print-hide-tecido-valores .print-col-trilho,
-    .print-hide-tecido-valores .print-col-instalacao,
-    .print-hide-tecido-valores .print-col-outros,
-    .print-hide-tecido-orcamento .sessao-orcamento,
-    .print-hide-tecido-orcamento .print-col-total,
-    .print-hide-tecido-orcamento .print-col-parcelado,
-    .print-hide-tecido-orcamento .print-col-observacao,
-    .print-hide-tecido-medidas tr:nth-child(2) th:nth-child(1), 
-    .print-hide-tecido-medidas tr:nth-child(2) th:nth-child(2), 
-    .print-hide-tecido-medidas tbody td:nth-child(4),          
-    .print-hide-tecido-medidas tbody td:nth-child(5),
-    .print-hide-tecido-cortina tr:nth-child(2) th:nth-child(3),
-    .print-hide-tecido-cortina tr:nth-child(2) th:nth-child(4),
-    .print-hide-tecido-cortina tr:nth-child(2) th:nth-child(5),
-    .print-hide-tecido-cortina tbody td:nth-child(6),
-    .print-hide-tecido-cortina tbody td:nth-child(7),
-    .print-hide-tecido-cortina tbody td:nth-child(8),
-    .print-hide-tecido-forro tr:nth-child(2) th:nth-child(6),
-    .print-hide-tecido-forro tr:nth-child(2) th:nth-child(7),
-    .print-hide-tecido-forro tbody td:nth-child(9),
-    .print-hide-tecido-forro tbody td:nth-child(10),
-    .print-hide-tecido-blackout tr:nth-child(2) th:nth-child(8),
-    .print-hide-tecido-blackout tr:nth-child(2) th:nth-child(9),
-    .print-hide-tecido-blackout tr:nth-child(2) th:nth-child(10),
-    .print-hide-tecido-blackout tbody td:nth-child(11),
-    .print-hide-tecido-blackout tbody td:nth-child(12),
-    .print-hide-tecido-blackout tbody td:nth-child(13),
-    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(11),
-    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(12),
-    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(13),
-    .print-hide-tecido-valores tr:nth-child(2) th:nth-child(14),
-    .print-hide-tecido-valores tbody td:nth-child(14),
-    .print-hide-tecido-valores tbody td:nth-child(15),
-    .print-hide-tecido-valores tbody td:nth-child(16),
-    .print-hide-tecido-valores tbody td:nth-child(17),
-    .print-hide-tecido-orcamento tr:nth-child(2) th:nth-child(15),
-    .print-hide-tecido-orcamento tr:nth-child(2) th:nth-child(16),
-    .print-hide-tecido-orcamento tr:nth-child(2) th:nth-child(17),
-    .print-hide-tecido-orcamento tbody td:nth-child(18),
-    .print-hide-tecido-orcamento tbody td:nth-child(19),
-    .print-hide-tecido-orcamento tbody td:nth-child(20),
-    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(5),
-    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(5),
-    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(5),
-    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(5),
-    .print-hide-amorim-modelo .tabela-amorim-cortina th:nth-child(6),
-    .print-hide-amorim-modelo .tabela-amorim-cortina td:nth-child(6),
-    .print-hide-amorim-modelo .tabela-amorim-toldos th:nth-child(6),
-    .print-hide-amorim-modelo .tabela-amorim-toldos td:nth-child(6),
-    .print-hide-amorim-detalhes .tabela-amorim-cortina th:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-detalhes .tabela-amorim-cortina td:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-detalhes .tabela-amorim-toldos th:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-detalhes .tabela-amorim-toldos td:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-orcamento .tabela-amorim-cortina th:nth-child(n+13),
-    .print-hide-amorim-cortina td:nth-child(n+13),
-    .print-hide-amorim-toldos th:nth-child(n+13),
-    .print-hide-amorim-toldos td:nth-child(n+13),
-    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-cortina th:nth-child(5),
-    .print-hide-amorim-medidas .tabela-amorim-cortina td:nth-child(5),
-    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(4),
-    .print-hide-amorim-medidas .tabela-amorim-toldos th:nth-child(5),
-    .print-hide-amorim-medidas .tabela-amorim-toldos td:nth-child(5),
-    .print-hide-amorim-modelo .tabela-amorim-cortina th:nth-child(6),
-    .print-hide-amorim-modelo .tabela-amorim-cortina td:nth-child(6),
-    .print-hide-amorim-modelo .tabela-amorim-toldos th:nth-child(6),
-    .print-hide-amorim-modelo .tabela-amorim-toldos td:nth-child(6), 
-    .print-hide-amorim-detalhes .tabela-amorim-cortina th:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-detalhes .tabela-amorim-cortina td:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-detalhes .tabela-amorim-toldos th:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-detalhes .tabela-amorim-toldos td:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-orcamento .tabela-amorim-cortina th:nth-child(n+13),
-    .print-hide-amorim-cortina td:nth-child(n+13),
-    .print-hide-amorim-toldos th:nth-child(n+13),
-    .print-hide-amorim-toldos td:nth-child(n+13),
-    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina th:nth-child(4), 
-    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina td:nth-child(4),
-    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina th:nth-child(5), 
-    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina td:nth-child(5),
-    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina th:nth-child(6), 
-    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina td:nth-child(6),
-    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina th:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina td:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina th:nth-child(n+13),
-    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina td:nth-child(n+13),
-    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos th:nth-child(4), 
-    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos td:nth-child(4),
-    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos th:nth-child(5), 
-    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos td:nth-child(5),
-    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos th:nth-child(6), 
-    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos td:nth-child(6),
-    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos th:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos td:nth-child(n+7):nth-child(-n+12),
-    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos th:nth-child(n+13),
-    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos td:nth-child(n+13) { 
-        display: none !important; }
-    .tabela-calculo.tabela-amorim-cortina,
-    .tabela-calculo.tabela-amorim-toldos {
-        table-layout: auto !important;
-        width: 100% !important;
+    .quote-section[data-section-type="toldos"] .print-col-observacao { width: 6%; }
+    .wrapper-markups.calculator-markups {
+        display: block !important;
+        border: 1px solid #000;
+        padding: 5px;
+        margin-top: 10px;
+        page-break-inside: avoid;
     }
-    .quote-section[data-section-type="amorim"] col,
-    .quote-section[data-section-type="toldos"] col {
-        width: auto !important;
+    .calculator-markups .grupo-markups {
+        display: flex !important;
+        gap: 30px;
+        justify-content: center;
+    }
+    .calculator-markups label {
+        font-size: 7pt;
+        color: #000;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+    .calculator-markups input, 
+    .calculator-markups select {
+        border: none;
+        background: transparent;
+        font-weight: bold;
+        font-size: 9pt;
+        color: #000;
+        text-align: center !important;
+        width: auto;
+        min-width: 0 !important;
+        padding: 0;
+    }
+
+    #calculator-summary {
+        display: block !important;
+        border: 1px solid #000;
+        padding: 5px;
+        margin-top: 10px;
+        page-break-inside: avoid;
+    }
+    .summary-totals-container {
+        display: flex;
+        justify-content: space-around;
+        border: none;
+    }
+    .summary-total-box {
+        border: none;
+        padding: 0 10px;
+        text-align: center;
+        background: transparent !important;
+    }
+    .summary-total-box label {
+        font-size: 7pt;
+        color: #000;
+        margin-bottom: 2px;
+    }
+    .summary-total-box span {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .print-hide-tecido-medidas .sessao-medidas, 
+    .print-hide-tecido-medidas tbody td:nth-child(4), 
+    .print-hide-tecido-medidas tbody td:nth-child(5) { display: none !important; }
+
+    .print-hide-tecido-cortina .sessao-cortina, 
+    .print-hide-tecido-cortina tbody td:nth-child(6), 
+    .print-hide-tecido-cortina tbody td:nth-child(7), 
+    .print-hide-tecido-cortina tbody td:nth-child(8) { display: none !important; }
+
+    .print-hide-tecido-forro .sessao-forro, 
+    .print-hide-tecido-forro tbody td:nth-child(9), 
+    .print-hide-tecido-forro tbody td:nth-child(10) { display: none !important; }
+
+    .print-hide-tecido-blackout .sessao-blackout, 
+    .print-hide-tecido-blackout tbody td:nth-child(11), 
+    .print-hide-tecido-blackout tbody td:nth-child(12), 
+    .print-hide-tecido-blackout tbody td:nth-child(13) { display: none !important; }
+
+    .print-hide-tecido-valores .sessao-valores, 
+    .print-hide-tecido-valores tbody td:nth-child(14), 
+    .print-hide-tecido-valores tbody td:nth-child(15), 
+    .print-hide-tecido-valores tbody td:nth-child(16), 
+    .print-hide-tecido-valores tbody td:nth-child(17) { display: none !important; }
+
+    .print-hide-tecido-orcamento .sessao-orcamento, 
+    .print-hide-tecido-orcamento tbody td:nth-child(18), 
+    .print-hide-tecido-orcamento tbody td:nth-child(19), 
+    .print-hide-tecido-orcamento tbody td:nth-child(20) { display: none !important; }
+
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina .sessao-medidas,
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina col:nth-child(4),
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina col:nth-child(5),
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina tbody td:nth-child(4),
+    .print-hide-amorim-cortina-medidas .tabela-amorim-cortina tbody td:nth-child(5) { display: none !important; }
+
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina .sessao-cortina,
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina col:nth-child(6),
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina col:nth-child(7),
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina col:nth-child(8),
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina tbody td:nth-child(6),
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina tbody td:nth-child(7),
+    .print-hide-amorim-cortina-modelo .tabela-amorim-cortina tbody td:nth-child(8) { display: none !important; }
+
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina .sessao-detalhes,
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina col:nth-child(9),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina col:nth-child(10),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina col:nth-child(11),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina col:nth-child(12),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina tbody td:nth-child(9),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina tbody td:nth-child(10),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina tbody td:nth-child(11),
+    .print-hide-amorim-cortina-detalhes .tabela-amorim-cortina tbody td:nth-child(12) { display: none !important; }
+
+    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina .sessao-orcamento,
+    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina .sessao-valores,
+    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina col:nth-child(n+13),
+    .print-hide-amorim-cortina-orcamento .tabela-amorim-cortina tbody td:nth-child(n+13) { display: none !important; }
+
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos .sessao-medidas,
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos col:nth-child(4),
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos col:nth-child(5),
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos tbody td:nth-child(4),
+    .print-hide-amorim-toldo-medidas .tabela-amorim-toldos tbody td:nth-child(5) { display: none !important; }
+
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos .sessao-cortina,
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos col:nth-child(6),
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos col:nth-child(7),
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos col:nth-child(8),
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos tbody td:nth-child(6),
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos tbody td:nth-child(7),
+    .print-hide-amorim-toldo-modelo .tabela-amorim-toldos tbody td:nth-child(8) { display: none !important; }
+
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos .sessao-detalhes,
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos col:nth-child(9),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos col:nth-child(10),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos col:nth-child(11),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos col:nth-child(12),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos tbody td:nth-child(9),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos tbody td:nth-child(10),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos tbody td:nth-child(11),
+    .print-hide-amorim-toldo-detalhes .tabela-amorim-toldos tbody td:nth-child(12) { display: none !important; }
+
+    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos .sessao-orcamento,
+    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos .sessao-valores,
+    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos col:nth-child(n+13),
+    .print-hide-amorim-toldo-orcamento .tabela-amorim-toldos tbody td:nth-child(n+13) { display: none !important; }
+}
+@media (max-width: 480px) {
+    .calculator-header {
+        display: grid !important;
+        grid-template-columns: 1fr auto 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
+        padding: 10px 5px !important;
+        gap: 5px;
+    }
+
+    #btn-voltar-clientes {
+        grid-column: 2; 
+        grid-row: 1;  
+        justify-self: center;
+        margin: 0 !important;
+        width: auto;
+        order: unset !important; 
+    }
+
+    .save-status-wrapper {
+        grid-column: 3;
+        grid-row: 1;    
+        justify-self: end;
+        justify-content: flex-end;
+        width: auto;
+        order: unset !important;
+        min-width: auto !important; 
+    }
+
+    .save-status-message {
+        display: none; 
+    }
+
+    .calculator-header h2 {
+        grid-column: 1 / -1;
+        grid-row: 2;         
+        text-align: center;
+        margin: 5px 0 0 0 !important;
+        font-size: 16px;  
+        order: unset !important;
+        white-space: normal;
+        width: 100%;
     }
 }
