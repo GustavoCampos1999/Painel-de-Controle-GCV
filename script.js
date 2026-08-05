@@ -3,7 +3,7 @@ import { checkUserSession, setupLogoutButton } from './modules/auth.js';
 import { initUI, showToast, openModal, closeModal } from './modules/ui.js'; 
 import { initCRM, carregarClientes } from './modules/crm.js'; 
 import { initDataManager, renderizarTabelaTecidos, renderizarTabelaConfeccao, renderizarTabelaTrilho, renderizarTabelaFrete, renderizarTabelaInstalacao } from './modules/dataManager.js'; 
-import { initCalculator, showCalculatorView } from './modules/calculator.js'; 
+import { initCalculator, showCalculatorView, atualizarListasAmorim, atualizarInterfaceCalculadora } from './modules/calculator.js'; 
 import { initTeamManager } from './modules/team.js';
 import { loadPermissions } from './modules/permissions.js';
 import { initRealtime } from './modules/realtime.js';
@@ -43,7 +43,11 @@ const calculatorDataRefs = {
      confeccao: {}, 
      trilho: {},    
      frete: {},    
-     instalacao: {} 
+     instalacao: {},
+     amorim_modelos_cortina: amorimModCortina,
+     amorim_cores_cortina: amorimCorCortina,
+     amorim_modelos_toldo: amorimModToldo,
+     amorim_cores_toldo: amorimCorToldo 
 };
 
 function showClientListLocal() {
@@ -154,6 +158,10 @@ async function buscarDadosBaseDoBackend() {
     calculatorDataRefs.confeccao = dadosApi.confeccao || []; 
     calculatorDataRefs.trilho = (dadosApi.trilho || []).reduce((acc, item) => { acc[item.opcao] = item.valor; return acc; }, {});
     
+    calculatorDataRefs.amorim_modelos_cortina = amorimModCortina;
+    calculatorDataRefs.amorim_cores_cortina = amorimCorCortina;
+    calculatorDataRefs.amorim_modelos_toldo = amorimModToldo;
+    calculatorDataRefs.amorim_cores_toldo = amorimCorToldo;
     calculatorDataRefs.frete = (dadosApi.frete || []).reduce((acc, item) => {
         const valor = item.valor || 0;
         const valorFormatado = `R$ ${valor.toFixed(2).replace('.', ',')}`;
@@ -264,6 +272,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         selectParcelamentoGlobal: document.getElementById('select-parcelamento-global'),
         inputValorEntradaGlobal: document.getElementById('input-valor-entrada-global'),
         selectFreteGlobal: document.getElementById('select-frete-global'),
+        inputDescontoGlobal: document.getElementById('input-desconto-global'), 
+        selectTipoDescontoGlobal: document.getElementById('select-tipo-desconto-global'), 
+        textareaAnotacoes: document.getElementById('textarea-anotacoes'), 
+        notesContainer: document.getElementById('calculator-notes-container'),
         btnVoltarClientes: document.getElementById('btn-voltar-clientes'),
         modalExcluirLinha: document.getElementById('modal-confirm-excluir-linha'),
         btnConfirmarExcluirLinha: document.getElementById('btn-confirmar-excluir-linha'),
@@ -347,6 +359,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('dadosBaseAlterados', async () => {
         console.log("Evento 'dadosBaseAlterados' recebido, recarregando dados base do backend...");
         await buscarDadosBaseDoBackend(); 
+        atualizarListasAmorim();
+        atualizarInterfaceCalculadora();
         renderizarTabelaTecidos(dataRefs.tecidos);
         renderizarTabelaConfeccao(dataRefs.confeccao);
         renderizarTabelaTrilho(dataRefs.trilho);
@@ -418,6 +432,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         console.log("Carregamento inicial concluído.");
 
+        atualizarListasAmorim();
+        atualizarInterfaceCalculadora();
         renderizarTabelaTecidos(dataRefs.tecidos);
         renderizarTabelaConfeccao(dataRefs.confeccao);
         renderizarTabelaTrilho(dataRefs.trilho);

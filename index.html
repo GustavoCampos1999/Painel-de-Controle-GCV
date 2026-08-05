@@ -103,12 +103,26 @@
                             <label for="select-frete-global">FRETE</label>
                             <select id="select-frete-global" class="global-calc-trigger"></select>
                         </div>
+                       <div>
+                            <label for="input-desconto-global">DESCONTO</label>
+                            <div class="input-group-desconto">
+                                <input type="text" id="input-desconto-global" class="global-calc-trigger" inputmode="decimal">
+                                <select id="select-tipo-desconto-global" class="global-calc-trigger">
+                                    <option value="R$">R$</option>
+                                    <option value="%">%</option>
+                                </select>
+                            </div>
+                        </div>
 
+                        </div>
+                    </div>
+
+                    <div id="calculator-notes-container" class="calculator-container" style="display: none;">
+                        <label for="textarea-anotacoes">Anotações do Orçamento:</label>
+                        <textarea id="textarea-anotacoes" rows="4" placeholder="Digite aqui informações adicionais para este orçamento..."></textarea>
                     </div>
                     
-                </div>
-
-                <div id="calculator-summary" class="calculator-container" style="display: none;">
+                    <div id="calculator-summary" class="calculator-container" style="display: none;">
                     <h3>Resumo do Orçamento Selecionado</h3>
                     <div class="summary-totals-container">
                 <div class="summary-total-box" id="summary-total-geral-box">
@@ -148,6 +162,7 @@
                     <button class="subtab-button" data-subtab="subtab-trilho">Trilho</button>
                     <button class="subtab-button" data-subtab="subtab-amorim">Amorim</button>
                     <button class="subtab-button" data-subtab="subtab-outros">Outros</button>
+                    <button class="subtab-button" data-subtab="subtab-markup">Markup</button>
                 </nav>
 
                 <div id="subtab-tecidos" class="subtab-content active">
@@ -249,6 +264,26 @@
                         </table>
                     </section>
                 </div>
+
+                <div id="subtab-markup" class="subtab-content">
+                    <section class="gerenciar-dados-secao config-markup-secao">
+                        <div class="secao-header">
+                            <h2>Configurações de Markup Padrão</h2>
+                        </div>
+                        
+                        <div class="markup-config-group">
+                            <label for="input-markup-padrao">Markup Padrão Global (%):</label>
+                            <input type="number" id="input-markup-padrao" value="100">
+                            <button id="btn-salvar-markup-padrao" class="btn-salvar">Salvar</button>
+                        </div>
+
+                        <div class="markup-desc">
+                            <strong>Aviso:</strong> Esse valor será o inicial para <strong>novos orçamentos</strong>.<br> 
+                            Se você modificar na engrenagem da calculadora, a alteração será salva apenas para o orçamento daquele cliente.
+                        </div>
+                    </section>
+                </div>
+
 <div id="subtab-amorim" class="subtab-content">
     
     <div class="amorim-card">
@@ -856,7 +891,6 @@
         <div class="modal-content">
             <h2>Editar Opção de Frete</h2>
             <form id="form-edit-frete">
-                <form id="form-edit-frete">
     <input type="hidden" name="id">
     <div><label for="edit-frete-opcao">Nome (Opcional):</label><input type="text" id="edit-frete-opcao" name="opcao" placeholder="Ex: Entrega Expressa"></div>
     <div><label for="edit-frete-valor">Valor:</label><input type="text" inputmode="decimal" id="edit-frete-valor" name="valor"></div>
@@ -1094,7 +1128,6 @@
                 <button type="submit" class="btn-salvar">Salvar Taxas</button>
             </div>
         </form>
-    </div>
     </div>
 </div>
 

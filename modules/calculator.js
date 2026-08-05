@@ -44,6 +44,13 @@ let abaParaExcluir = { index: null, element: null };
 let secaoParaExcluir = { element: null, type: null, button: null };
 let isDirty = false;
 
+let printSettings = {
+    tecido: { medidas: true, cortina: true, forro: true, blackout: true, valores: true, orcamento: true },
+    amorim_cortina: { medidas: true, modelo: true, detalhes: true, orcamento: true },
+    amorim_toldo: { medidas: true, modelo: true, detalhes: true, orcamento: true }
+};
+
+
 async function getAuthToken() {
   const { data: { session }, error } = await _supabase.auth.getSession();
   if (error || !session) return null;
@@ -82,6 +89,80 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
     carregarTaxasDoBanco();
+    const btnConfigPrint = document.getElementById('btn-config-print');
+    const modalConfigPrint = document.getElementById('modal-config-print');
+    const formConfigPrint = document.getElementById('form-config-print');
+    const btnCancelarConfigPrint = document.getElementById('btn-cancelar-config-print');
+   const ajustarAlturaModalPrint = () => {
+        const modal = document.getElementById('modal-config-print');
+        const content = modal ? modal.querySelector('.modal-content') : null;
+        
+        if (modal && content && modal.style.display !== 'none') {
+            const windowHeight = window.innerHeight;
+            content.style.maxHeight = `${windowHeight * 0.90}px`;
+        }
+    };
+    window.addEventListener('resize', ajustarAlturaModalPrint);
+
+    if (btnConfigPrint) {
+        btnConfigPrint.addEventListener('click', () => {
+            document.getElementById('print-tecido-medidas').checked = printSettings.tecido.medidas;
+            document.getElementById('print-tecido-cortina').checked = printSettings.tecido.cortina;
+            document.getElementById('print-tecido-forro').checked = printSettings.tecido.forro;
+            document.getElementById('print-tecido-blackout').checked = printSettings.tecido.blackout;
+            document.getElementById('print-tecido-valores').checked = printSettings.tecido.valores;
+            document.getElementById('print-tecido-orcamento').checked = printSettings.tecido.orcamento;
+            const amCortina = printSettings.amorim_cortina || { medidas: true, modelo: true, detalhes: true, orcamento: true };
+            document.getElementById('print-amorim-cortina-medidas').checked = amCortina.medidas;
+            document.getElementById('print-amorim-cortina-modelo').checked = amCortina.modelo;
+            document.getElementById('print-amorim-cortina-detalhes').checked = amCortina.detalhes;
+            document.getElementById('print-amorim-cortina-orcamento').checked = amCortina.orcamento;
+            const amToldo = printSettings.amorim_toldo || { medidas: true, modelo: true, detalhes: true, orcamento: true };
+            document.getElementById('print-amorim-toldo-medidas').checked = amToldo.medidas;
+            document.getElementById('print-amorim-toldo-modelo').checked = amToldo.modelo;
+            document.getElementById('print-amorim-toldo-detalhes').checked = amToldo.detalhes;
+            document.getElementById('print-amorim-toldo-orcamento').checked = amToldo.orcamento;
+
+            openModal(modalConfigPrint);
+            setTimeout(ajustarAlturaModalPrint, 10);
+        });
+    }
+
+    if (btnCancelarConfigPrint) btnCancelarConfigPrint.addEventListener('click', () => closeModal(modalConfigPrint));
+
+    if (formConfigPrint) {
+        formConfigPrint.addEventListener('submit', (e) => {
+            e.preventDefault();
+            aplicarClassesImpressao();
+            closeModal(modalConfigPrint);
+            printSettings.tecido.medidas = document.getElementById('print-tecido-medidas').checked;
+            printSettings.tecido.cortina = document.getElementById('print-tecido-cortina').checked;
+            printSettings.tecido.forro = document.getElementById('print-tecido-forro').checked;
+            printSettings.tecido.blackout = document.getElementById('print-tecido-blackout').checked;
+            printSettings.tecido.valores = document.getElementById('print-tecido-valores').checked;
+            printSettings.tecido.orcamento = document.getElementById('print-tecido-orcamento').checked;
+            if(!printSettings.amorim_cortina) printSettings.amorim_cortina = {};
+            if(!printSettings.amorim_toldo) printSettings.amorim_toldo = {};
+            printSettings.amorim_cortina.medidas = document.getElementById('print-amorim-cortina-medidas').checked;
+            printSettings.amorim_cortina.modelo = document.getElementById('print-amorim-cortina-modelo').checked;
+            printSettings.amorim_cortina.detalhes = document.getElementById('print-amorim-cortina-detalhes').checked;
+            printSettings.amorim_cortina.orcamento = document.getElementById('print-amorim-cortina-orcamento').checked;
+            printSettings.amorim_toldo.medidas = document.getElementById('print-amorim-toldo-medidas').checked;
+            printSettings.amorim_toldo.modelo = document.getElementById('print-amorim-toldo-modelo').checked;
+            printSettings.amorim_toldo.detalhes = document.getElementById('print-amorim-toldo-detalhes').checked;
+            printSettings.amorim_toldo.orcamento = document.getElementById('print-amorim-toldo-orcamento').checked;
+
+            if (estadoAbas[abaAtivaIndex]) {
+                estadoAbas[abaAtivaIndex].printSettings = JSON.parse(JSON.stringify(printSettings));
+            }
+            
+            aplicarClassesImpressao();
+            setDirty(); 
+            closeModal(modalConfigPrint);
+            showToast("Configuração de impressão aplicada!");
+        });
+    }
+    
     const btnConfigTaxas = document.getElementById('btn-config-taxas');
     const modalConfigTaxas = document.getElementById('modal-config-taxas');
     const formConfigTaxas = document.getElementById('form-config-taxas');
@@ -219,6 +300,40 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     
     setupCurrencyFormatting(elements.inputValorEntradaGlobal);
 
+    if (elements.inputDescontoGlobal) {
+        elements.inputDescontoGlobal.addEventListener('blur', (e) => {
+            let isPerc = elements.selectTipoDescontoGlobal?.value === '%';
+            let v = parseCurrencyValue(e.target.value);
+            if (isPerc) {
+                 e.target.value = v > 0 ? v.toFixed(2).replace('.', ',') : '';
+            } else {
+                 e.target.value = v > 0 ? formatadorReaisCalc.format(v) : '';
+            }
+            recalcularTotaisSelecionados();
+            setDirty();
+        });
+    }
+
+    if (elements.selectTipoDescontoGlobal) {
+        elements.selectTipoDescontoGlobal.addEventListener('change', () => {
+            let isPerc = elements.selectTipoDescontoGlobal.value === '%';
+            let v = parseCurrencyValue(elements.inputDescontoGlobal?.value);
+            if(elements.inputDescontoGlobal) {
+                if (isPerc) {
+                    elements.inputDescontoGlobal.value = v > 0 ? v.toFixed(2).replace('.', ',') : '';
+                } else {
+                    elements.inputDescontoGlobal.value = v > 0 ? formatadorReaisCalc.format(v) : '';
+                }
+            }
+            recalcularTotaisSelecionados();
+            setDirty();
+        });
+    }
+
+    if (elements.textareaAnotacoes) {
+        elements.textareaAnotacoes.addEventListener('input', setDirty);
+    }
+    
     if (elements.btnAddAba) elements.btnAddAba.addEventListener('click', adicionarAba);
     
     if (elements.tabsContainer) {
@@ -381,6 +496,7 @@ function executarExclusaoSecao() {
         if(secaoParaExcluir.button) secaoParaExcluir.button.classList.remove('hidden');
         checkSectionControls();
         updateMoveButtonsVisibility();
+    aplicarClassesImpressao();
         recalcularTotaisSelecionados();
         setDirty();
     }
@@ -437,6 +553,7 @@ function addSection(sectionType, buttonElement, isInitialLoad = false) {
     atualizarHeaderParcelado();
     checkSectionControls(); 
     updateMoveButtonsVisibility();
+    aplicarClassesImpressao();
     if (!isInitialLoad) setDirty();
 }
 
@@ -448,6 +565,7 @@ function moverSecao(section, direction) {
         container.insertBefore(section.nextElementSibling, section);
     }
     updateMoveButtonsVisibility();
+    aplicarClassesImpressao();
     setDirty();
 }
 
@@ -601,6 +719,7 @@ function adicionarLinhaTecido(tableBody, estadoLinha, isInitialLoad) {
             setDirty();
         });
     });
+    const btnDuplicar = novaLinha.querySelector('.btn-duplicar-linha'); if (btnDuplicar) btnDuplicar.addEventListener('click', () => duplicarLinhaCalculadora(novaLinha));
     novaLinha.querySelector('.btn-remover-linha').addEventListener('click', () => removerLinhaCalculadora(novaLinha));
     
     const inOutros = novaLinha.querySelector('.input-outros');
@@ -654,6 +773,7 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
         const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
         calcularParceladoLinhaAmorim(novaLinha, taxa);
     });
+    const btnDuplicar = novaLinha.querySelector('.btn-duplicar-linha'); if (btnDuplicar) btnDuplicar.addEventListener('click', () => duplicarLinhaCalculadora(novaLinha));
     novaLinha.querySelector('.btn-remover-linha').addEventListener('click', () => removerLinhaCalculadora(novaLinha));
     
     tableBody.appendChild(novaLinha);
@@ -705,6 +825,7 @@ function adicionarLinhaToldos(tableBody, estadoLinha, isInitialLoad) {
         const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
         calcularParceladoLinhaAmorim(novaLinha, taxa);
     });
+    const btnDuplicar = novaLinha.querySelector('.btn-duplicar-linha'); if (btnDuplicar) btnDuplicar.addEventListener('click', () => duplicarLinhaCalculadora(novaLinha));
     novaLinha.querySelector('.btn-remover-linha').addEventListener('click', () => removerLinhaCalculadora(novaLinha));
     tableBody.appendChild(novaLinha);
     const taxa = TAXAS_PARCELAMENTO[elements.selectParcelamentoGlobal?.value || 'DÉBITO'] || 0;
@@ -761,20 +882,34 @@ function recalcularTotaisSelecionados() {
 
     const frete = parseFloat(elements.selectFreteGlobal?.value) || 0;
     const entrada = parseCurrencyValue(elements.inputValorEntradaGlobal?.value);
+    let isPerc = elements.selectTipoDescontoGlobal?.value === '%';
+    let rawDesconto = elements.inputDescontoGlobal?.value || '';
+    let descontoVal = parseCurrencyValue(rawDesconto);
     
     let totalFinalSelecionado = 0, parceladoFinal = 0;
     
     totalGeral += frete;
 
     if (algumSelect) {
-        totalFinalSelecionado = totalSelecionado + frete;
-        let baseParcelar = Math.max(0, (totalSelecionado - totalInstalacao) - entrada); 
+        let totalDesconto = 0;
+        if (isPerc) {
+            totalDesconto = totalSelecionado * (descontoVal / 100);
+        } else {
+            totalDesconto = Math.min(descontoVal, totalSelecionado); 
+        }
+
+        totalFinalSelecionado = Math.max(0, (totalSelecionado + frete) - totalDesconto);
+        
+        let baseParcelar = Math.max(0, (totalSelecionado - totalInstalacao - totalDesconto) - entrada); 
         parceladoFinal = (baseParcelar * (1 + taxa)) + frete + totalInstalacao;
     }
 
     if (elements.summaryContainer) {
         elements.summaryContainer.style.display = (temLinhas || algumSelect) ? 'block' : 'none';
         
+        if (elements.notesContainer) {
+            elements.notesContainer.style.display = (temLinhas || algumSelect) ? 'block' : 'none';
+        }
         if (elements.summaryTotalGeral) {
             elements.summaryTotalGeral.textContent = formatadorReaisCalc.format(totalGeral);
         }
@@ -1093,3 +1228,107 @@ function atualizarOpcoesConfeccao(linha) {
     });
     sel.value = valOld; if(sel.selectedIndex===-1) sel.value='-';
 }
+
+function aplicarClassesImpressao() {
+    const classesParaRemover = [];
+    document.body.classList.forEach(cls => {
+        if (cls.startsWith('print-hide-')) classesParaRemover.push(cls);
+    });
+    classesParaRemover.forEach(cls => document.body.classList.remove(cls));
+
+    const tecido = printSettings.tecido || {};
+    if (!tecido.medidas) document.body.classList.add('print-hide-tecido-medidas');
+    if (!tecido.cortina) document.body.classList.add('print-hide-tecido-cortina');
+    if (!tecido.forro) document.body.classList.add('print-hide-tecido-forro');
+    if (!tecido.blackout) document.body.classList.add('print-hide-tecido-blackout');
+    if (!tecido.valores) document.body.classList.add('print-hide-tecido-valores');
+    if (!tecido.orcamento) document.body.classList.add('print-hide-tecido-orcamento');
+
+    const amCortina = printSettings.amorim_cortina || {};
+    if (!amCortina.medidas) document.body.classList.add('print-hide-amorim-cortina-medidas');
+    if (!amCortina.modelo) document.body.classList.add('print-hide-amorim-cortina-modelo');
+    if (!amCortina.detalhes) document.body.classList.add('print-hide-amorim-cortina-detalhes');
+    if (!amCortina.orcamento) document.body.classList.add('print-hide-amorim-cortina-orcamento');
+
+    const amToldo = printSettings.amorim_toldo || {};
+    if (!amToldo.medidas) document.body.classList.add('print-hide-amorim-toldo-medidas');
+    if (!amToldo.modelo) document.body.classList.add('print-hide-amorim-toldo-modelo');
+    if (!amToldo.detalhes) document.body.classList.add('print-hide-amorim-toldo-detalhes');
+    if (!amToldo.orcamento) document.body.classList.add('print-hide-amorim-toldo-orcamento');
+}
+
+function duplicarLinhaCalculadora(linhaOrigem) {
+    const type = linhaOrigem.dataset.linhaType;
+    const tableBody = linhaOrigem.closest('tbody');
+
+    let estadoLinha = {
+        ambiente: linhaOrigem.querySelector('.input-ambiente')?.value,
+        largura: linhaOrigem.querySelector('.input-largura')?.value,
+        altura: linhaOrigem.querySelector('.input-altura')?.value,
+        selecionado: linhaOrigem.querySelector('.select-linha-checkbox')?.checked,
+        observacao: linhaOrigem.querySelector('.input-observacao')?.value
+    };
+
+    if (type === 'tecido') {
+        estadoLinha.franzCortina = linhaOrigem.querySelector('.select-franzCortina')?.value;
+        estadoLinha.codTecidoCortina = linhaOrigem.querySelector('.select-codTecidoCortina')?.value;
+        estadoLinha.codTecidoForro = linhaOrigem.querySelector('.select-codTecidoForro')?.value;
+        estadoLinha.franzBlackout = linhaOrigem.querySelector('.select-franzBlackout')?.value;
+        estadoLinha.codTecidoBlackout = linhaOrigem.querySelector('.select-codTecidoBlackout')?.value;
+        estadoLinha.confecaoTexto = linhaOrigem.querySelector('.select-confecao')?.value;
+        estadoLinha.trilhoTexto = linhaOrigem.querySelector('.select-trilho')?.value;
+        estadoLinha.instalacao = linhaOrigem.querySelector('.select-instalacao')?.value;
+        estadoLinha.outros = linhaOrigem.querySelector('.input-outros')?.value;
+
+        adicionarLinhaTecido(tableBody, estadoLinha, false, linhaOrigem);
+    } else {
+        estadoLinha.modelo_cortina = linhaOrigem.querySelector('.select-modelo-cortina')?.value;
+        estadoLinha.modelo_toldo = linhaOrigem.querySelector('.select-modelo-toldo')?.value;
+        estadoLinha.codigo_tecido = linhaOrigem.querySelector('.input-cod-tecido')?.value;
+        estadoLinha.colecao = linhaOrigem.querySelector('.input-colecao')?.value;
+        estadoLinha.cor_acessorios = linhaOrigem.querySelector('.select-cor-acessorios')?.value;
+        estadoLinha.comando = linhaOrigem.querySelector('.select-comando')?.value;
+        estadoLinha.lado_comando = linhaOrigem.querySelector('.select-lado-comando')?.value;
+        estadoLinha.altura_comando = (estadoLinha.comando === 'MOTORIZADO') ? linhaOrigem.querySelector('.select-altura-comando-motor')?.value : linhaOrigem.querySelector('.input-altura-comando-manual')?.value;
+        estadoLinha.valor_manual = linhaOrigem.querySelector('.input-valor-manual')?.value;
+        estadoLinha.instalacao = linhaOrigem.querySelector('.select-instalacao')?.value;
+        estadoLinha.outros = linhaOrigem.querySelector('.input-outros')?.value;
+
+        if (type === 'amorim') {
+            adicionarLinhaAmorim(tableBody, estadoLinha, false, linhaOrigem);
+        } else if (type === 'toldos') {
+            adicionarLinhaToldos(tableBody, estadoLinha, false, linhaOrigem);
+        }
+    }
+    setDirty();
+    recalcularTotaisSelecionados();
+}
+
+export function atualizarListasAmorim() {
+    console.log("Atualizando listas Amorim na calculadora...");
+    
+    if (dataRefs.amorim_modelos_cortina) {
+        DADOS_MODELO_CORTINA.length = 0; 
+        DADOS_MODELO_CORTINA.push(...dataRefs.amorim_modelos_cortina.map(i => i.opcao).sort());
+    }
+
+    if (dataRefs.amorim_modelos_toldo) {
+        DADOS_MODELO_TOLDO.length = 0;
+        DADOS_MODELO_TOLDO.push(...dataRefs.amorim_modelos_toldo.map(i => i.opcao).sort());
+    }
+
+    const coresBanco = [...(dataRefs.amorim_cores_cortina||[]), ...(dataRefs.amorim_cores_toldo||[])];
+    if (coresBanco.length > 0) {
+        DADOS_COR_ACESSORIOS.length = 0;
+        DADOS_COR_ACESSORIOS.push(...[...new Set(coresBanco.map(i => i.opcao))].sort());
+    }
+}
+
+export function atualizarInterfaceCalculadora() {
+    const calcView = document.getElementById('calculator-view');
+    if (calcView && calcView.style.display !== 'none' && abaAtivaIndex >= 0) {
+        console.log("Redesenhando a calculadora com novos dados...");
+        ativarAba(abaAtivaIndex, false);
+    }
+}
+
