@@ -7,14 +7,18 @@ let modalAddClienteEl, modalEditarClienteEl, modalExcluirClienteEl;
 let btnConfirmarExcluirClienteEl;
 let clienteParaExcluirInfo = null;
 let btnToggleFilterEl, selectClientFilterEl, btnToggleSortOrderEl;
-let cachedLojaIdCrm = null; 
+let cachedLojaIdCrm = null;
 let isSortAscending = true;
+let authListenerRegistradoCrm = false;
 async function getMyLojaIdCrm() {
-    _supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-            cachedLojaIdCrm = null;
-        }
-    });
+    if (!authListenerRegistradoCrm) {
+        authListenerRegistradoCrm = true;
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+                cachedLojaIdCrm = null;
+            }
+        });
+    }
     if (cachedLojaIdCrm) return cachedLojaIdCrm;
     try {
         const { data: { user } } = await _supabase.auth.getUser();
@@ -129,8 +133,11 @@ function renderizarListaClientes(clientes) {
     clientes.forEach(cliente => {
         const card = document.createElement('div');
         card.className = `cliente-card ${cliente.venda_realizada ? 'venda-realizada' : ''}`;
-        card.dataset.id = cliente.id; 
-        card.dataset.nome = cliente.nome; 
+        card.dataset.id = cliente.id;
+        card.dataset.nome = cliente.nome;
+        card.dataset.telefone = cliente.telefone || '';
+        card.dataset.email = cliente.email || '';
+        card.dataset.endereco = cliente.endereco || '';
 
         const criadoEm = formatarDataHora(cliente.created_at); 
         const atualizadoEm = formatarDataHora(cliente.updated_at);

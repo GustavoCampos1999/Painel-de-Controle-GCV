@@ -6,12 +6,16 @@ let elements = {};
 let dataArrays = {}; 
 
 let cachedLojaId = null;
+let authListenerRegistradoDataManager = false;
 async function getMyLojaId() {
-    _supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-            cachedLojaId = null;
-        }
-    });
+    if (!authListenerRegistradoDataManager) {
+        authListenerRegistradoDataManager = true;
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+                cachedLojaId = null;
+            }
+        });
+    }
 
     if (cachedLojaId) return cachedLojaId;
     try {
@@ -444,7 +448,7 @@ function setupCRUD(tabela) {
                  starElement.classList.toggle('favorito', newStatus);
                  row.dataset.favorito = newStatus;
                  const { error } = await _supabase.from(tabela).update({ favorito: newStatus }).match({ id: id, loja_id: lojaId }); 
-                 if (error) { showToast('Erro ao atualizar favorito.', true); } 
+                 if (error) { showToast('Erro ao atualizar favorito.', 'error'); }
                  else { 
                     const itemInData = dataArrays[tabela].find(item => item.id == id);
                     if (itemInData) itemInData.favorito = newStatus;

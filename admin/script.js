@@ -529,7 +529,7 @@ window.onclick = function(event) {
     const modals = [
         document.getElementById('modal-editar-loja'),
         document.getElementById('modal-nova-loja'),
-        document.getElementById('modal-confirm-action'),
+        document.getElementById('modal-confirmacao'),
         document.getElementById('modal-funcionarios')
     ];
     modals.forEach(modal => {

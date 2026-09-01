@@ -278,8 +278,8 @@
                         </div>
 
                         <div class="markup-desc">
-                            <strong>Aviso:</strong> Esse valor será o inicial para <strong>novos orçamentos</strong>.<br> 
-                            Se você modificar na engrenagem da calculadora, a alteração será salva apenas para o orçamento daquele cliente.
+                            <strong>Aviso:</strong> Esse markup é único para toda a empresa e vale para <strong>todos os usuários e orçamentos</strong>, inclusive os já existentes.<br>
+                            O campo de markup na engrenagem da calculadora agora é somente leitura — para alterar o valor, mude aqui.
                         </div>
                     </section>
                 </div>
@@ -491,11 +491,11 @@
         <th rowspan="2" class="col-ambiente-calc">AMBIENTE</th>
         <th colspan="2" class="sessao-medidas">MEDIDAS</th>
 
-        <th colspan="2" class="sessao-cortina">TECIDO CORTINA</th> 
+        <th colspan="3" class="sessao-cortina">TECIDO CORTINA</th>
 
-        <th colspan="1" class="sessao-forro">TECIDO FORRO</th> 
+        <th colspan="2" class="sessao-forro">TECIDO FORRO</th>
 
-        <th colspan="2" class="sessao-blackout">BLACKOUT</th> 
+        <th colspan="3" class="sessao-blackout">BLACKOUT</th>
 
         <th colspan="4" class="sessao-valores hide-on-print">VALORES</th> 
         <th colspan="1" class="sessao-valores show-on-print" style="display:none;">VALORES</th> 
@@ -551,7 +551,8 @@
             <col class="print-col-cor-acessorios">
             <col class="print-col-comando">
             <col class="print-col-alt-comando">
-            <col class="print-col-lado-comando"> <col class="print-col-valor">
+            <col class="print-col-lado-comando"> <col class="print-col-instalacao">
+            <col class="print-col-valor">
             <col class="print-col-parcelado">
             <col class="print-col-observacao">
         </colgroup>
@@ -568,7 +569,7 @@
                 <th>COR ACESSÓRIOS</th>
                 <th>COMANDO</th>
                 <th>ALT. COMANDO</th>
-                <th>LADO</th> <th>VALOR</th>
+                <th>LADO</th> <th>INSTALAÇÃO</th> <th>VALOR</th>
                 <th class="th-parcelado-header">DÉBITO</th>
                 <th>OBSERVAÇÃO</th>
             </tr>
@@ -672,7 +673,8 @@
                 <option value="220v">220v</option>
             </select>
         </td>
-        <td><select class="select-lado-comando"></select></td> 
+        <td><select class="select-lado-comando"></select></td>
+        <td><select class="select-instalacao"></select></td>
         <td><input type="text" class="input-valor-manual format-money resultado-preco-total" inputmode="decimal"></td>
         <td><input type="text" class="resultado-preco-parcelado" readonly></td>
         <td><input type="text" class="input-observacao" placeholder="Obs..."></td>
@@ -977,12 +979,15 @@
         <div class="modal-content">
             <h2>Configurações do Orçamento</h2>
             <div class="config-calculadora-content">
-                <p>Ajuste o valor base para o cálculo do orçamento.</p>
+                <p>O markup usado no cálculo do orçamento agora é único para toda a empresa.</p>
                 <div class="grupo-markups-modal">
                     <div>
                         <label for="input-markup-base-calc">MARKUP (%)</label>
-                        <input type="number" id="input-markup-base-calc" class="global-calc-trigger" value="100">
+                        <input type="number" id="input-markup-base-calc" class="global-calc-trigger" value="100" disabled title="Definido em Gerenciar Dados > Markup, vale para todos os orçamentos da empresa.">
                     </div>
+                </div>
+                <div class="markup-desc" style="margin-top: 10px;">
+                    Para alterar esse valor, vá em <strong>Gerenciar Dados → Markup</strong>. A mudança passa a valer para todos os usuários e orçamentos.
                 </div>
             </div>
             <div class="modal-actions">

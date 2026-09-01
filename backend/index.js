@@ -60,8 +60,10 @@ app.post('/api/check-email', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ erro: "Email obrigatório" });
     try {
-        const result = await db.query("SELECT id FROM auth.users WHERE email = $1", [email]);
-        return res.json({ exists: result.rows.length > 0 });
+        const result = await db.query("SELECT id, email_confirmed_at FROM auth.users WHERE email = $1", [email]);
+        const exists = result.rows.length > 0;
+        const confirmed = exists ? !!result.rows[0].email_confirmed_at : false;
+        return res.json({ exists, confirmed });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ erro: "Erro interno." });
@@ -194,24 +196,6 @@ app.put('/admin/loja/:id/editar', async (req, res) => {
         res.json({ sucesso: true });
     } catch(err) {
         console.error("Erro na edição:", err);
-        res.status(500).json({ erro: err.message });
-    }
-});
-
-// Checa se o e-mail existe no sistema antes de disparar o esqueci a senha
-app.post('/api/check-email', async (req, res) => {
-    const { email } = req.body;
-    try {
-        const { data: { users }, error } = await supabaseService.auth.admin.listUsers();
-        if (error) throw error;
-        
-        const user = users.find(u => u.email === email);
-        if (user) {
-            res.json({ exists: true, confirmed: !!user.email_confirmed_at });
-        } else {
-            res.json({ exists: false, confirmed: false });
-        }
-    } catch(err) {
         res.status(500).json({ erro: err.message });
     }
 });

@@ -15,6 +15,7 @@ const TAXAS_PADRAO = {
     '18x': 0.1457
 };
 let TAXAS_PARCELAMENTO = { ...TAXAS_PADRAO };
+let MARKUP_PADRAO_GLOBAL = 100;
 const DEFAULT_CORTINA = [
     "CELULAR", "ATENA", "ATENA PAINEL", "CORTINA TETO", "ILLUMINE", "LAMOUR", 
     "LUMIERE", "MELIADE", "ROLO STILLO", "PAINEL", "PERSIANA VERTICAL", 
@@ -89,6 +90,33 @@ export function initCalculator(domElements, dataArrays, clientIdRef, isDataLoade
     currentClientIdRef = clientIdRef;
     isDataLoadedRef = isDataLoadedFlag;
     carregarTaxasDoBanco();
+
+    const inputMarkupPadrao = document.getElementById('input-markup-padrao');
+    const btnSalvarMarkupPadrao = document.getElementById('btn-salvar-markup-padrao');
+    if (btnSalvarMarkupPadrao && inputMarkupPadrao) {
+        btnSalvarMarkupPadrao.addEventListener('click', async () => {
+            const valor = parseFloat(String(inputMarkupPadrao.value).replace(',', '.'));
+            if (isNaN(valor) || valor < 0) {
+                showToast("Informe um valor de markup válido.", "error");
+                return;
+            }
+            const textoOriginal = btnSalvarMarkupPadrao.textContent;
+            btnSalvarMarkupPadrao.disabled = true;
+            btnSalvarMarkupPadrao.textContent = "Salvando...";
+            const sucesso = await salvarMarkupPadraoNoBanco(valor);
+            btnSalvarMarkupPadrao.disabled = false;
+            btnSalvarMarkupPadrao.textContent = textoOriginal;
+            if (sucesso) {
+                MARKUP_PADRAO_GLOBAL = valor;
+                inputMarkupPadrao.value = valor;
+                // Markup é único para toda a empresa: se a calculadora estiver aberta, reflete o novo valor na hora.
+                if (elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = String(valor);
+                recalcularTotaisSelecionados();
+                showToast("Markup padrão salvo com sucesso!");
+            }
+        });
+    }
+
     const btnConfigPrint = document.getElementById('btn-config-print');
     const modalConfigPrint = document.getElementById('modal-config-print');
     const formConfigPrint = document.getElementById('form-config-print');
@@ -417,8 +445,20 @@ async function carregarTaxasDoBanco() {
         if (response.ok) {
             const taxasSalvas = await response.json();
             if (taxasSalvas) {
-                TAXAS_PARCELAMENTO = taxasSalvas;
-                preencherSelectParcelamento(); 
+                if (taxasSalvas.parcelamento) {
+                    // Formato novo: taxas de parcelamento + markup padrão agrupados.
+                    TAXAS_PARCELAMENTO = taxasSalvas.parcelamento;
+                    MARKUP_PADRAO_GLOBAL = (typeof taxasSalvas.markupPadrao === 'number' && !isNaN(taxasSalvas.markupPadrao))
+                        ? taxasSalvas.markupPadrao
+                        : 100;
+                } else {
+                    // Formato antigo (somente taxas de parcelamento, sem markup salvo ainda).
+                    TAXAS_PARCELAMENTO = taxasSalvas;
+                    MARKUP_PADRAO_GLOBAL = 100;
+                }
+                preencherSelectParcelamento();
+                const inputMarkupPadrao = document.getElementById('input-markup-padrao');
+                if (inputMarkupPadrao) inputMarkupPadrao.value = MARKUP_PADRAO_GLOBAL;
             }
         }
     } catch (e) { console.error("Erro ao carregar taxas:", e); }
@@ -480,12 +520,29 @@ async function salvarNovasTaxasNoBanco(taxas) {
         const response = await fetch(`${BACKEND_API_URL}/api/config/taxas`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ taxas })
+            body: JSON.stringify({ taxas: { parcelamento: taxas, markupPadrao: MARKUP_PADRAO_GLOBAL } })
         });
         if (!response.ok) throw new Error("Erro API");
         return true;
     } catch (error) {
         showToast("Erro ao salvar taxas.", "error");
+        return false;
+    }
+}
+
+async function salvarMarkupPadraoNoBanco(valor) {
+    try {
+        const token = await getAuthToken();
+        if (!token) return false;
+        const response = await fetch(`${BACKEND_API_URL}/api/config/taxas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ taxas: { parcelamento: TAXAS_PARCELAMENTO, markupPadrao: valor } })
+        });
+        if (!response.ok) throw new Error("Erro API");
+        return true;
+    } catch (error) {
+        showToast("Erro ao salvar markup padrão.", "error");
         return false;
     }
 }
@@ -737,6 +794,7 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
     preencherSelectCalculadora(novaLinha.querySelector('.select-cor-acessorios'), DADOS_COR_ACESSORIOS);
     preencherSelectCalculadora(novaLinha.querySelector('.select-comando'), DADOS_COMANDO);
     preencherSelectCalculadora(novaLinha.querySelector('.select-lado-comando'), DADOS_LADO_COMANDO);
+    preencherSelectCalculadora(novaLinha.querySelector('.select-instalacao'), dataRefs.instalacao, true, "NENHUM", true);
     setupDecimalFormatting(novaLinha.querySelector('.input-largura'), 3);
     setupDecimalFormatting(novaLinha.querySelector('.input-altura'), 3);
     setupCurrencyFormatting(novaLinha.querySelector('.input-valor-manual'));
@@ -763,6 +821,7 @@ function adicionarLinhaAmorim(tableBody, estadoLinha, isInitialLoad) {
         if(estadoLinha.comando === 'MOTORIZADO') selMotor.value = estadoLinha.altura_comando || '127v';
         else inpManual.value = estadoLinha.altura_comando || '';
         toggleCmd();
+        novaLinha.querySelector('.select-instalacao').value = estadoLinha.instalacao || '0';
         novaLinha.querySelector('.input-valor-manual').value = estadoLinha.valor_manual || '';
         novaLinha.querySelector('.input-observacao').value = estadoLinha.observacao || '';
         novaLinha.querySelector('.select-linha-checkbox').checked = estadoLinha.selecionado === true;
@@ -1006,11 +1065,13 @@ async function carregarEstadoCalculadora(clientId) {
         
         if (res.status === 404) {
             estadoAbas = [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
-            if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = '100';
+            if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = String(MARKUP_PADRAO_GLOBAL);
         } else {
             const data = await res.json();
             estadoAbas = data.abas || [{ nome: "Orçamento 1", sections: {}, venda_realizada: false }];
-            if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = data.markup || '100';
+            // O markup deixou de ser individual por orçamento: sempre usa o Markup Padrão Global da empresa,
+            // mesmo que este orçamento tenha um valor antigo salvo (data.markup) de quando ainda era editável por cliente.
+            if(elements.calculatorMarkupInput) elements.calculatorMarkupInput.value = String(MARKUP_PADRAO_GLOBAL);
             if(elements.selectParcelamentoGlobal) elements.selectParcelamentoGlobal.value = data.parcelamento || 'DÉBITO';
             if(elements.selectFreteGlobal) elements.selectFreteGlobal.value = data.frete || '0';
             if(elements.inputValorEntradaGlobal) elements.inputValorEntradaGlobal.value = data.entrada || '';
@@ -1036,7 +1097,7 @@ async function salvarEstadoCalculadora(clientId) {
     
     const payload = {
         abas: estadoAbas,
-        markup: elements.calculatorMarkupInput?.value,
+        // markup não é mais salvo por orçamento: é sempre o Markup Padrão Global (Gerenciar Dados > Markup).
         parcelamento: elements.selectParcelamentoGlobal?.value,
         frete: elements.selectFreteGlobal?.value,
         entrada: elements.inputValorEntradaGlobal?.value
@@ -1086,6 +1147,7 @@ function obterEstadoSection(section) {
             obj.comando = l.querySelector('.select-comando')?.value;
             obj.lado_comando = l.querySelector('.select-lado-comando')?.value;
             obj.altura_comando = (obj.comando==='MOTORIZADO') ? l.querySelector('.select-altura-comando-motor')?.value : l.querySelector('.input-altura-comando-manual')?.value;
+            obj.instalacao = l.querySelector('.select-instalacao')?.value;
             obj.valor_manual = l.querySelector('.input-valor-manual')?.value;
         }
         linhas.push(obj);

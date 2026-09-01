@@ -1,5 +1,13 @@
+require('dotenv').config();
 const { Pool } = require('pg');
-const pool = new Pool({ connectionString: 'postgres://postgres.tyixoquzxuclxvbokhif:jgcv123456A%25@aws-1-us-east-2.pooler.supabase.com:5432/postgres' });
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+  ssl: { rejectUnauthorized: false }
+});
 pool.query("NOTIFY pgrst, 'reload schema'")
   .then(() => console.log('Schema Reloaded'))
   .catch(console.error)
