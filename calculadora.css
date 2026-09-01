@@ -249,13 +249,6 @@ body.dark-mode #btn-config-taxas:hover {
 .grupo-markups-modal label { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; text-align: center; }
 .grupo-markups-modal input { width: 100px; padding: 6px; font-size: 14px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
 .calculator-markups .grupo-markups input.format-money { text-align: right; }
-.quote-section[data-section-type="tecido"] .tabela-calculo thead tr:nth-child(2) th:nth-child(5),
-.quote-section[data-section-type="tecido"] .tabela-calculo thead tr:nth-child(2) th:nth-child(7),
-.quote-section[data-section-type="tecido"] .tabela-calculo thead tr:nth-child(2) th:nth-child(10),
-.quote-section[data-section-type="tecido"] .tabela-calculo tbody td:nth-child(8),
-.quote-section[data-section-type="tecido"] .tabela-calculo tbody td:nth-child(10),
-.quote-section[data-section-type="tecido"] .tabela-calculo tbody td:nth-child(13)
-{ display: none; }
 #input-valor-entrada-global,
 #select-frete-global { width: 120px; }
 #calc-tabs-container { 
@@ -975,9 +968,6 @@ body.dark-mode #container-inputs-taxas input:focus {
     .tabela-calculo td.col-selecionar-calc {
         display: none !important;
     }
-    .tabela-calculo col.print-col-qtd-cortina,
-    .tabela-calculo col.print-col-qtd-forro,
-    .tabela-calculo col.print-col-qtd-blackout,
     .tabela-calculo col.print-col-confeccao,
     .tabela-calculo col.print-col-instalacao,
     .tabela-calculo col.print-col-outros {
@@ -1081,18 +1071,18 @@ body.dark-mode #container-inputs-taxas input:focus {
     .print-hide-tecido-cortina [data-section-type="tecido"] tbody td:nth-child(6),
     .print-hide-tecido-cortina [data-section-type="tecido"] tbody td:nth-child(7) { display: none !important; }
     .print-hide-tecido-forro [data-section-type="tecido"] .sessao-forro,
-    .print-hide-tecido-forro [data-section-type="tecido"] tbody td:nth-child(9) { display: none !important; }
+    .print-hide-tecido-forro [data-section-type="tecido"] tbody td:nth-child(8) { display: none !important; }
     .print-hide-tecido-blackout [data-section-type="tecido"] .sessao-blackout,
-    .print-hide-tecido-blackout [data-section-type="tecido"] tbody td:nth-child(11),
-    .print-hide-tecido-blackout [data-section-type="tecido"] tbody td:nth-child(12) { display: none !important; }
+    .print-hide-tecido-blackout [data-section-type="tecido"] tbody td:nth-child(9),
+    .print-hide-tecido-blackout [data-section-type="tecido"] tbody td:nth-child(10) { display: none !important; }
     .print-hide-tecido-valores [data-section-type="tecido"] .sessao-valores,
-    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(14),
-    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(15),
-    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(16),
-    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(17) { display: none !important; }
+    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(11),
+    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(12),
+    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(13),
+    .print-hide-tecido-valores [data-section-type="tecido"] tbody td:nth-child(14) { display: none !important; }
     .print-hide-tecido-orcamento [data-section-type="tecido"] .sessao-orcamento,
-    .print-hide-tecido-orcamento [data-section-type="tecido"] tbody td:nth-child(18),
-    .print-hide-tecido-orcamento [data-section-type="tecido"] tbody td:nth-child(19),
-    .print-hide-tecido-orcamento [data-section-type="tecido"] tbody td:nth-child(20) { display: none !important; }
+    .print-hide-tecido-orcamento [data-section-type="tecido"] tbody td:nth-child(15),
+    .print-hide-tecido-orcamento [data-section-type="tecido"] tbody td:nth-child(16),
+    .print-hide-tecido-orcamento [data-section-type="tecido"] tbody td:nth-child(17) { display: none !important; }
 
 }
